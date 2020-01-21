@@ -1,17 +1,17 @@
-import { EntityConfig, Structure } from './types';
-import { PowerSource } from './power_source';
 import { Player } from '../player';
+import { PowerSource } from './power_source';
+import { Structure } from './types';
 
 export class PowerGenerator extends Structure {
-  powerSource: PowerSource;
-  energyOutput: number;
+  public powerSource: PowerSource;
+  public energyOutput: number;
 
   constructor(source: PowerSource, player: Player, built: boolean, energyOutput = 1) {
     super({
       position: source.position,
       collisionRadius: 5,
-      player: player,
-      built: built,
+      player,
+      built,
       buildCost: 100,
       fullHealth: 60,
       health: built ? 60 : 0,

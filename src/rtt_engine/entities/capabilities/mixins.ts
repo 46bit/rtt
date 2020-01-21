@@ -1,22 +1,22 @@
 // For building a mixin that uses the same single argument as the class it is extending.
 type ComposableConstructor<T, U> =
-  [T, U] extends [
+  readonly [T, U] extends readonly [
     new (a: infer O1) => infer R1,
     new (a: infer O2) => infer R2
   ]
-  ? { new (o: O1 & O2): R1 & R2 } & Pick<T, keyof T> & Pick<U, keyof U>
-  : never
+  ? (new (o: O1 & O2) => R1 & R2) & Pick<T, keyof T> & Pick<U, keyof U>
+  : never;
 
 // For building a mixin that prepends a single argument before those of the class it is extending.
 // FIXME: Might `ConstructorParameters` from https://www.typescriptlang.org/docs/handbook/utility-types.html#constructorparameterst
 // allow arbitrary numbers of parameters on each level?
 type ConcatenatableConstructor<T, U> =
-  [T, U] extends [
+  readonly [T, U] extends readonly [
     new (a: infer O1, ...b: infer O2) => infer R1,
     new (...b: infer O2) => infer R2
   ]
-  ? { new (a: O1, ...b: O2): R1 & R2 } & Pick<T, keyof T> & Pick<U, keyof U>
-  : never
+  ? (new (a: O1, ...b: O2) => R1 & R2) & Pick<T, keyof T> & Pick<U, keyof U>
+  : never;
 
 // import { Entity } from '../types/entity';
 // import { Vector } from '../../vector';
@@ -100,7 +100,6 @@ type ConcatenatableConstructor<T, U> =
 // //   }
 // // }
 
-
 // // interface EntityDescription {
 // //   position: Vector;
 // //   velocity: number;
@@ -180,9 +179,6 @@ type ConcatenatableConstructor<T, U> =
 // //     }
 // // }
 
-
-
-
 // // type ConcatenatableConstructor<T, U> =
 // //   [T, U] extends [
 // //     new (a: infer O1, b: infer O2) => infer R1,
@@ -220,8 +216,6 @@ type ConcatenatableConstructor<T, U> =
 // //         super(c_value, x_value)
 // //     }
 // // }
-
-
 
 // // // export class Entity {
 // // //   position: Vector;

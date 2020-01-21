@@ -1,12 +1,12 @@
-import { IEntityConfig, Entity } from './entity';
 import {
-  ICollidableConfig,
   Collidable,
-  IConstructableConfig,
   Constructable,
+  ICollidableConfig,
+  IConstructableConfig,
   IOwnableConfig,
   Ownable,
 } from '../capabilities';
+import { Entity, IEntityConfig } from './entity';
 
 export interface IStructureConfig extends ICollidableConfig, IConstructableConfig, IOwnableConfig, IEntityConfig {}
 

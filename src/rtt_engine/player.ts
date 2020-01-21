@@ -1,33 +1,33 @@
-import { Units } from './units';
-import { DirectFireQuadTree } from './stubs';
 import { PowerSource } from './entities/index';
+import { DirectFireQuadTree } from './stubs';
+import { Units } from './units';
 
-export interface NamedRGB {
+export interface INamedRGB {
   name: string;
-  r, g, b: number;
+  r; g; b: number;
 }
 
 export class Player {
-  color: NamedRGB;
-  units: Units;
-  storedEnergy: number;
+  public color: INamedRGB;
+  public units: Units;
+  public storedEnergy: number;
 
-  constructor(color: NamedRGB, units: Units) {
+  constructor(color: INamedRGB, units: Units) {
     this.color = color;
     this.units = units;
     this.storedEnergy = 0;
   }
 
-  isDefeated() {
-    return this.units.unitCount() + this.units.projectiles.length == 0;
+  public isDefeated() {
+    return this.units.unitCount() + this.units.projectiles.length === 0;
   }
 
-  update(powerSources: Array<PowerSource>, otherPlayers: Array<Player>, directFireQuadtree: DirectFireQuadTree) {
+  public update(powerSources: readonly PowerSource[], otherPlayers: readonly Player[], directFireQuadtree: DirectFireQuadTree) {
     this.updateEnergy();
     this.units.update();
   }
 
-  updateEnergy() {
+  public updateEnergy() {
     this.storedEnergy += this.units.energyOutput();
   }
 }

@@ -1,17 +1,17 @@
-import { Entity } from '../types/entity';
 import { Vector } from '../../vector';
-import { IMovableConfig, Movable } from './movable';
+import { Entity } from '../types/entity';
 import { Physics } from '../types/physics';
+import { IMovableConfig, Movable } from './movable';
 
 export interface IManoeuverableConfig extends IMovableConfig {
   physics: Physics;
   angularVelocity: number;
 }
 
-export function Manoeuvrable<T extends new(o: any) => any>(Base: T) {
-  class Manoeuvrable extends Movable(Base as new(o: any) => Entity) {
-    physics: Physics;
-    angularVelocity: number;
+export function Manoeuvrable<T extends new(o: any) => any>(base: T) {
+  class Manoeuvrable extends Movable(base as new(o: any) => Entity) {
+    public physics: Physics;
+    public angularVelocity: number;
 
     constructor(cfg: IManoeuverableConfig) {
       super(cfg);
@@ -19,12 +19,12 @@ export function Manoeuvrable<T extends new(o: any) => any>(Base: T) {
       this.angularVelocity = cfg.angularVelocity;
     }
 
-    updateVelocity(turningAngle = 0, forceMultiplier = 1, stop = false) {
+    public updateVelocity(turningAngle = 0, forceMultiplier = 1, stop = false) {
       // FIXME: Drag should be applied after acceleration, but based on the previous velocity?
-      this.applyDragForces()
+      this.applyDragForces();
 
       // FIXME: Rename to Vector.fromMagnitudeAndDirection or similar
-      let accelerationForces = Vector.from_magnitude_and_direction(this.physics.maxAccelerationForce, turningAngle);
+      const accelerationForces = Vector.from_magnitude_and_direction(this.physics.maxAccelerationForce, turningAngle);
       accelerationForces.y *= forceMultiplier;
       if (stop) {
         accelerationForces.x -= this.dragForce(accelerationForces.x, this.angularVelocity);
@@ -34,23 +34,23 @@ export function Manoeuvrable<T extends new(o: any) => any>(Base: T) {
       this.velocity += accelerationForces.y / this.physics.mass;
     }
 
-    updateDirection(multiplier = 1.0) {
-      this.direction += this.angularVelocity * multiplier
+    public updateDirection(multiplier = 1.0) {
+      this.direction += this.angularVelocity * multiplier;
       // Normalise @direction to keep within [-PI, PI]
       if (this.direction < -Math.PI) {
-        this.direction += Math.PI * 2
+        this.direction += Math.PI * 2;
       }
       if (this.direction > Math.PI) {
-        this.direction -= Math.PI * 2
+        this.direction -= Math.PI * 2;
       }
     }
 
-    shouldTurnLeftToReach(destination: Vector) {
+    public shouldTurnLeftToReach(destination: Vector) {
       const angle = Vector.angleBetween(this.position, destination);
       return (this.direction - angle) % (Math.PI * 2) > Math.PI;
     }
 
-    shouldTurnRightToReach(destination: Vector) {
+    public shouldTurnRightToReach(destination: Vector) {
       const angle = Vector.angleBetween(this.position, destination);
       return (this.direction - angle) % (Math.PI * 2) < Math.PI;
     }
@@ -58,7 +58,7 @@ export function Manoeuvrable<T extends new(o: any) => any>(Base: T) {
     protected dragForce(force: number, velocity: number) {
       const clippedForce = Math.min(
         Math.abs(force),
-        this.physics.momentum(Math.abs(this.velocity))
+        this.physics.momentum(Math.abs(this.velocity)),
       );
       return clippedForce * Math.sign(velocity);
     }
@@ -73,5 +73,5 @@ export function Manoeuvrable<T extends new(o: any) => any>(Base: T) {
     }
   }
 
-  return Manoeuvrable as ComposableConstructor<typeof Manoeuvrable, T>
+  return Manoeuvrable as ComposableConstructor<typeof Manoeuvrable, T>;
 }

@@ -1,14 +1,14 @@
-import { IEntityConfig, Entity } from './entity';
 import {
-  ICollidableConfig,
   Collidable,
-  IConstructableConfig,
   Constructable,
+  ICollidableConfig,
+  IConstructableConfig,
   IManoeuverableConfig,
-  Manoeuvrable,
   IOwnableConfig,
-  Ownable
+  Manoeuvrable,
+  Ownable,
 } from '../capabilities';
+import { Entity, IEntityConfig } from './entity';
 
 export interface IVehicleConfig extends ICollidableConfig, IConstructableConfig, IManoeuverableConfig, IOwnableConfig, IEntityConfig {
   movementRate: number;
@@ -16,8 +16,8 @@ export interface IVehicleConfig extends ICollidableConfig, IConstructableConfig,
 }
 
 export class Vehicle extends Collidable(Constructable(Manoeuvrable(Ownable(Entity)))) {
-  movementRate: number;
-  turnRate: number;
+  public movementRate: number;
+  public turnRate: number;
 
   constructor(cfg: IVehicleConfig) {
     cfg.constructableByMobileUnits = false;
@@ -26,7 +26,7 @@ export class Vehicle extends Collidable(Constructable(Manoeuvrable(Ownable(Entit
     this.turnRate = cfg.turnRate;
   }
 
-  update() {
+  public update() {
     if (this.dead) {
       return;
     }

@@ -5,7 +5,7 @@ export interface IEntityConfig {
 }
 
 export class Entity {
-  position: Vector;
+  public position: Vector;
 
   constructor(cfg: IEntityConfig) {
     this.position = cfg.position;

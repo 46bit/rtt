@@ -1,10 +1,10 @@
-import { IEntityConfig, Entity } from './entity';
-import { ICollidableConfig, Collidable } from '../capabilities/collidable';
+import { Collidable, ICollidableConfig } from '../capabilities/collidable';
+import { Entity, IEntityConfig } from './entity';
 
 export interface IPointOfInterestConfig extends ICollidableConfig, IEntityConfig {}
 
 export class PointOfInterest<S> extends Collidable(Entity) {
-  structure: S | null;
+  public structure: S | null;
 
   constructor(cfg: IPointOfInterestConfig) {
     super(cfg);

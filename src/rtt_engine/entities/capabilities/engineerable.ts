@@ -1,17 +1,17 @@
-import { Entity } from '../types/entity';
 import { Vector } from '../../vector';
+import { Entity } from '../types/entity';
 import { IConstructable } from './constructable';
 
 export interface IEngineerableConfig {
   productionRange: number;
 }
 
-export function Engineerable<T extends new(o: any) => any>(Base: T) {
-  class Engineerable extends (Base as new(o: any) => Entity) {
+export function Engineerable<T extends new(o: any) => any>(base: T) {
+  class Engineerable extends (base as new(o: any) => Entity) {
     // FIXME: Store velocity as a Vector instead?
-    productionRange: number;
-    energyProvided: number;
-    construction: IConstructable | null;
+    public productionRange: number;
+    public energyProvided: number;
+    public construction: IConstructable | null;
 
     constructor(cfg: IEngineerableConfig) {
       super(cfg);
@@ -20,23 +20,23 @@ export function Engineerable<T extends new(o: any) => any>(Base: T) {
       this.construction = null;
     }
 
-    isProducing() {
+    public isProducing() {
       return this.construction !== null;
     }
 
-    productionProgress() {
+    public productionProgress() {
        return this.construction!.healthiness();
     }
 
-    energyConsumption() {
+    public energyConsumption() {
       return this.isProducing() ? 20 : 0;
     }
 
-    isWithinProductionRange(target: Vector) {
+    public isWithinProductionRange(target: Vector) {
       return Vector.subtract(this.position, target).magnitude() <= this.productionRange;
     }
 
-    updateProduction() {
+    public updateProduction() {
       if (this.construction === null) {
         return;
       }
@@ -56,5 +56,5 @@ export function Engineerable<T extends new(o: any) => any>(Base: T) {
     }
   }
 
-  return Engineerable as ComposableConstructor<typeof Engineerable, T>
+  return Engineerable as ComposableConstructor<typeof Engineerable, T>;
 }

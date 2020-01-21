@@ -1,6 +1,5 @@
 import { Entity } from '../types/entity';
-import { Vector } from '../../vector';
-import { Killable, IKillable } from './killable';
+import { IKillable, Killable } from './killable';
 
 export interface IConstructableConfig {
   built: boolean;
@@ -18,11 +17,11 @@ export interface IConstructable extends IKillable {
   repair(amount: number): void;
 }
 
-export function Constructable<T extends new(o: any) => any>(Base: T) {
-  class Constructable extends Killable(Base as new(o: any) => Entity) implements IConstructable {
-    buildCost: number;
-    built: boolean;
-    constructableByMobileUnits: boolean;
+export function Constructable<T extends new(o: any) => any>(base: T) {
+  class Constructable extends Killable(base as new(o: any) => Entity) implements IConstructable {
+    public buildCost: number;
+    public built: boolean;
+    public constructableByMobileUnits: boolean;
 
     constructor(cfg: IConstructableConfig) {
       super(cfg);
@@ -31,25 +30,25 @@ export function Constructable<T extends new(o: any) => any>(Base: T) {
       this.constructableByMobileUnits = cfg.constructableByMobileUnits;
     }
 
-    isBuilt() {
+    public isBuilt() {
       return this.built;
     }
 
-    isUnderConstruction() {
+    public isUnderConstruction() {
       return !this.dead && !this.built;
     }
 
-    buildCostPerHealth() {
+    public buildCostPerHealth() {
       return this.buildCost / this.fullHealth;
     }
 
-    repair(amount: number) {
+    public repair(amount: number) {
       super.repair(amount);
       if (!this.dead && !this.built) {
-        this.built = (this.health == this.fullHealth);
+        this.built = (this.health === this.fullHealth);
       }
     }
   }
 
-  return Constructable as ComposableConstructor<typeof Constructable, T>
+  return Constructable as ComposableConstructor<typeof Constructable, T>;
 }

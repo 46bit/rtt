@@ -1,8 +1,8 @@
 export class Construction {
-  kind: string;
-  unit: any;
+  public kind: string;
+  public unit: any;
 
-  isComplete(): boolean {
-    throw new Error("Construction.isComplete not yet implemented");
+  public isComplete(): boolean {
+    throw new Error('Construction.isComplete not yet implemented');
   }
 }

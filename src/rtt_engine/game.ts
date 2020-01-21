@@ -1,13 +1,13 @@
 import { Player } from './player';
-import { PowerSource, DirectFireQuadTree } from './unimplemented_stubs';
+import { DirectFireQuadTree, PowerSource } from './unimplemented_stubs';
 
 export class Game {
-  powerSources: Array<PowerSource>;
-  players: Array<Player>;
-  sandbox: boolean;
-  updateCounter: number;
-  winner: string | null;
-  winTime: Date | null;
+  public powerSources: readonly PowerSource[];
+  public players: readonly Player[];
+  public sandbox: boolean;
+  public updateCounter: number;
+  public winner: string | null;
+  public winTime: Date | null;
 
   constructor(powerSources, players, sandbox = false) {
     this.powerSources = powerSources;
@@ -15,7 +15,7 @@ export class Game {
     this.sandbox = sandbox;
   }
 
-  update() {
+  public update() {
     this.updateCounter += 1;
 
     this.updatePlayers(null);
@@ -25,21 +25,21 @@ export class Game {
     }
   }
 
-  updatePlayers(directFireQuadtree: DirectFireQuadTree) {
+  public updatePlayers(directFireQuadtree: DirectFireQuadTree) {
     this.players.forEach((player) => {
       player.update(this.powerSources, this.players, directFireQuadtree);
     });
   }
 
-  updateWinner() {
-    const undefeated_players = this.players.map((player) => !player.isDefeated());
-    switch (undefeated_players.length) {
+  public updateWinner() {
+    const undefeatedPlayers = this.players.map((player) => !player.isDefeated());
+    switch (undefeatedPlayers.length) {
       case 0:
-        this.winner = "nobody";
+        this.winner = 'nobody';
         this.winTime = Date.new();
         break;
       case 1:
-        this.winner = undefeated_players[0];
+        this.winner = undefeatedPlayers[0];
         this.winTime = Date.new();
         break;
     }

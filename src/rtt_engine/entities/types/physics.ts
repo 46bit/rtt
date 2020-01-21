@@ -1,15 +1,15 @@
 import { Vector } from '../../vector';
 
 export class Physics {
-  mass: number;
-  power: number;
-  frictionCoefficient: number;
-  dragCoefficient: number;
-  dragArea: number;
-  airMassDensity: number;
-  rollingResistanceCoefficient: number;
+  public mass: number;
+  public power: number;
+  public frictionCoefficient: number;
+  public dragCoefficient: number;
+  public dragArea: number;
+  public airMassDensity: number;
+  public rollingResistanceCoefficient: number;
   // This one isn't well-founded at all. We might want to model dynamics–angular momentum.
-  turnCoefficient: number;
+  public turnCoefficient: number;
 
   // FIXME: Refactor as `interface Physics` and `class DefaultPhysics`
   constructor() {
@@ -24,40 +24,40 @@ export class Physics {
     this.turnCoefficient = 2500.0; // 3500.0
   }
 
-  normalForce() {
+  public normalForce() {
     return this.mass * 9.81;
   }
 
-  grip() {
+  public grip() {
     return this.normalForce() * this.frictionCoefficient;
   }
 
-  momentum(velocity: number) {
+  public momentum(velocity: number) {
     return this.mass * velocity;
   }
 
-  airResistance(velocity: number) {
+  public airResistance(velocity: number) {
     return 0.5 * this.airMassDensity * Math.pow(velocity, 2) * this.dragCoefficient * this.dragArea;
   }
 
-  rollingResistance() {
+  public rollingResistance() {
     return this.rollingResistanceCoefficient * this.normalForce();
   }
 
-  rollingResistanceForces(velocity: number, angularVelocity: number) {
+  public rollingResistanceForces(velocity: number, angularVelocity: number) {
     const speed = Math.abs(velocity) + Math.abs(angularVelocity);
-    if (speed == 0) {
-      return Vector.new(0, 0);
+    if (speed === 0) {
+      return new Vector(0, 0);
     }
     const perUnit = this.rollingResistance() / speed;
-    return Vector.new(velocity * perUnit, angularVelocity * perUnit);
+    return new Vector(velocity * perUnit, angularVelocity * perUnit);
   }
 
-  maxAccelerationForce() {
+  public maxAccelerationForce() {
     return Math.min(this.power, this.grip());
   }
 
-  turningAngle() {
+  public turningAngle() {
     return Math.PI / this.turnCoefficient;
   }
 }
