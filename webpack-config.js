@@ -1,13 +1,11 @@
 const path = require('path');
-const CompressionPlugin = require('compression-webpack-plugin');
-const OptimizeCssnanoPlugin = require('@intervolga/optimize-cssnano-plugin');
 const webpack = require('webpack');
 const nodeModules = require('webpack-node-externals');
 
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
 let cfg = {
-  target: 'node',
+  target: 'web',
   mode: NODE_ENV,
   entry: {
     main: ['./src/main.ts'],
@@ -18,7 +16,6 @@ let cfg = {
     publicPath: '/'
   },
   devtool: 'source-map',
-  externals: ['chokidar'],
   stats: {
     modules: false
   },
@@ -27,7 +24,7 @@ let cfg = {
     runtimeChunk: false
   },
   performance: {
-    hints: false
+    hints: "warning"
   },
   resolve: {
     extensions: ['.ts', '.js', '.json']
@@ -55,7 +52,5 @@ let cfg = {
 if (process.env.ENABLE_WATCH === 'true') {
   cfg.watch = true;
 }
-
-cfg.externals.push(nodeModules({whitelist: []}));
 
 module.exports = cfg;
