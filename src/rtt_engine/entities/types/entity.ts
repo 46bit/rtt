@@ -1,7 +1,13 @@
+import { Vector } from '../../vector';
+
+export interface IEntityConfig {
+  position: Vector;
+}
+
 export class Entity {
   position: Vector;
 
-  constructor(position) {
-    this.position = position;
+  constructor(cfg: IEntityConfig) {
+    this.position = cfg.position;
   }
 }

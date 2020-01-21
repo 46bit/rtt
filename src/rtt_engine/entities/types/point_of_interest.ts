@@ -1,8 +1,13 @@
-export class PointOfInterest<S> extends CollidableEntity {
-  structure: S;
+import { IEntityConfig, Entity } from './entity';
+import { ICollidableConfig, Collidable } from '../capabilities/collidable';
 
-  constructor(position, collision_radius, structure) {
-    super(position, collision_radius);
-    this.structure = structure;
+export interface IPointOfInterestConfig extends ICollidableConfig, IEntityConfig {}
+
+export class PointOfInterest<S> extends Collidable(Entity) {
+  structure: S | null;
+
+  constructor(cfg: IPointOfInterestConfig) {
+    super(cfg);
+    this.structure = null;
   }
 }

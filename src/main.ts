@@ -1,7 +1,31 @@
 import * as rtt_engine from './rtt_engine/index';
+import { CollidableMovableEntity } from './rtt_engine/entities/capabilities/movable';
 import * as THREE from 'three';
 
 function main() {
+  let player = new rtt_engine.Player(
+    { name: "red", r: 255, g: 0, b: 0 },
+    new rtt_engine.Units(),
+  );
+  let bot = new rtt_engine.Bot(
+    new rtt_engine.Vector(0, 0),
+    Math.random() * 2 * Math.PI,
+    player,
+    true
+  );
+  console.log(bot);
+  return;
+
+  // let cx = new CX(1, 7);
+  // cx.c();
+  // cx.x();
+  // return;
+  // //let me = new MovableEntity(1.0, 0.0, new Vector(5, 7));
+  // let ab = new AB({ a_value: 77, b_value: "wow", ab_value: "wowwww" });
+  // ab.a();
+  // ab.b();
+  // ab.ab()
+
   const start = new Date();
   let v = new rtt_engine.Vector(1.0, 2.0);
   let angles = 0;
@@ -44,7 +68,7 @@ function threeDemoInit() {
   f = 0;
   mesh2s = [];
   var rotation2 = new rtt_engine.Vector(3, 0);
-  for (let i = 0; i < 1000; i++) {
+  for (let i = 0; i < 200; i++) {
     var geometry2 = new THREE.BoxGeometry( 0.2, 0.2, 0.2 );
     var material2 = new THREE.MeshNormalMaterial();
     var mesh2 = new THREE.Mesh( geometry2, material );

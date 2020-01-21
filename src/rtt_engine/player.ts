@@ -12,7 +12,7 @@ export class Player {
   units: Units;
   storedEnergy: number;
 
-  constructor(color, units) {
+  constructor(color: NamedRGB, units: Units) {
     this.color = color;
     this.units = units;
     this.storedEnergy = 0;
