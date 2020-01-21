@@ -1,5 +1,5 @@
 import { Player } from './player';
-import { DirectFireQuadTree, PowerSource } from './unimplemented_stubs';
+import { PowerSource } from './entities';
 
 export class Game {
   public powerSources: readonly PowerSource[];
@@ -9,25 +9,28 @@ export class Game {
   public winner: string | null;
   public winTime: Date | null;
 
-  constructor(powerSources, players, sandbox = false) {
+  constructor(powerSources: PowerSource[], players: Player[], sandbox = false) {
     this.powerSources = powerSources;
     this.players = players;
     this.sandbox = sandbox;
+    this.updateCounter = 0;
+    this.winner = null;
+    this.winTime = null;
   }
 
   public update() {
     this.updateCounter += 1;
 
-    this.updatePlayers(null);
+    this.updatePlayers();
 
     if (!this.winner) {
       this.updateWinner();
     }
   }
 
-  public updatePlayers(directFireQuadtree: DirectFireQuadTree) {
+  public updatePlayers() {
     this.players.forEach((player) => {
-      player.update(this.powerSources, this.players, directFireQuadtree);
+      player.update(this.powerSources, this.players);
     });
   }
 

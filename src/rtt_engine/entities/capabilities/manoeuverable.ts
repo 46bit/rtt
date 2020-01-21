@@ -5,7 +5,6 @@ import { IMovableConfig, Movable } from './movable';
 
 export interface IManoeuverableConfig extends IMovableConfig {
   physics: Physics;
-  angularVelocity: number;
 }
 
 export function Manoeuvrable<T extends new(o: any) => any>(base: T) {
@@ -15,8 +14,8 @@ export function Manoeuvrable<T extends new(o: any) => any>(base: T) {
 
     constructor(cfg: IManoeuverableConfig) {
       super(cfg);
-      this.physics = cfg.physics;
-      this.angularVelocity = cfg.angularVelocity;
+      this.physics = cfg.physics == null ? new Physics() : cfg.physics;
+      this.angularVelocity = 0;
     }
 
     public updateVelocity(turningAngle = 0, forceMultiplier = 1, stop = false) {

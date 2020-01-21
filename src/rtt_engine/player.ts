@@ -1,5 +1,4 @@
 import { PowerSource } from './entities/index';
-import { DirectFireQuadTree } from './stubs';
 import { Units } from './units';
 
 export interface INamedRGB {
@@ -22,7 +21,7 @@ export class Player {
     return this.units.unitCount() + this.units.projectiles.length === 0;
   }
 
-  public update(powerSources: readonly PowerSource[], otherPlayers: readonly Player[], directFireQuadtree: DirectFireQuadTree) {
+  public update(powerSources: readonly PowerSource[], otherPlayers: readonly Player[]) {
     this.updateEnergy();
     this.units.update();
   }

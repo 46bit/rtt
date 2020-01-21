@@ -2,7 +2,6 @@ import { Vector } from '../../vector';
 import { Entity } from '../types/entity';
 
 export interface IMovableConfig {
-  velocity: number;
   direction: number;
 }
 
@@ -12,10 +11,10 @@ export function Movable<T extends new(o: any) => any>(base: T) {
     public velocity: number;
     public direction: number;
 
-    constructor(cfg: { velocity: number, direction: number }) {
+    constructor(cfg: IMovableConfig) {
       super(cfg);
-      this.velocity = cfg.velocity;
-      this.direction = cfg.direction;
+      this.velocity = 0;
+      this.direction = cfg.direction == null ? 0 : cfg.direction;
     }
 
     public updatePosition(multiplier = 1) {

@@ -4,7 +4,9 @@ import { Engineerable } from './capabilities';
 import { Vehicle } from './types';
 
 export class Commander extends Engineerable(Vehicle) {
-  constructor(position: Vector, direction: number, player: Player) {
+  public energyOutput: number;
+
+  constructor(position: Vector, direction: number, player: Player, energyOutput = 1) {
     super({
       position,
       direction,
@@ -18,5 +20,6 @@ export class Commander extends Engineerable(Vehicle) {
       turnRate: 2.0 / 3.0,
       productionRange: 35.0,
     } as any);
+    this.energyOutput = energyOutput;
   }
 }
