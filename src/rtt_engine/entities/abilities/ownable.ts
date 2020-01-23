@@ -1,4 +1,5 @@
 import { Player } from '../../player';
+import { ComposableConstructor } from '../lib/mixins';
 
 export interface IOwnableConfig {
   player: Player | null;

@@ -1,5 +1,5 @@
-export * from './capabilities';
-export * from './types';
+export * from './abilities';
+export * from './lib';
 export * from './bot';
 export * from './commander';
 export * from './power_generator';

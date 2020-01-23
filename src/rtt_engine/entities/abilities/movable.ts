@@ -1,5 +1,6 @@
 import { Vector } from '../../vector';
-import { Entity } from '../types/entity';
+import { Entity } from '../lib/entity';
+import { ComposableConstructor } from '../lib/mixins';
 
 export interface IMovableConfig {
   direction: number;
@@ -19,7 +20,7 @@ export function Movable<T extends new(o: any) => any>(base: T) {
 
     public updatePosition(multiplier = 1) {
       const movement = Vector.from_magnitude_and_direction(this.velocity * multiplier, this.direction);
-      this.position.add(movement);
+      this.position = Vector.add(this.position, movement);
     }
 
     public isGoingSouth() {

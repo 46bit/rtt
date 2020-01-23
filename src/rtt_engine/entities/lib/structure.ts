@@ -5,7 +5,7 @@ import {
   IConstructableConfig,
   IOwnableConfig,
   Ownable,
-} from '../capabilities';
+} from '../abilities';
 import { Entity, IEntityConfig } from './entity';
 
 export interface IStructureConfig extends ICollidableConfig, IConstructableConfig, IOwnableConfig, IEntityConfig {}

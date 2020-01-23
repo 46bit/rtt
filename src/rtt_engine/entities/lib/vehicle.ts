@@ -7,7 +7,7 @@ import {
   IOwnableConfig,
   Manoeuvrable,
   Ownable,
-} from '../capabilities';
+} from '../abilities';
 import { Entity, IEntityConfig } from './entity';
 
 export interface IVehicleConfig extends ICollidableConfig, IConstructableConfig, IManoeuverableConfig, IOwnableConfig, IEntityConfig {

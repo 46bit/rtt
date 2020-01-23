@@ -1,7 +1,7 @@
 import { Player } from '../player';
 import { Vector } from '../vector';
-import { Engineerable } from './capabilities';
-import { Vehicle } from './types';
+import { Engineerable } from './abilities';
+import { Vehicle } from './lib';
 
 export class Bot extends Engineerable(Vehicle) {
   constructor(position: Vector, direction: number, player: Player, built: boolean) {

@@ -1,7 +1,7 @@
 import { Player } from '../player';
 import { Vector } from '../vector';
-import { Engineerable } from './capabilities';
-import { Vehicle } from './types';
+import { Engineerable } from './abilities';
+import { Vehicle } from './lib';
 
 export class Commander extends Engineerable(Vehicle) {
   public energyOutput: number;
@@ -12,7 +12,7 @@ export class Commander extends Engineerable(Vehicle) {
       direction,
       collisionRadius: 8,
       built: true,
-      buildCost: 100,
+      buildCost: 10000,
       player,
       fullHealth: 1000,
       health: 1000,

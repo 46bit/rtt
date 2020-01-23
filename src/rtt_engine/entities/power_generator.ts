@@ -1,6 +1,6 @@
 import { Player } from '../player';
 import { PowerSource } from './power_source';
-import { Structure } from './types';
+import { Structure } from './lib';
 
 export class PowerGenerator extends Structure {
   public powerSource: PowerSource;

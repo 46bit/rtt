@@ -54,14 +54,14 @@
     "webpack-node-externals": "^1.7.2"
   },
   "dependencies": {
-    "@aws-sdk/client-cloudwatch-node": "^0.1.0-preview.2",
-    "@aws-sdk/client-resource-groups-tagging-api-node": "0.1.0-preview.2",
+    "camera-controls": "1.18.2",
     "lodash": "^4.17.15",
     "moment": "^2.24.0",
     "nanoid": "^2.1.8",
     "pino": "^5.16.0",
     "source-map-support": "^0.5.16",
     "three": "0.112.1",
+    "three.meshline": "v1.2.0",
     "tslib": "^1.10.0",
     "uuid": "^3.3.3"
   },

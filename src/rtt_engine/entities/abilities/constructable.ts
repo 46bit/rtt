@@ -1,5 +1,6 @@
-import { Entity } from '../types/entity';
+import { Entity } from '../lib/entity';
 import { IKillable, Killable } from './killable';
+import { ComposableConstructor } from '../lib/mixins';
 
 export interface IConstructableConfig {
   built: boolean;

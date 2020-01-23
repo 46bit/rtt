@@ -1,4 +1,4 @@
-import { Collidable, ICollidableConfig } from '../capabilities/collidable';
+import { Collidable, ICollidableConfig } from '../abilities/collidable';
 import { Entity, IEntityConfig } from './entity';
 
 export interface IPointOfInterestConfig extends ICollidableConfig, IEntityConfig {}

@@ -1,5 +1,4 @@
 export class Vector {
-
   public static from_magnitude_and_direction(magnitude, direction) {
     const x = magnitude * Math.sin(direction);
     const y = magnitude * Math.cos(direction);
@@ -17,12 +16,17 @@ export class Vector {
   public static angleBetween(v1, v2) {
     return v2.angle() - v1.angle();
   }
+
   public x: number;
   public y: number;
 
-  constructor(x, y) {
+  constructor(x: number, y: number) {
     this.x = x;
     this.y = y;
+  }
+
+  public clone(): Vector {
+    return new Vector(this.x, this.y);
   }
 
   public add(v2: Vector) {

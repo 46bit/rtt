@@ -1,6 +1,7 @@
 import { Vector } from '../../vector';
-import { Entity } from '../types/entity';
+import { Entity } from '../lib/entity';
 import { IConstructable } from './constructable';
+import { ComposableConstructor } from '../lib/mixins';
 
 export interface IEngineerableConfig {
   productionRange: number;

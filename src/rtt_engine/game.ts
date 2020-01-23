@@ -1,5 +1,5 @@
-import { Player } from './player';
 import { PowerSource } from './entities';
+import { Player } from './player';
 
 export class Game {
   public powerSources: readonly PowerSource[];
@@ -9,7 +9,7 @@ export class Game {
   public winner: string | null;
   public winTime: Date | null;
 
-  constructor(powerSources: PowerSource[], players: Player[], sandbox = false) {
+  constructor(powerSources: readonly PowerSource[], players: readonly Player[], sandbox = false) {
     this.powerSources = powerSources;
     this.players = players;
     this.sandbox = sandbox;

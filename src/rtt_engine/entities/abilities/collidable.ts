@@ -1,5 +1,6 @@
 import { Vector } from '../../vector';
-import { Entity } from '../types/entity';
+import { Entity } from '../lib/entity';
+import { ComposableConstructor } from '../lib/mixins';
 
 export interface ICollidableConfig {
   collisionRadius: number;
