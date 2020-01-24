@@ -10,26 +10,26 @@ type Unit = Bot | Commander | PowerGenerator;
 // FIXME: Do this based upon an `IVehicle`?
 type Vehicle = Bot;
 
-export class Units {
+export class PlayerUnits {
   public unitCap: number | null;
-  public powerGenerators: readonly PowerGenerator[];
   public commander: Commander | null;
-  public vehicles: readonly Vehicle[];
+  public vehicles: Vehicle[];
+  public powerGenerators: PowerGenerator[];
   public constructions: readonly Unit[];
 
   public constructor(unitCap: number | null) {
     this.unitCap = unitCap;
-    this.powerGenerators = [];
     this.commander = null;
     this.vehicles = [];
+    this.powerGenerators = [];
     this.constructions = [];
   }
 
   public unitCount() {
-    return this.constructions.length
-      + (this.commander ? 1 : 0)
+    return (this.commander ? 1 : 0)
       + this.vehicles.length
-      + this.powerGenerators.length;
+      + this.powerGenerators.length
+      + this.constructions.length;
   }
 
   public isAtUnitCap() {

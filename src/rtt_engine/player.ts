@@ -1,24 +1,27 @@
 import { PowerSource } from './entities/index';
-import { Units } from './units';
+import { PlayerUnits } from './player_units';
 
-export interface INamedRGB {
-  name: string;
-  r; g; b: number;
+export interface IColor {
+  r: number;
+  g: number;
+  b: number;
 }
 
 export class Player {
-  public color: INamedRGB;
-  public units: Units;
+  public name: string;
+  public color: IColor;
+  public units: PlayerUnits;
   public storedEnergy: number;
 
-  constructor(color: INamedRGB, units: Units) {
+  constructor(name: string, color: IColor, units: PlayerUnits) {
+    this.name = name;
     this.color = color;
     this.units = units;
     this.storedEnergy = 0;
   }
 
   public isDefeated() {
-    return this.units.unitCount() + this.units.projectiles.length === 0;
+    return this.units.unitCount() === 0;
   }
 
   public update(powerSources: readonly PowerSource[], otherPlayers: readonly Player[]) {

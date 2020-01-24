@@ -35,15 +35,15 @@ export class Game {
   }
 
   public updateWinner() {
-    const undefeatedPlayers = this.players.map((player) => !player.isDefeated());
+    const undefeatedPlayers = this.players.filter((player) => !player.isDefeated());
     switch (undefeatedPlayers.length) {
       case 0:
         this.winner = 'nobody';
-        this.winTime = Date.new();
+        this.winTime = new Date();
         break;
       case 1:
-        this.winner = undefeatedPlayers[0];
-        this.winTime = Date.new();
+        this.winner = undefeatedPlayers[0].name;
+        this.winTime = new Date();
         break;
     }
   }
