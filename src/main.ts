@@ -3,17 +3,36 @@ import * as rtt_engine from './rtt_engine';
 import * as rtt_threejs_renderer from './rtt_threejs_renderer';
 
 function main() {
-  const worldSize = 1600;
-  let players = [
-    new rtt_engine.Player(
-      { name: 'red', r: 255, g: 0, b: 0 },
-      new rtt_engine.Units(null),
-    ),
-    new rtt_engine.Player(
-      { name: 'green', r: 0, g: 255, b: 0 },
-      new rtt_engine.Units(null),
-    )
-  ];
+  const map = {
+    name: 'test-map',
+    worldSize: 800,
+    powerGenerators: [
+      new rtt_engine.Vector(100, 100),
+      new rtt_engine.Vector(100, 700),
+      new rtt_engine.Vector(700, 100),
+      new rtt_engine.Vector(700, 700),
+    ],
+  };
+  const config = {
+    map,
+    unitCap: 200,
+    players: [{
+      name: 'red',
+      color: { r: 255, g: 0, b: 0 },
+      commanderPosition: new rtt_engine.Vector(150, 150),
+    }, {
+      name: 'green',
+      color: { r: 255, g: 0, b: 0 },
+      commanderPosition: new rtt_engine.Vector(650, 650),
+    }]
+  };
+
+  let game = rtt_engine.gameFromConfig(config);
+  window.game = game;
+  setInterval(() => {
+    game.update();
+  }, 200);
+  return;
 
   const renderer = new rtt_threejs_renderer.Renderer(worldSize, window, document);
   const geometry = new THREE.PlaneGeometry(worldSize, worldSize);
