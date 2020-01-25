@@ -1,4 +1,4 @@
-import { Entity } from '../lib/entity';
+import { IEntityConfig, Entity } from '../lib/entity';
 import { ComposableConstructor } from '../lib/mixins';
 
 export interface IKillableConfig {
@@ -6,7 +6,7 @@ export interface IKillableConfig {
   health: number;
 }
 
-export interface IKillable {
+export interface IKillable extends IEntityConfig {
   fullHealth: number;
   health: number;
   dead: boolean;

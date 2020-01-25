@@ -5,3 +5,4 @@ export * from './killable';
 export * from './manoeuverable';
 export * from './movable';
 export * from './ownable';
+export * from './orderable';
