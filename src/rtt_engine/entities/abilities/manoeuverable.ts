@@ -20,9 +20,6 @@ export function Manoeuvrable<T extends new(o: any) => any>(base: T) {
     }
 
     public updateVelocity(turningAngle = 0, forceMultiplier = 1, stopForward = false, stopTurning = false) {
-      // FIXME: Drag should be applied after acceleration, but based on the previous velocity?
-      this.applyDragForces();
-
       if (stopTurning) {
         turningAngle = this.physics.turningAngle() * Math.sign(this.angularVelocity)
       }

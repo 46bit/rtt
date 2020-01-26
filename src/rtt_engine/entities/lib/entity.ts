@@ -2,6 +2,7 @@ import { Vector } from '../../vector';
 
 export interface IEntityConfig {
   position: Vector;
+  presenter: any;
 }
 
 export class Entity {

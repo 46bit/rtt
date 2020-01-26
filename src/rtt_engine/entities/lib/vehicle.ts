@@ -9,17 +9,19 @@ import {
   Manoeuvrable,
   Ownable,
   Orderable,
-  IKillable
+  IKillable,
+  Presentable,
+  IPresentableConfig,
 } from '../abilities';
 import { Entity, IEntityConfig } from './entity';
 import { Vector } from '../../vector';
 
-export interface IVehicleConfig extends ICollidableConfig, IConstructableConfig, IManoeuverableConfig, IOwnableConfig, IEntityConfig, IOrderableConfig {
+export interface IVehicleConfig extends ICollidableConfig, IConstructableConfig, IManoeuverableConfig, IOwnableConfig, IEntityConfig, IOrderableConfig, IPresentableConfig {
   movementRate: number;
   turnRate: number;
 }
 
-export class Vehicle extends Collidable(Constructable(Manoeuvrable(Orderable(Ownable(Entity))))) {
+export class Vehicle extends Collidable(Constructable(Manoeuvrable(Orderable(Ownable(Presentable(Entity)))))) {
   public movementRate: number;
   public turnRate: number;
 
@@ -48,7 +50,9 @@ export class Vehicle extends Collidable(Constructable(Manoeuvrable(Orderable(Own
     if (this.dead) {
       return;
     }
-    // FIXME: Update the velocity too
+    // FIXME: Drag should be applied after acceleration, but based on the previous velocity?
+    this.applyDragForces();
+    this.updateOrders();
     this.updateDirection(this.turnRate);
     this.updatePosition(this.movementRate);
   }
@@ -56,11 +60,11 @@ export class Vehicle extends Collidable(Constructable(Manoeuvrable(Orderable(Own
   protected manoeuvre(manoeuvreOrder: { destination: Vector }): boolean {
     const distanceToDestination = Vector.subtract(this.position, manoeuvreOrder.destination).magnitude();
     if (distanceToDestination < 10) {
-      this.updateVelocity(this.physics.turningAngle());
+      return false;
     } else if (this.shouldTurnLeftToReach(manoeuvreOrder.destination) && Math.random() > 0.2) {
-      this.updateVelocity(this.physics.turningAngle());
-    } else if (this.shouldTurnRightToReach(manoeuvreOrder.destination) && Math.random() > 0.2) {
       this.updateVelocity(-this.physics.turningAngle());
+    } else if (this.shouldTurnRightToReach(manoeuvreOrder.destination) && Math.random() > 0.2) {
+      this.updateVelocity(this.physics.turningAngle());
     } else {
       this.updateVelocity(0);
     }
@@ -78,7 +82,7 @@ export class Vehicle extends Collidable(Constructable(Manoeuvrable(Orderable(Own
   protected patrol(patrolOrder: { location: Vector, range: number }): boolean {
     const distanceToLocation = Vector.subtract(this.position, patrolOrder.location).magnitude();
     if (distanceToLocation <= patrolOrder.range) {
-      // FIXME: Supply a force multiplier of 0.4
+      // FIXME: Circle the location
       this.manoeuvre({ destination: patrolOrder.location });
     } else {
       this.manoeuvre({ destination: patrolOrder.location });

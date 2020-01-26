@@ -83,4 +83,17 @@ export class PlayerUnits {
     }
     this.vehicles = this.vehicles.filter((vehicle) => vehicle.isAlive());
   }
+
+  public draw() {
+    this.commander?.presenter?.draw();
+    for (let vehicle of this.vehicles) {
+      vehicle.presenter?.draw();
+    }
+    for (let powerGenerator of this.powerGenerators) {
+      powerGenerator.presenter?.draw();
+    }
+    for (let construction of this.constructions) {
+      construction.presenter?.draw();
+    }
+  }
 }

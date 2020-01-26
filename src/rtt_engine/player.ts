@@ -32,4 +32,8 @@ export class Player {
   public updateEnergy() {
     this.storedEnergy += this.units.energyOutput();
   }
+
+  public draw() {
+    this.units.draw();
+  }
 }

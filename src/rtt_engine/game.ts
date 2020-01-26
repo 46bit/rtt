@@ -47,4 +47,10 @@ export class Game {
         break;
     }
   }
+
+  public draw() {
+    for (let player of this.players) {
+      player.draw();
+    }
+  }
 }

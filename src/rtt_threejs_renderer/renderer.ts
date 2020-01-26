@@ -7,14 +7,19 @@ export class Renderer {
   clock: THREE.Clock;
   camera: THREE.PerspectiveCamera;
   scene: THREE.Scene;
+  gameCoordsGroup: THREE.Group;
   renderer: THREE.Renderer;
   controls: CameraControls;
 
   constructor(worldSize: number, window: any, document: any) {
     this.clock = new THREE.Clock();
     this.camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, worldSize * 2);
-    this.camera.position.z = worldSize;
+    //this.camera.position.z = worldSize;
     this.scene = new THREE.Scene();
+    this.gameCoordsGroup = new THREE.Group();
+    this.gameCoordsGroup.position.x = -worldSize / 2;
+    this.gameCoordsGroup.position.y = -worldSize / 2;
+    this.scene.add(this.gameCoordsGroup);
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(this.renderer.domElement);
@@ -31,6 +36,7 @@ export class Renderer {
     this.controls.touches.one = CameraControls.ACTION.TOUCH_TRUCK;
     this.controls.touches.two = CameraControls.ACTION.TOUCH_DOLLY;
     this.controls.touches.three = CameraControls.ACTION.TOUCH_DOLLY_TRUCK;
+    this.controls.setLookAt(0, 0, worldSize, 0, 0, 0, false);
   }
 
   animate(force = false) {

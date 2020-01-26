@@ -6,3 +6,4 @@ export * from './manoeuverable';
 export * from './movable';
 export * from './ownable';
 export * from './orderable';
+export * from './presentable';

@@ -22,81 +22,51 @@ function main() {
       commanderPosition: new rtt_engine.Vector(150, 150),
     }, {
       name: 'green',
-      color: { r: 255, g: 0, b: 0 },
+      color: { r: 0, g: 255, b: 0 },
       commanderPosition: new rtt_engine.Vector(650, 650),
     }]
   };
 
-  let game = rtt_engine.gameFromConfig(config);
-  window.game = game;
-  setInterval(() => {
-    game.update();
-  }, 200);
-  return;
+  let renderer = new rtt_threejs_renderer.Renderer(map.worldSize, window, document);
+  renderer.animate(true);
 
-  const renderer = new rtt_threejs_renderer.Renderer(worldSize, window, document);
-  const geometry = new THREE.PlaneGeometry(worldSize, worldSize);
-  var edges = new THREE.EdgesGeometry( geometry );
-  var line = new THREE.LineSegments( edges, new THREE.LineBasicMaterial( { color: 0xffffff } ) );
-  renderer.scene.add(line);
-  const grid = new THREE.GridHelper( worldSize, worldSize / 25 );
+  const grid = new THREE.GridHelper(map.worldSize, map.worldSize / 25);
   grid.position.z = -0.1;
   grid.rotation.x = Math.PI / 2;
-  renderer.scene.add( grid );
+  renderer.scene.add(grid);
 
-  const bot_geometry = new THREE.PlaneGeometry(10, 10);
-  const player_materials = players.map((player) => {
-    new THREE.MeshBasicMaterial({
-      color: new THREE.Color(player.color.r, player.color.g, player.color.b)
-    })
-  });
-  let bots = [];
-  let botPresenters = [];
-  for (let player of players) {
+  let game = rtt_engine.gameFromConfig(config, renderer.gameCoordsGroup);
+  for (let player of game.players) {
     for (let i = 0; i < 500; i++) {
       const bot = new rtt_engine.Bot(
         new rtt_engine.Vector(
-          (Math.random() - 0.5) * worldSize,
-          (Math.random() - 0.5) * worldSize
+          map.worldSize * Math.random(),
+          map.worldSize * Math.random(),
         ),
-        Math.random() * 2 * Math.PI,
+        2 * Math.PI * Math.random(),
         player,
         true,
+        renderer.gameCoordsGroup,
       );
-      bot.updateVelocity(0);
-      bot.update();
-      bots.push(bot);
-
-      const botPresenter = new rtt_threejs_renderer.BotPresenter(bot, renderer.scene);
-      botPresenters.push(botPresenter);
+      player.units.vehicles.push(bot);
     }
   }
-
-  renderer.animate(true);
-
-  setInterval(() => {
-    // console.log(".");
-    // console.log(bot.position.x);
-    // console.log(bot.position.y);
-    for (let i in bots) {
-      let bot = bots[i];
-      if bot.position.x < -worldSize/2 || bot.position.y < -worldSize/2 || bot.position.x > worldSize/2 || bot.position.y > worldSize/2 {
-      //if bot.position.magnitude() > worldSize/2) {
-        if (bot.shouldTurnLeftToReach(new rtt_engine.Vector(0, 0))) {
-          bot.updateVelocity(-bot.physics.turningAngle());
-        } else if (bot.shouldTurnRightToReach(new rtt_engine.Vector(0, 0))) {
-          bot.updateVelocity(bot.physics.turningAngle());
-        } else {
-          bot.updateVelocity(0, 1, false, true);
-        }
-      } else {
-        bot.updateVelocity(0, 1, false, true);
-      }
-      bot.update();
-
-      let botPresenter = botPresenters[i];
-      botPresenter.draw();
+  window.game = game;
+  window.rtt_engine = rtt_engine;
+  window.rtt_threejs_renderer = rtt_threejs_renderer;
+  for (let i in game.players) {
+    const player = game.players[i];
+    for (let j in player.units.vehicles) {
+      const k = (parseInt(i) + 1) % game.players.length;
+      console.log(k);
+      const target = game.players[k].units.vehicles[j];
+      player.units.vehicles[j].orders[0] = { kind: 'attack', target: target };
     }
+  }
+  setInterval(() => {
+
+    game.update();
+    game.draw();
   }, 1000 / 30);
 }
 

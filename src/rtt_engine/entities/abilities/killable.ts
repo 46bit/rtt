@@ -37,6 +37,8 @@ export function Killable<T extends new(o: any) => any>(base: T) {
     public kill() {
       this.dead = true;
       this.health = 0;
+      // FIXME: Things like this make me think I shouldn't use mixins
+      (this as any).presenter?.predraw();
     }
 
     public repair(amount: number) {
