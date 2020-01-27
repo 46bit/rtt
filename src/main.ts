@@ -5,7 +5,7 @@ import * as rtt_threejs_renderer from './rtt_threejs_renderer';
 function main() {
   const map = {
     name: 'test-map',
-    worldSize: 800,
+    worldSize: 1600,
     powerGenerators: [
       new rtt_engine.Vector(100, 100),
       new rtt_engine.Vector(100, 700),
@@ -15,7 +15,7 @@ function main() {
   };
   const config = {
     map,
-    unitCap: 200,
+    unitCap: 1500,
     players: [{
       name: 'red',
       color: { r: 255, g: 0, b: 0 },
@@ -30,14 +30,14 @@ function main() {
   let renderer = new rtt_threejs_renderer.Renderer(map.worldSize, window, document);
   renderer.animate(true);
 
-  const grid = new THREE.GridHelper(map.worldSize, map.worldSize / 25);
-  grid.position.z = -0.1;
-  grid.rotation.x = Math.PI / 2;
-  renderer.scene.add(grid);
+  // const grid = new THREE.GridHelper(map.worldSize, map.worldSize / 25);
+  // grid.position.z = -0.1;
+  // grid.rotation.x = Math.PI / 2;
+  // renderer.scene.add(grid);
 
   let game = rtt_engine.gameFromConfig(config, renderer.gameCoordsGroup);
   for (let player of game.players) {
-    for (let i = 0; i < 500; i++) {
+    for (let i = 0; i < 1500; i++) {
       const bot = new rtt_engine.Bot(
         new rtt_engine.Vector(
           map.worldSize * Math.random(),
@@ -58,13 +58,27 @@ function main() {
     const player = game.players[i];
     for (let j in player.units.vehicles) {
       const k = (parseInt(i) + 1) % game.players.length;
-      console.log(k);
       const target = game.players[k].units.vehicles[j];
       player.units.vehicles[j].orders[0] = { kind: 'attack', target: target };
     }
   }
+  let quadtreePresenter: rtt_threejs_renderer.QuadtreePresenter | null = null;
   setInterval(() => {
-
+    const units = game.players.map((p) => p.units.vehicles).flat();
+    const quadtree = rtt_engine.quadtreeForEntityCollisions(units);
+    if (quadtreePresenter == null) {
+      quadtreePresenter = new rtt_threejs_renderer.QuadtreePresenter(quadtree, renderer.gameCoordsGroup);
+    } else if (Math.random() > 0.9) {
+      quadtreePresenter.quadtree = quadtree;
+    }
+    quadtreePresenter.draw();
+    console.log(quadtree.items.length);
+    let collisions = rtt_engine.quadtreeCollisions(quadtree as any, units);
+    for (let unitId in collisions) {
+      const deadUnit = units.filter((u: rtt_engine.IKillable) => u.id == unitId)[0];
+      deadUnit.presenter?.dedraw();
+      deadUnit.kill();
+    }
     game.update();
     game.draw();
   }, 1000 / 30);

@@ -4,3 +4,4 @@ export * from './player';
 export * from './player_units';
 export * from './vector';
 export * from './config';
+export * from './quadtree';

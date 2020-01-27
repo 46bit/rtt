@@ -1,9 +1,16 @@
 import { Vector } from '../../vector';
-import { Entity } from '../lib/entity';
+import { Entity, IEntity, IEntityConfig } from '../lib/entity';
+import { IOwnableConfig } from './ownable';
 import { ComposableConstructor } from '../lib/mixins';
 
-export interface ICollidableConfig {
+export interface ICollidableConfig extends IEntityConfig {
   collisionRadius: number;
+}
+
+export interface ICollidable extends IEntity, IOwnableConfig {
+  collisionRadius: number;
+
+  isCollidingWith(otherCollidableEntity: ICollidable, within: number): boolean;
 }
 
 export function Collidable<T extends new(o: any) => any>(base: T) {
