@@ -1,9 +1,14 @@
 import { IEntity, IEntityConfig } from '../rtt_engine/entities';
 import { ICollidableConfig, ICollidable } from '../rtt_engine/entities/abilities';
 
-export interface IEntityQuadtree<I = IEntity> extends Bounds {
-  subtrees: IEntityQuadtree<I>[] | null;
-  items: I[];
+export interface IQuadtree<E extends ICollidable> {
+  tree: IQuadrant<E>;
+  entityRadius: (e: E) => number;
+}
+
+export class IQuadrant<E extends ICollidable> implements Bounds {
+  entities: E[];
+  subtrees: IQuadrant<E>[];
 }
 
 interface Bounds {
@@ -13,16 +18,16 @@ interface Bounds {
   bottom: number;
 }
 
-export function quadtreeForEntityCollisions(units: ICollidableConfig[]): IEntityQuadtree<ICollidableConfig> {
-  return quadtree(units, (item: ICollidableConfig) => item.collisionRadius);
+export function collisionsQuadtree<E extends ICollidable>(units: ICollidable[]): IQuadtree<E> {
+  const entityRadius = (e: E) => e.collisionRadius;
+  return IQuadtree{
+    tree: quadrant(bounds(units, entityRadius), units, entityRadius),
+    entityRadius,
+  };
 }
 
-function quadtree<I = IEntity>(items: I[], itemRadiusCallback: (item: I) => number): IEntityQuadtree<I> {
-  return quadrant(bounds(items, itemRadiusCallback), items, itemRadiusCallback);
-}
-
-function quadrant<I = IEntity>(bounds: Bounds, items: I[], itemRadiusCallback: (item: I) => number): IEntityQuadtree<I> {
-  let quadrant_ = bounds as IEntityQuadtree<I>;
+function quadrant<E extends ICollidable>(bounds: Bounds, items: E[], entityRadius: (e: E) => number): IQuadrant<E> {
+  let quadrant_ = bounds as IQuadrant<E>;
   quadrant_.subtrees = [];
   if (items.length <= 1) {
     quadrant_.items = items;
@@ -34,7 +39,7 @@ function quadrant<I = IEntity>(bounds: Bounds, items: I[], itemRadiusCallback: (
   for (let i in items) {
     let assigned = null;
     for (let j in subquadrantBounds) {
-      if (quadrantContains(subquadrantBounds[j], items[i], itemRadiusCallback)) {
+      if (quadrantContains(subquadrantBounds[j], items[i], entityRadius)) {
         assigned = j;
         subquadrantItems[j].push(items[i]);
         break;
@@ -45,7 +50,7 @@ function quadrant<I = IEntity>(bounds: Bounds, items: I[], itemRadiusCallback: (
     }
   }
   for (let j in subquadrantBounds) {
-    const subquadrant = quadrant(subquadrantBounds[j], subquadrantItems[j], itemRadiusCallback);
+    const subquadrant = quadrant(subquadrantBounds[j], subquadrantItems[j], entityRadius);
     quadrant_.subtrees.push(subquadrant);
   }
   return quadrant_;
@@ -134,7 +139,7 @@ export function quadtreeCollisionsFor(quadtree: IEntityQuadtree<ICollidable>, it
     if (item.isCollidingWith(quadtreeItem, 0)) {
       collisions.push(quadtreeItem);
     }
-  }
+  }K
   if (quadtree.subtrees != null) {
     for (let subtree of quadtree.subtrees) {
       collisions.push(...quadtreeCollisionsFor(subtree, item));
