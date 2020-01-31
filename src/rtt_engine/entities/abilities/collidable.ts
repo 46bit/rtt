@@ -26,7 +26,7 @@ export function Collidable<T extends new(o: any) => any>(base: T) {
     public isCollidingWith(otherCollidableEntity: Collidable, within = 0) {
       const combinedCollisionRadius = this.collisionRadius + otherCollidableEntity.collisionRadius + within;
       const distanceBetween = Vector.subtract(this.position, otherCollidableEntity.position).magnitude();
-      return distanceBetween <= combinedCollisionRadius;
+      return distanceBetween < combinedCollisionRadius;
     }
   }
 

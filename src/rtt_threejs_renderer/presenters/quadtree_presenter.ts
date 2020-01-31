@@ -1,15 +1,15 @@
 import * as THREE from 'three';
-import { IEntityQuadtree } from '../../rtt_engine/quadtree';
+import { IQuadrant } from '../../rtt_engine/quadtree';
 import { Vector } from '../../rtt_engine/vector';
-import { IEntityConfig } from '../../rtt_engine';
+import { ICollidable } from '../../rtt_engine';
 
 export class QuadtreePresenter {
-  quadtree: IEntityQuadtree<IEntityConfig>;
-  knownQuadtree?: IEntityQuadtree<IEntityConfig>;
+  quadtree: IQuadrant<ICollidable>;
+  knownQuadtree?: IQuadrant<ICollidable>;
   scene: THREE.Group;
   childScene?: THREE.Group;
 
-  constructor(quadtree: IEntityQuadtree<IEntityConfig>, scene: THREE.Group) {
+  constructor(quadtree: IQuadrant<ICollidable>, scene: THREE.Group) {
     this.quadtree = quadtree;
     this.scene = scene;
   }
@@ -28,13 +28,14 @@ export class QuadtreePresenter {
     }
   }
 
-  protected drawQuadrant(quadrant: IEntityQuadtree<IEntityConfig>) {
-    const planeGeometry = new THREE.PlaneGeometry(quadrant.right - quadrant.left, quadrant.bottom - quadrant.top);
+  protected drawQuadrant(quadrant: IQuadrant<ICollidable>) {
+    const planeGeometry = new THREE.PlaneGeometry(quadrant.bounds.right - quadrant.bounds.left, quadrant.bounds.bottom - quadrant.bounds.top);
     const planeEdgesGeometry = new THREE.EdgesGeometry(planeGeometry);
     const planeEdgesMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
     const planeEdgesMesh = new THREE.LineSegments(planeEdgesGeometry, planeEdgesMaterial);
-    planeEdgesMesh.position.x = quadrant.left + (quadrant.right - quadrant.left) / 2;
-    planeEdgesMesh.position.y = quadrant.top + (quadrant.bottom - quadrant.top) / 2;
+    planeEdgesMesh.position.x = quadrant.bounds.left + (quadrant.bounds.right - quadrant.bounds.left) / 2;
+    planeEdgesMesh.position.y = quadrant.bounds.top + (quadrant.bounds.bottom - quadrant.bounds.top) / 2;
+    planeEdgesMesh.position.z = -1;
     this.childScene!.add(planeEdgesMesh);
 
     if (quadrant.subtrees != null) {

@@ -86,9 +86,9 @@ export class PlayerUnits {
 
   public draw() {
     this.commander?.presenter?.draw();
-    for (let vehicle of this.vehicles) {
-      vehicle.presenter?.draw();
-    }
+    // for (let vehicle of this.vehicles) {
+    //   vehicle.presenter?.draw();
+    // }
     for (let powerGenerator of this.powerGenerators) {
       powerGenerator.presenter?.draw();
     }

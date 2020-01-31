@@ -13,7 +13,7 @@ export class Renderer {
 
   constructor(worldSize: number, window: any, document: any) {
     this.clock = new THREE.Clock();
-    this.camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, worldSize * 2);
+    this.camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, worldSize * 200);
     //this.camera.position.z = worldSize;
     this.scene = new THREE.Scene();
     this.gameCoordsGroup = new THREE.Group();

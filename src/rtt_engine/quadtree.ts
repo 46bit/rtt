@@ -24,6 +24,17 @@ export class Bounds {
       && (itemRight <= this.right)
       && (itemBottom <= this.bottom);
   }
+
+  containedBy<E extends ICollidable>(entity: E, entityRadius: (e: E) => number): boolean {
+    const itemLeft = entity.position.x - entityRadius(entity);
+    const itemRight = entity.position.x + entityRadius(entity);
+    const itemTop = entity.position.y - entityRadius(entity);
+    const itemBottom = entity.position.y + entityRadius(entity);
+    return (this.left <= itemRight)
+      && (this.right >= itemLeft)
+      && (this.top <= itemBottom)
+      && (this.bottom >= itemTop);
+  }
 }
 
 export class IQuadrant<E extends ICollidable> {
@@ -71,7 +82,9 @@ export class IQuadrant<E extends ICollidable> {
         if (subquadrantBounds[j].contains(entities[i], entityRadius)) {
           assigned = j;
           subquadrantEntities[j].push(entities[i]);
-          break;
+          // FIXME: Right now because quadrant bounds are inclusive on all sides some entities
+          // belong in multiple quadrants. Fix and re-break.
+          //break;
         }
       }
       if (assigned == null) {
@@ -86,6 +99,10 @@ export class IQuadrant<E extends ICollidable> {
 
   contains(entity: E): boolean {
     return this.bounds.contains(entity, this.entityRadius);
+  }
+
+  containedBy(entity: E): boolean {
+    return this.bounds.containedBy(entity, this.entityRadius);
   }
 
   subquadrantBounds(): Bounds[] {
@@ -111,7 +128,7 @@ export class IQuadrant<E extends ICollidable> {
   }
 
   getCollisionsFor(collidingEntity: E): E[] {
-    if (!this.contains(collidingEntity)) {
+    if (!this.containedBy(collidingEntity)) {
       return [];
     }
     let collisions = [];

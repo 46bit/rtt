@@ -19,7 +19,7 @@ export class Bot extends Engineerable(Vehicle) {
       turnRate: 4.0 / 3.0,
       productionRange: 25.0,
       scene,
-      newPresenter: (bot: this, scene: THREE.Group) => new BotPresenter(bot, scene),
+      newPresenter: (bot: this, scene: THREE.Group) => null,
     } as any);
   }
 }

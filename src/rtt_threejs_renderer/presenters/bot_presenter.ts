@@ -1,57 +1,62 @@
 import * as THREE from 'three';
+import { Player } from '../../rtt_engine/player';
 import { Bot } from '../../rtt_engine/entities/bot';
 import { Vector } from '../../rtt_engine/vector';
 
 export class BotPresenter {
-  bot: Bot;
+  player: Player;
   scene: THREE.Group;
-  circle?: THREE.Mesh;
-  line?: THREE.Mesh;
-  predrawn: boolean;
+  meshMaterial?: THREE.Material;
+  circleGeometry?: THREE.BufferGeometry;
+  instancedMesh?: THREE.InstancedMesh;
 
-  constructor(bot: Bot, scene: THREE.Group) {
-    this.bot = bot;
+  constructor(player: Player, scene: THREE.Group) {
+    this.player = player;
     this.scene = scene;
-    this.predrawn = false;
   }
 
   predraw() {
-    this.predrawn = true;
-    const meshMaterial = new THREE.MeshBasicMaterial({
+    this.meshMaterial = new THREE.MeshBasicMaterial({
       color: new THREE.Color(
-        this.bot.player!.color.r,
-        this.bot.player!.color.g,
-        this.bot.player!.color.b,
+        this.player.color.r,
+        this.player.color.g,
+        this.player.color.b,
       ),
     });
-    const circleGeometry = new THREE.CircleBufferGeometry(this.bot.collisionRadius);
-    this.circle = new THREE.Mesh(circleGeometry, meshMaterial);
-    this.scene.add(this.circle);
-
-    const lineMaterial = new THREE.MeshBasicMaterial({
-      color: new THREE.Color(0, 0, 0),
-    });
-    let lineGeometry = new THREE.CircleBufferGeometry(this.bot.collisionRadius / 1.2);
-    this.line = new THREE.Mesh(lineGeometry, lineMaterial);
-    this.line.position.z = 0.1;
-    this.scene.add(this.line);
+    this.circleGeometry = new THREE.CircleBufferGeometry(5);
   }
 
   draw() {
-    if (!this.predrawn) {
-      this.predraw();
+    const bots = this.player.units.vehicles.filter((v) => v instanceof Bot);
+    const numberOfBots = bots.length;
+    if (this.instancedMesh != undefined && this.instancedMesh.count != numberOfBots) {
+      this.scene.remove(this.instancedMesh);
+      this.instancedMesh = undefined;
     }
-    this.circle!.position.x = this.bot.position.x;
-    this.circle!.position.y = this.bot.position.y;
-    this.line!.position.x = this.bot.position.x + this.bot.collisionRadius / 1.5;// + this.bot.collisionRadius;
-    this.line!.position.y = this.bot.position.y;// + this.bot.collisionRadius;
+    if (this.instancedMesh == undefined) {
+      this.instancedMesh = new THREE.InstancedMesh(this.circleGeometry!, this.meshMaterial!, numberOfBots);
+      this.instancedMesh.count = numberOfBots;
+      this.instancedMesh.frustumCulled = false;
+      // this.instancedMesh.matrixAutoUpdate = true;
+      // this.instancedMesh.matrixWorldNeedsUpdate = true;
+      // this.instancedMesh.visible = true;
+      this.scene.add(this.instancedMesh);
+    }
+    for (let i = 0; i < numberOfBots; i++) {
+      const bot = bots[i];
+      let m = new THREE.Matrix4();
+      //this.instancedMesh.getMatrixAt(i, m);
+      m.setPosition(bot.position.x, bot.position.y, 0);
+      //m.setPosition(10, 10, 0);
+      this.instancedMesh.setMatrixAt(i, m);
+    }
+    this.instancedMesh.instanceMatrix.needsUpdate = true;
   }
 
   dedraw() {
-    this.predrawn = false;
-    this.scene.remove(this.circle!);
-    this.scene.remove(this.line!);
-    this.circle = null;
-    this.line = null;
+    if (this.instancedMesh) {
+      this.scene.remove(this.instancedMesh);
+      this.instancedMesh = undefined;
+    }
   }
 }

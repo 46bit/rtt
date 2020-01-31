@@ -16,6 +16,7 @@ export class CommanderPresenter {
   }
 
   predraw() {
+    return;
     this.predrawn = true;
     const meshMaterial = new THREE.MeshBasicMaterial({
       color: new THREE.Color(
@@ -38,6 +39,7 @@ export class CommanderPresenter {
   }
 
   draw() {
+    return;
     if (!this.predrawn) {
       this.predraw();
     }
@@ -48,6 +50,7 @@ export class CommanderPresenter {
   }
 
   dedraw() {
+    return;
     this.predrawn = false;
     this.scene.remove(this.circle!);
     this.scene.remove(this.line!);
