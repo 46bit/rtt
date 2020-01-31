@@ -64,23 +64,26 @@ function main() {
   }
   let quadtreePresenter: rtt_threejs_renderer.QuadtreePresenter | null = null;
   setInterval(() => {
+    const start = new Date();
     const units = game.players.map((p) => p.units.vehicles).flat();
-    const quadtree = rtt_engine.quadtreeForEntityCollisions(units);
+    const quadtree = rtt_engine.IQuadrant.fromEntityCollisions(units);
     if (quadtreePresenter == null) {
       quadtreePresenter = new rtt_threejs_renderer.QuadtreePresenter(quadtree, renderer.gameCoordsGroup);
     } else if (Math.random() > 0.9) {
       quadtreePresenter.quadtree = quadtree;
     }
     quadtreePresenter.draw();
-    console.log(quadtree.items.length);
-    let collisions = rtt_engine.quadtreeCollisions(quadtree as any, units);
+    //console.log(quadtree.entities.length);
+    let collisions = quadtree.getCollisions(units);
     for (let unitId in collisions) {
       const deadUnit = units.filter((u: rtt_engine.IKillable) => u.id == unitId)[0];
       deadUnit.presenter?.dedraw();
       deadUnit.kill();
     }
     game.update();
+    console.log((new Date()) - start);
     game.draw();
+    console.log((new Date()) - start);
   }, 1000 / 30);
 }
 

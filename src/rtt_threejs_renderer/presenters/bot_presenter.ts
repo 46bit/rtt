@@ -24,14 +24,14 @@ export class BotPresenter {
         this.bot.player!.color.b,
       ),
     });
-    const circleGeometry = new THREE.CircleGeometry(this.bot.collisionRadius);
+    const circleGeometry = new THREE.CircleBufferGeometry(this.bot.collisionRadius);
     this.circle = new THREE.Mesh(circleGeometry, meshMaterial);
     this.scene.add(this.circle);
 
     const lineMaterial = new THREE.MeshBasicMaterial({
       color: new THREE.Color(0, 0, 0),
     });
-    let lineGeometry = new THREE.CircleGeometry(this.bot.collisionRadius / 1.2);
+    let lineGeometry = new THREE.CircleBufferGeometry(this.bot.collisionRadius / 1.2);
     this.line = new THREE.Mesh(lineGeometry, lineMaterial);
     this.line.position.z = 0.1;
     this.scene.add(this.line);

@@ -1,149 +1,130 @@
 import { IEntity, IEntityConfig } from '../rtt_engine/entities';
 import { ICollidableConfig, ICollidable } from '../rtt_engine/entities/abilities';
 
-export interface IQuadtree<E extends ICollidable> {
-  tree: IQuadrant<E>;
-  entityRadius: (e: E) => number;
-}
-
-export class IQuadrant<E extends ICollidable> implements Bounds {
-  entities: E[];
-  subtrees: IQuadrant<E>[];
-}
-
-interface Bounds {
+export class Bounds {
   left: number;
   right: number;
   top: number;
   bottom: number;
-}
 
-export function collisionsQuadtree<E extends ICollidable>(units: ICollidable[]): IQuadtree<E> {
-  const entityRadius = (e: E) => e.collisionRadius;
-  return IQuadtree{
-    tree: quadrant(bounds(units, entityRadius), units, entityRadius),
-    entityRadius,
-  };
-}
-
-function quadrant<E extends ICollidable>(bounds: Bounds, items: E[], entityRadius: (e: E) => number): IQuadrant<E> {
-  let quadrant_ = bounds as IQuadrant<E>;
-  quadrant_.subtrees = [];
-  if (items.length <= 1) {
-    quadrant_.items = items;
-    return quadrant_;
+  constructor(left: number, right: number, top: number, bottom: number) {
+    this.left = left;
+    this.right = right;
+    this.top = top;
+    this.bottom = bottom;
   }
-  quadrant_.items = [];
-  const subquadrantBounds = quadrantBounds(bounds);
-  let subquadrantItems: I[][] = subquadrantBounds.map(() => []);
-  for (let i in items) {
-    let assigned = null;
+
+  contains<E extends ICollidable>(entity: E, entityRadius: (e: E) => number): boolean {
+    const itemLeft = entity.position.x - entityRadius(entity);
+    const itemRight = entity.position.x + entityRadius(entity);
+    const itemTop = entity.position.y - entityRadius(entity);
+    const itemBottom = entity.position.y + entityRadius(entity);
+    return (itemLeft >= this.left)
+      && (itemTop >= this.top)
+      && (itemRight <= this.right)
+      && (itemBottom <= this.bottom);
+  }
+}
+
+export class IQuadrant<E extends ICollidable> {
+  public static fromEntityCollisions<E extends ICollidable>(entities: E[]): IQuadrant<E> {
+    const entityRadius = (e: E) => e.collisionRadius;
+    return this.fromEntitiesAndRadii(entities, entityRadius);
+  }
+
+  public static fromEntitiesAndRadii<E extends ICollidable>(entities: E[], entityRadius: (e: E) => number): IQuadrant<E> {
+    return new IQuadrant<E>(
+      this.boundsOfEntities(entities, entityRadius),
+      entities,
+      entityRadius
+    );
+  }
+
+  public static boundsOfEntities<E extends ICollidable>(entities: E[], entityRadius: (e: E) => number): Bounds {
+    const left = Math.min(...entities.map((i) => (i.position.x - entityRadius(i))));
+    const right = Math.max(...entities.map((i) => (i.position.x + entityRadius(i))));
+    const top = Math.min(...entities.map((i) => (i.position.y - entityRadius(i))));
+    const bottom = Math.max(...entities.map((i) => (i.position.y + entityRadius(i))));
+    return new Bounds(left, right, top, bottom);
+  }
+
+  bounds: Bounds;
+  entities: E[];
+  subtrees: IQuadrant<E>[];
+  entityRadius: (e: E) => number;
+
+  constructor(bounds: Bounds, entities: E[], entityRadius: (e: E) => number) {
+    this.bounds = bounds;
+    this.subtrees = [];
+    this.entityRadius = entityRadius;
+    if (entities.length <= 1) {
+      this.entities = entities;
+      return;
+    }
+
+    this.entities = [];
+    const subquadrantBounds = this.subquadrantBounds();
+    let subquadrantEntities: E[][] = subquadrantBounds.map(() => []);
+    for (let i in entities) {
+      let assigned = null;
+      for (let j in subquadrantBounds) {
+        if (subquadrantBounds[j].contains(entities[i], entityRadius)) {
+          assigned = j;
+          subquadrantEntities[j].push(entities[i]);
+          break;
+        }
+      }
+      if (assigned == null) {
+        this.entities.push(entities[i]);
+      }
+    }
     for (let j in subquadrantBounds) {
-      if (quadrantContains(subquadrantBounds[j], items[i], entityRadius)) {
-        assigned = j;
-        subquadrantItems[j].push(items[i]);
-        break;
+      const subquadrant = new IQuadrant<E>(subquadrantBounds[j], subquadrantEntities[j], entityRadius);
+      this.subtrees.push(subquadrant);
+    }
+  }
+
+  contains(entity: E): boolean {
+    return this.bounds.contains(entity, this.entityRadius);
+  }
+
+  subquadrantBounds(): Bounds[] {
+    const centreX = this.bounds.left + (this.bounds.right - this.bounds.left) / 2;
+    const centreY = this.bounds.top + (this.bounds.bottom - this.bounds.top) / 2;
+    return [
+      new Bounds(this.bounds.left, centreX, this.bounds.top, centreY),
+      new Bounds(centreX, this.bounds.right, this.bounds.top, centreY),
+      new Bounds(this.bounds.left, centreX, centreY, this.bounds.bottom),
+      new Bounds(centreX, this.bounds.right, centreY, this.bounds.bottom),
+    ];
+  }
+
+  getCollisions(collidingEntities: E[]): {[key: string]: E[]} {
+    let allCollisions: {[key: string]: E[]} = {};
+    for (let collidingEntity of collidingEntities) {
+      const collisions = this.getCollisionsFor(collidingEntity);
+      if (collisions.length > 0) {
+        allCollisions[collidingEntity.id] = collisions;
       }
     }
-    if (assigned == null) {
-      quadrant_.items.push(items[i]);
+    return allCollisions;
+  }
+
+  getCollisionsFor(collidingEntity: E): E[] {
+    if (!this.contains(collidingEntity)) {
+      return [];
     }
-  }
-  for (let j in subquadrantBounds) {
-    const subquadrant = quadrant(subquadrantBounds[j], subquadrantItems[j], entityRadius);
-    quadrant_.subtrees.push(subquadrant);
-  }
-  return quadrant_;
-}
-
-function quadrantContains<I = IEntity>(bounds: Bounds, item: I, itemRadiusCallback: (item: I) => number): boolean {
-  const itemLeft = item.position.x - itemRadiusCallback(item);
-  const itemRight = item.position.x + itemRadiusCallback(item);
-  const itemTop = item.position.y - itemRadiusCallback(item);
-  const itemBottom = item.position.y + itemRadiusCallback(item);
-  return (itemLeft >= bounds.left) && (itemTop >= bounds.top) && (itemRight <= bounds.right) && (itemBottom <= bounds.bottom);
-}
-
-function bounds<I = IEntity>(items: I[], itemRadiusCallback: (item: I) => number): Bounds {
-  const left = Math.min(...items.map((i) => (i.position.x - itemRadiusCallback(i))));
-  const right = Math.max(...items.map((i) => (i.position.x + itemRadiusCallback(i))));
-  const top = Math.min(...items.map((i) => (i.position.y - itemRadiusCallback(i))));
-  const bottom = Math.max(...items.map((i) => (i.position.y + itemRadiusCallback(i))));
-  return { left, right, top, bottom };
-}
-
-function quadrantBounds(parentBounds: Bounds): Bounds[] {
-  const centreX = parentBounds.left + (parentBounds.right - parentBounds.left) / 2;
-  const centreY = parentBounds.top + (parentBounds.bottom - parentBounds.top) / 2;
-  return [
-    { // Top left
-      left: parentBounds.left,
-      right: centreX,
-      top: parentBounds.top,
-      bottom: centreY,
-    },
-    { // Top right
-      left: centreX,
-      right: parentBounds.right,
-      top: parentBounds.top,
-      bottom: centreY,
-    },
-    { // Bottom left
-      left: parentBounds.left,
-      right: centreX,
-      top: centreY,
-      bottom: parentBounds.bottom,
-    },
-    { // Bottom right
-      left: centreX,
-      right: parentBounds.right,
-      top: centreY,
-      bottom: parentBounds.bottom,
-    },
-  ];
-}
-
-export function quadtreeCollisions(quadtree: IEntityQuadtree<ICollidable>, items: ICollidable[]): {[key: string]: ICollidable[]} {
-  let collisions: {[key: string]: ICollidable[]} = {};
-  for (let item of items) {
-    collisions[item.id] = [];
-    for (let quadtreeItem of quadtree.items) {
-      if (item.player == quadtreeItem.player) {
-        continue;
-      }
-      if (item.isCollidingWith(quadtreeItem, 0)) {
-        collisions[item.id].push(quadtreeItem);
+    let collisions = [];
+    for (let quadtreeEntity of this.entities) {
+      if (quadtreeEntity.player != collidingEntity.player && collidingEntity.isCollidingWith(quadtreeEntity, 0)) {
+        collisions.push(quadtreeEntity);
       }
     }
-    if (quadtree.subtrees != null) {
-      for (let subtree of quadtree.subtrees) {
-        collisions[item.id].push(...quadtreeCollisionsFor(subtree, item));
+    if (this.subtrees != null) {
+      for (let subtree of this.subtrees) {
+        collisions.push(...subtree.getCollisionsFor(collidingEntity));
       }
     }
-    if (collisions[item.id].length == 0) {
-      delete collisions[item.id];
-    }
+    return collisions;
   }
-  return collisions;
-}
-
-export function quadtreeCollisionsFor(quadtree: IEntityQuadtree<ICollidable>, item: ICollidable): ICollidable[] {
-  if (!quadrantContains(quadtree, item, (i) => i.collisionRadius)) {
-    return [];
-  }
-  let collisions = [];
-  for (let quadtreeItem of quadtree.items) {
-    if (item.player == quadtreeItem.player) {
-      continue;
-    }
-    if (item.isCollidingWith(quadtreeItem, 0)) {
-      collisions.push(quadtreeItem);
-    }
-  }K
-  if (quadtree.subtrees != null) {
-    for (let subtree of quadtree.subtrees) {
-      collisions.push(...quadtreeCollisionsFor(subtree, item));
-    }
-  }
-  return collisions;
 }
