@@ -109,9 +109,15 @@ function main() {
     //console.log(quadtree.entities.length);
     let collisions = quadtree.getCollisions(units);
     for (let unitId in collisions) {
-      const deadUnit = units.filter((u: rtt_engine.IKillable) => u.id == unitId)[0];
-      deadUnit.presenter?.dedraw();
-      deadUnit.kill();
+      const unit: rtt_engine.IKillable = units.filter((u: rtt_engine.IKillable) => u.id == unitId)[0];
+      const numberOfCollidingUnits = collisions[unitId].length;
+      // FIXME: We need to only apply damage if it fulfils IKillable…
+      const damagePerCollidingUnit = unit.health / numberOfCollidingUnits;
+      for (let collidingUnit of collisions[unitId]) {
+        if (collidingUnit.damage != null) {
+          collidingUnit.damage(damagePerCollidingUnit);
+        }
+      }
     }
     game.update();
     console.log("game update time: " + ((new Date()) - start));
