@@ -8,7 +8,7 @@ export class Renderer {
   camera: THREE.PerspectiveCamera;
   scene: THREE.Scene;
   gameCoordsGroup: THREE.Group;
-  renderer: THREE.Renderer;
+  renderer: THREE.WebGLRenderer;
   controls: CameraControls;
 
   constructor(worldSize: number, window: any, document: any) {
@@ -21,13 +21,14 @@ export class Renderer {
     this.gameCoordsGroup.position.y = -worldSize / 2;
     this.scene.add(this.gameCoordsGroup);
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
+    if (window.devicePixelRatio != null) {
+      this.renderer.setPixelRatio(window.devicePixelRatio);
+    }
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(this.renderer.domElement);
     this.controls = new CameraControls(this.camera, this.renderer.domElement);
     this.controls.minDistance = 5;
     this.controls.maxDistance = worldSize;
-    //this.controls.setBoundary(new THREE.Box3(new THREE.Vector3(-40, -40, 0), new THREE.Vector3(40, 40, 50, 55)));
-    //this.controls.boundaryEnclosesCamera = true;
     this.controls.dollyToCursor = true;
     this.controls.mouseButtons.left = CameraControls.ACTION.DOLLY;
     this.controls.mouseButtons.right = CameraControls.ACTION.TRUCK;
