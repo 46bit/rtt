@@ -107,12 +107,19 @@ function main() {
     }
     //quadtreePresenter.draw();
     //console.log(quadtree.entities.length);
+    let unitOriginalHealths: {[id: string]: number} = {};
+    for (let unit of units) {
+      if (unit.damage != null) {
+        unitOriginalHealths[unit.id] = unit.health;
+      }
+    }
+
     let collisions = quadtree.getCollisions(units);
     for (let unitId in collisions) {
       const unit: rtt_engine.IKillable = units.filter((u: rtt_engine.IKillable) => u.id == unitId)[0];
       const numberOfCollidingUnits = collisions[unitId].length;
       // FIXME: We need to only apply damage if it fulfils IKillable…
-      const damagePerCollidingUnit = unit.health / numberOfCollidingUnits;
+      const damagePerCollidingUnit = unitOriginalHealths[unitId] / numberOfCollidingUnits;
       for (let collidingUnit of collisions[unitId]) {
         if (collidingUnit.damage != null) {
           collidingUnit.damage(damagePerCollidingUnit);
