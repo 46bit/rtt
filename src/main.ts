@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import * as rtt_engine from './rtt_engine';
 import * as rtt_threejs_renderer from './rtt_threejs_renderer';
 
+window.THREE = THREE;
+
 function main() {
   const map = {
     name: 'test-map',

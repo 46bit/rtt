@@ -37,17 +37,12 @@ export class BotPresenter {
       this.instancedMesh = new THREE.InstancedMesh(this.circleGeometry!, this.meshMaterial!, numberOfBots);
       this.instancedMesh.count = numberOfBots;
       this.instancedMesh.frustumCulled = false;
-      // this.instancedMesh.matrixAutoUpdate = true;
-      // this.instancedMesh.matrixWorldNeedsUpdate = true;
-      // this.instancedMesh.visible = true;
       this.scene.add(this.instancedMesh);
     }
     for (let i = 0; i < numberOfBots; i++) {
       const bot = bots[i];
       let m = new THREE.Matrix4();
-      //this.instancedMesh.getMatrixAt(i, m);
       m.setPosition(bot.position.x, bot.position.y, 0);
-      //m.setPosition(10, 10, 0);
       this.instancedMesh.setMatrixAt(i, m);
     }
     this.instancedMesh.instanceMatrix.needsUpdate = true;
