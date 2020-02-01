@@ -2,11 +2,25 @@ import * as THREE from 'three';
 import { Commander } from '../../rtt_engine/entities/commander';
 import { Vector } from '../../rtt_engine/vector';
 
+export function commanderShape(): THREE.Shape {
+  var shape = new THREE.Shape();
+  shape.moveTo(7, -8);
+  shape.lineTo(8, 7);
+  shape.lineTo(3.5, 1);
+  shape.lineTo(0, 8);
+  shape.lineTo(-3.5, 1);
+  shape.lineTo(-8, 7);
+  shape.lineTo(-7, -8);
+  shape.lineTo(-4, -8);
+  shape.lineTo(0, -5);
+  shape.lineTo(4, -8);
+  return shape;
+}
+
 export class CommanderPresenter {
   commander: Commander;
   scene: THREE.Group;
-  circle?: THREE.Mesh;
-  line?: THREE.Mesh;
+  mesh?: THREE.Mesh;
   predrawn: boolean;
 
   constructor(commander: Commander, scene: THREE.Group) {
@@ -16,7 +30,6 @@ export class CommanderPresenter {
   }
 
   predraw() {
-    return;
     this.predrawn = true;
     const meshMaterial = new THREE.MeshBasicMaterial({
       color: new THREE.Color(
@@ -25,36 +38,25 @@ export class CommanderPresenter {
         this.commander.player!.color.b,
       ),
     });
-    const circleGeometry = new THREE.CircleGeometry(this.commander.collisionRadius);
-    this.circle = new THREE.Mesh(circleGeometry, meshMaterial);
-    this.scene.add(this.circle);
-
-    const lineMaterial = new THREE.MeshBasicMaterial({
-      color: new THREE.Color(0, 0, 0),
-    });
-    let lineGeometry = new THREE.CircleGeometry(this.commander.collisionRadius / 1.2);
-    this.line = new THREE.Mesh(lineGeometry, lineMaterial);
-    this.line.position.z = 0.1;
-    this.scene.add(this.line);
+    const commanderGeometry = new THREE.ShapeBufferGeometry(commanderShape());
+    this.mesh = new THREE.Mesh(commanderGeometry, meshMaterial);
+    this.scene.add(this.mesh);
   }
 
   draw() {
-    return;
     if (!this.predrawn) {
       this.predraw();
     }
-    this.circle!.position.x = this.commander.position.x;
-    this.circle!.position.y = this.commander.position.y;
-    this.line!.position.x = this.commander.position.x + this.commander.collisionRadius / 1.5;// + this.bot.collisionRadius;
-    this.line!.position.y = this.commander.position.y;// + this.bot.collisionRadius;
+    this.mesh!.position.x = this.commander.position.x;
+    this.mesh!.position.y = this.commander.position.y;
+    this.mesh!.rotation.z = - this.commander.direction;
   }
 
   dedraw() {
-    return;
     this.predrawn = false;
-    this.scene.remove(this.circle!);
-    this.scene.remove(this.line!);
-    this.circle = undefined;
-    this.line = undefined;
+    if (this.mesh != null) {
+      this.scene.remove(this.mesh!);
+      this.mesh = undefined;
+    }
   }
 }

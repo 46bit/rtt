@@ -60,6 +60,15 @@ function main() {
   let botPresenters: rtt_threejs_renderer.BotPresenter[] = [];
   for (let i in game.players) {
     const player = game.players[i];
+    if (player.units.commander != null) {
+      player.units.commander.orders[0] = {
+        kind: 'manoeuvre',
+        destination: new rtt_engine.Vector(
+          Math.random() * map.worldSize,
+          Math.random() * map.worldSize,
+        )
+      };
+    }
     for (let j in player.units.vehicles) {
       const k = (parseInt(i) + 1) % game.players.length;
       const target = game.players[k].units.vehicles[j];
