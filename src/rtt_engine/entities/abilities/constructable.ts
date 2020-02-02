@@ -40,7 +40,7 @@ export function Constructable<T extends new(o: any) => any>(base: T) {
     }
 
     public buildCostPerHealth() {
-      return this.buildCost / this.fullHealth;
+      return (this.buildCost ?? this.fullHealth * 10) / this.fullHealth;
     }
 
     public repair(amount: number) {

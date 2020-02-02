@@ -8,8 +8,13 @@ export interface IManoeuverableConfig extends IMovableConfig {
   physics: Physics;
 }
 
+export interface IManoeuvrable extends IEntity {
+  physics: Physics;
+  angularVelocity: number;
+}
+
 export function Manoeuvrable<T extends new(o: any) => any>(base: T) {
-  class Manoeuvrable extends Movable(base as new(o: any) => Entity) {
+  class Manoeuvrable extends Movable(base as new(o: any) => Entity) implements IManoeuvrable {
     public physics: Physics;
     public angularVelocity: number;
 

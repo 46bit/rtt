@@ -85,6 +85,12 @@ function main() {
 
     for (let i in game.players) {
       const player = game.players[i];
+
+      player.units.factories[0].orders[0] = {
+        kind: 'construct',
+        unitClass: rtt_engine.Bot,
+      };
+
       const opposingPlayer = game.players[(parseInt(i) + 1) % game.players.length];
       if (opposingPlayer.units.vehicles.length == 0) {
         continue;

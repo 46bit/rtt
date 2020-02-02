@@ -30,7 +30,7 @@ export function Killable<T extends new(o: any) => any>(base: T) {
     constructor(cfg: IKillableConfig) {
       super(cfg);
       this.fullHealth = cfg.fullHealth;
-      this.health = cfg.health;
+      this.health = cfg.health ?? 0;
       this.dead = false;
     }
 

@@ -1,5 +1,6 @@
 import { PowerSource } from './entities/index';
 import { PlayerUnits } from './player_units';
+import lodash from 'lodash';
 
 export interface IColor {
   r: number;
@@ -31,6 +32,12 @@ export class Player {
 
   public updateEnergy() {
     this.storedEnergy += this.units.energyOutput();
+    const desiredEnergy = lodash.sum(this.units.factories.map((f) => f.energyConsumption()));
+    const proportionOfEnergyProvided = Math.min(this.storedEnergy / desiredEnergy, 1);
+    for (let factory of this.units.factories) {
+      factory.energyProvided = factory.energyConsumption() * proportionOfEnergyProvided;
+    }
+    this.storedEnergy -= desiredEnergy * proportionOfEnergyProvided;
   }
 
   public draw() {

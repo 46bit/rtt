@@ -1,6 +1,7 @@
 import {
   Bot,
   Commander,
+  Factory,
   PowerGenerator,
 } from './entities';
 
@@ -14,22 +15,25 @@ export class PlayerUnits {
   public unitCap: number | null;
   public commander: Commander | null;
   public vehicles: Vehicle[];
+  public factories: Factory[];
   public powerGenerators: PowerGenerator[];
-  public constructions: readonly Unit[];
+  public constructions: {[id: string]: Unit};
 
   public constructor(unitCap: number | null) {
     this.unitCap = unitCap;
     this.commander = null;
     this.vehicles = [];
+    this.factories = [];
     this.powerGenerators = [];
-    this.constructions = [];
+    this.constructions = {};
   }
 
   public unitCount() {
     return (this.commander ? 1 : 0)
       + this.vehicles.length
+      + this.factories.length
       + this.powerGenerators.length
-      + this.constructions.length;
+      + Object.keys(this.constructions).length;
   }
 
   public isAtUnitCap() {
@@ -48,7 +52,7 @@ export class PlayerUnits {
       this.commander.update();
     }
     this.updateEachOf(this.vehicles);
-    this.updateConstructions();
+    this.updateFactoriesAndConstructions();
     this.removeDeadUnits();
   }
 
@@ -58,22 +62,34 @@ export class PlayerUnits {
     }
   }
 
-  public updateConstructions() {
-    this.constructions = this.constructions.filter((construction) => {
-      if (this.isAtUnitCap() || !construction.isBuilt()) {
-        return true;
+  public updateFactoriesAndConstructions() {
+    for (let factory of this.factories) {
+      factory.update();
+      if (factory.construction != null) {
+        this.constructions[factory.construction.id] = factory.construction;
       }
+    }
 
-      switch (construction.kind) {
-        case 'POWER_GENERATOR':
-          this.powerGenerators.push(construction);
-        case 'VEHICLE':
-          this.vehicles.push(construction);
-        default:
-          throw new TypeError('unexpected kind of construction completed: ' + construction.kind);
+    for (let unitId in this.constructions) {
+      const unit = this.constructions[unitId];
+      if (this.isAtUnitCap()) {
+        break;
       }
-      return false;
-    });
+      if (!unit.isBuilt()) {
+        continue;
+      }
+      delete(this.constructions[unitId]);
+      switch (unit.constructor) {
+        case PowerGenerator:
+          this.powerGenerators.push(unit as PowerGenerator);
+          break;
+        case Bot:
+          this.vehicles.push(unit as Bot);
+          break;
+        default:
+          throw new TypeError('unexpected kind of construction completed: ' + unit);
+      }
+    }
   }
 
   public removeDeadUnits() {
@@ -91,9 +107,6 @@ export class PlayerUnits {
     // }
     for (let powerGenerator of this.powerGenerators) {
       powerGenerator.presenter?.draw();
-    }
-    for (let construction of this.constructions) {
-      construction.presenter?.draw();
     }
   }
 }

@@ -5,15 +5,15 @@ export class Vector {
     return new Vector(x, y);
   }
 
-  public static add(v1, v2) {
+  public static add(v1: Vector, v2: Vector): Vector {
     return new Vector(v1.x + v2.x, v1.y + v2.y);
   }
 
-  public static subtract(v1, v2) {
+  public static subtract(v1: Vector, v2: Vector): Vector {
     return new Vector(v1.x - v2.x, v1.y - v2.y);
   }
 
-  public static angleBetween(v1, v2) {
+  public static angleBetween(v1: Vector, v2: Vector): number {
     return v2.angle() - v1.angle();
   }
 

@@ -16,7 +16,7 @@ export function Engineerable<T extends new(o: any) => any>(base: T) {
 
     constructor(cfg: IEngineerableConfig) {
       super(cfg);
-      this.productionRange = cfg.fullHealth;
+      this.productionRange = cfg.productionRange ?? 0;
       this.energyProvided = 0;
       this.construction = null;
     }
@@ -38,7 +38,7 @@ export function Engineerable<T extends new(o: any) => any>(base: T) {
     }
 
     public updateProduction() {
-      if (this.construction === null) {
+      if (this.construction == null) {
         return;
       }
 
@@ -47,12 +47,13 @@ export function Engineerable<T extends new(o: any) => any>(base: T) {
         return;
       }
 
-      if (this.isWithinProductionRange(this.construction!.position)) {
-        this.construction!.repair(this.energyProvided / this.construction!.costPerHealth());
+      if (this.construction!.isBuilt()) {
+        return;
       }
 
-      if (this.construction!.isBuilt()) {
-        this.construction = null;
+      if (this.isWithinProductionRange(this.construction!.position)) {
+        const healthIncrease = this.energyProvided / this.construction!.buildCostPerHealth();
+        this.construction!.repair(healthIncrease);
       }
     }
   }
