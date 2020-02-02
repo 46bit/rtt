@@ -58,6 +58,7 @@ function main() {
   window.rtt_threejs_renderer = rtt_threejs_renderer;
 
   let botPresenters: rtt_threejs_renderer.BotPresenter[] = [];
+  let factoryPresenters: rtt_threejs_renderer.FactoryPresenter[] = [];
   for (let i in game.players) {
     const player = game.players[i];
     if (player.units.commander != null) {
@@ -78,6 +79,10 @@ function main() {
     botPresenter.predraw();
     //botPresenter.draw();
     botPresenters.push(botPresenter);
+    const factoryPresenter = new rtt_threejs_renderer.FactoryPresenter(player, renderer.gameCoordsGroup);
+    factoryPresenter.predraw();
+    //botPresenter.draw();
+    factoryPresenters.push(factoryPresenter);
   }
   let quadtreePresenter: rtt_threejs_renderer.QuadtreePresenter | null = null;
   setInterval(() => {
@@ -139,6 +144,9 @@ function main() {
     game.draw();
     for (let botPresenter of botPresenters) {
       botPresenter.draw();
+    }
+    for (let factoryPresenter of factoryPresenters) {
+      factoryPresenter.draw();
     }
     console.log("game draw time: " + ((new Date()) - start2));
   }, 1000 / 30);
