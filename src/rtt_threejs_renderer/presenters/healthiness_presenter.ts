@@ -51,12 +51,8 @@ export class HealthinessPresenter {
       '#include <common>'
     ].join('\n');
     var colorChunk = [
-      'vec3 fcolor = diffuse;',
-      // 'fcolor.x = (vRequiredHealthiness >= vHealthiness) ? 0.0 : fcolor.x;',
-      // 'fcolor.y = (vRequiredHealthiness >= vHealthiness) ? 0.0 : fcolor.y;',
-      // 'fcolor.z = (vRequiredHealthiness >= vHealthiness) ? 0.0 : fcolor.z;',
-      'float opacity = (vHealthiness < 1.0 && vRequiredHealthiness <= vHealthiness) ? 1.0 : 0.0;',
-      'vec4 diffuseColor = vec4( fcolor, opacity );'
+      'float opacity = (vRequiredHealthiness <= vHealthiness) ? 1.0 : 0.0;',
+      'vec4 diffuseColor = vec4( diffuse, opacity );'
     ].join('\n');
     material.blending = THREE.AdditiveBlending;
     material.onBeforeCompile = function (shader) {
@@ -75,7 +71,7 @@ export class HealthinessPresenter {
   }
 
   draw() {
-    const units = this.player.units.allKillableCollidableUnits();
+    const units = this.player.units.allKillableCollidableUnits().filter((u) => u.isDamaged());
     const numberOfUnits = units.length;
     if (this.instancedMesh != undefined && this.instancedMesh.count != numberOfUnits) {
       this.scene.remove(this.instancedMesh);
