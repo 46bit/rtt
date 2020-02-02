@@ -1,0 +1,38 @@
+name: Build and Deploy to Github Pages
+on:
+  push:
+    branches:
+      - master
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        persist-credentials: false
+
+    - name: Build
+      run: |
+        npm install
+        npm run build
+
+    - name: Prepare for deploy
+      run: |
+        mkdir -p release
+        cp dist/main.js release/main.js
+        cp index.html release/index.html
+        sed -i 's/src=\"dist\//src=\"/g' release/index.html
+        ls -la release
+
+    - name: Install SSH Client
+      uses: webfactory/ssh-agent@v0.2.0
+      with:
+        ssh-private-key: ${{ secrets.DEPLOY_KEY }}
+
+    - name: Deploy to Github Pages
+      uses: JamesIves/github-pages-deploy-action@releases/v3
+      with:
+        BRANCH: gh-pages
+        FOLDER: release
+        SSH: true
