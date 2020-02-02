@@ -20,7 +20,7 @@ export class Renderer {
     this.gameCoordsGroup.position.x = -worldSize / 2;
     this.gameCoordsGroup.position.y = -worldSize / 2;
     this.scene.add(this.gameCoordsGroup);
-    this.renderer = new THREE.WebGLRenderer({ antialias: true });
+    this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     if (window.devicePixelRatio != null) {
       this.renderer.setPixelRatio(window.devicePixelRatio);
     }

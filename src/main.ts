@@ -39,6 +39,15 @@ function main() {
 
   let game = rtt_engine.gameFromConfig(config, renderer.gameCoordsGroup);
   for (let player of game.players) {
+    player.units.factories.push(new rtt_engine.Factory(
+      new rtt_engine.Vector(
+        map.worldSize * Math.random(),
+        map.worldSize * Math.random(),
+      ),
+      player,
+      true
+     ));
+
     for (let i = 0; i < 4500; i++) {
       const bot = new rtt_engine.Bot(
         new rtt_engine.Vector(
@@ -59,6 +68,7 @@ function main() {
 
   let botPresenters: rtt_threejs_renderer.BotPresenter[] = [];
   let factoryPresenters: rtt_threejs_renderer.FactoryPresenter[] = [];
+  let healthinessPresenters: rtt_threejs_renderer.HealthinessPresenter[] = [];
   for (let i in game.players) {
     const player = game.players[i];
     if (player.units.commander != null) {
@@ -77,12 +87,12 @@ function main() {
     }
     const botPresenter = new rtt_threejs_renderer.BotPresenter(player, renderer.gameCoordsGroup);
     botPresenter.predraw();
-    //botPresenter.draw();
     botPresenters.push(botPresenter);
     const factoryPresenter = new rtt_threejs_renderer.FactoryPresenter(player, renderer.gameCoordsGroup);
     factoryPresenter.predraw();
-    //botPresenter.draw();
     factoryPresenters.push(factoryPresenter);
+    const healthinessPresenter = new rtt_threejs_renderer.HealthinessPresenter(player, renderer.gameCoordsGroup);
+    healthinessPresenters.push(healthinessPresenter);
   }
   let quadtreePresenter: rtt_threejs_renderer.QuadtreePresenter | null = null;
   setInterval(() => {
@@ -147,6 +157,9 @@ function main() {
     }
     for (let factoryPresenter of factoryPresenters) {
       factoryPresenter.draw();
+    }
+    for (let healthinessPresenter of healthinessPresenters) {
+      healthinessPresenter.draw();
     }
     console.log("game draw time: " + ((new Date()) - start2));
   }, 1000 / 30);

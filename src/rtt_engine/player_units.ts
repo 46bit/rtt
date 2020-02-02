@@ -3,6 +3,8 @@ import {
   Commander,
   Factory,
   PowerGenerator,
+  IKillable,
+  ICollidable,
 } from './entities';
 
 // FIXME: Do this based upon an `IUnit`?
@@ -26,6 +28,18 @@ export class PlayerUnits {
     this.factories = [];
     this.powerGenerators = [];
     this.constructions = {};
+  }
+
+  public allKillableCollidableUnits(): (IKillable & ICollidable)[] {
+    let units = [];
+    units.push(...this.vehicles);
+    units.push(...this.factories);
+    units.push(...this.powerGenerators);
+    units.push(...Object.values(this.constructions));
+    if (this.commander != null) {
+      units.push(this.commander);
+    }
+    return units;
   }
 
   public unitCount() {
