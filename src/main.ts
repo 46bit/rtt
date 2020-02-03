@@ -73,11 +73,12 @@ function main() {
     const player = game.players[i];
     if (player.units.commander != null) {
       player.units.commander.orders[0] = {
-        kind: 'manoeuvre',
-        destination: new rtt_engine.Vector(
-          Math.random() * map.worldSize,
-          Math.random() * map.worldSize,
-        )
+        kind: 'construct',
+        structureClass: rtt_engine.Factory,
+        position: new rtt_engine.Vector(
+          player.units.commander.position.x + 30,
+          player.units.commander.position.y,
+        ),
       };
     }
     for (let j in player.units.vehicles) {

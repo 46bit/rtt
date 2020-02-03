@@ -32,10 +32,16 @@ export class Player {
 
   public updateEnergy() {
     this.storedEnergy += this.units.energyOutput();
-    const desiredEnergy = lodash.sum(this.units.factories.map((f) => f.energyConsumption()));
+    let desiredEnergy = lodash.sum(this.units.factories.map((f) => f.energyConsumption()));
+    if (this.units.commander != null) {
+      desiredEnergy += this.units.commander.energyConsumption();
+    }
     const proportionOfEnergyProvided = Math.min(this.storedEnergy / desiredEnergy, 1);
     for (let factory of this.units.factories) {
       factory.energyProvided = factory.energyConsumption() * proportionOfEnergyProvided;
+    }
+    if (this.units.commander != null) {
+      this.units.commander.energyProvided = this.units.commander.energyConsumption() * proportionOfEnergyProvided;
     }
     this.storedEnergy -= desiredEnergy * proportionOfEnergyProvided;
   }

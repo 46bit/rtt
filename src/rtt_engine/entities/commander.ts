@@ -6,6 +6,7 @@ import { CommanderPresenter } from '../../rtt_threejs_renderer/presenters/comman
 
 export class Commander extends Engineerable(Vehicle) {
   public energyOutput: number;
+  constructing: boolean;
 
   constructor(position: Vector, direction: number, player: Player, scene: THREE.Group) {
     super({
@@ -24,5 +25,44 @@ export class Commander extends Engineerable(Vehicle) {
       newPresenter: (commander: this, scene: THREE.Group) => new CommanderPresenter(commander, scene),
     } as any);
     this.energyOutput = 1;
+    this.orderExecutionCallbacks['construct'] = (constructionOrder: any): boolean => {
+      return this.construct(constructionOrder);
+    };
+    this.constructing = false;
+  }
+
+  kill() {
+    super.kill();
+    this.construction?.kill();
+  }
+
+  update() {
+    super.update();
+    if (this.construction != null && this.construction.isBuilt()) {
+      this.construction = null;
+    }
+    this.updateProduction();
+    this.updateOrders();
+    if (this.construction == null) {
+      this.constructing = false;
+    }
+  }
+
+  construct(constructionOrder: { position: Vector, structureClass: any }): boolean {
+    if (this.construction == null) {
+      if (this.constructing) {
+        this.constructing = false;
+        return false;
+      } else {
+        this.constructing = true;
+        this.construction = new constructionOrder.structureClass(
+          constructionOrder.position,
+          this.player,
+          false,
+        );
+        return true;
+      }
+    }
+    return true;
   }
 }

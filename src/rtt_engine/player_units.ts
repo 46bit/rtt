@@ -8,7 +8,7 @@ import {
 } from './entities';
 
 // FIXME: Do this based upon an `IUnit`?
-type Unit = Bot | Commander | PowerGenerator;
+type Unit = Bot | Commander | PowerGenerator | Factory;
 
 // FIXME: Do this based upon an `IVehicle`?
 type Vehicle = Bot;
@@ -83,6 +83,9 @@ export class PlayerUnits {
         this.constructions[factory.construction.id] = factory.construction;
       }
     }
+    if (this.commander != null && this.commander.construction != null) {
+      this.constructions[this.commander.construction.id] = this.commander.construction;
+    }
 
     for (let unitId in this.constructions) {
       const unit = this.constructions[unitId];
@@ -94,6 +97,9 @@ export class PlayerUnits {
       }
       delete(this.constructions[unitId]);
       switch (unit.constructor) {
+        case Factory:
+          this.factories.push(unit as Factory);
+          break;
         case PowerGenerator:
           this.powerGenerators.push(unit as PowerGenerator);
           break;
