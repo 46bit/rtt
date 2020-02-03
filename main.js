@@ -69621,7 +69621,7 @@ class Commander extends abilities_1.Engineerable(lib_1.Vehicle) {
     }
     update() {
         super.update();
-        if (this.construction != null && this.construction.isBuilt()) {
+        if (this.construction != null && (this.construction.isBuilt() || this.construction.isDead())) {
             this.construction = null;
         }
         this.updateProduction();
@@ -70223,10 +70223,11 @@ class PlayerUnits {
         }
         for (let unitId in this.constructions) {
             const unit = this.constructions[unitId];
-            if (this.isAtUnitCap()) {
-                break;
+            if (unit.isDead()) {
+                delete (this.constructions[unitId]);
+                continue;
             }
-            if (!unit.isBuilt()) {
+            if (this.isAtUnitCap() || !unit.isBuilt()) {
                 continue;
             }
             delete (this.constructions[unitId]);
