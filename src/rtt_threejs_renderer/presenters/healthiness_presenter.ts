@@ -51,7 +51,7 @@ export class HealthinessPresenter {
       '#include <common>'
     ].join('\n');
     var colorChunk = [
-      'float opacity = (vRequiredHealthiness <= vHealthiness) ? 1.0 : 0.0;',
+      'float opacity = (vRequiredHealthiness <= vHealthiness) ? 1.0 : 0.2;',
       'vec4 diffuseColor = vec4( diffuse, opacity );'
     ].join('\n');
     material.blending = THREE.AdditiveBlending;

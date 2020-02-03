@@ -16,6 +16,7 @@ export class Renderer {
     this.camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, worldSize * 200);
     //this.camera.position.z = worldSize;
     this.scene = new THREE.Scene();
+    this.scene.background = new THREE.Color(0);
     this.gameCoordsGroup = new THREE.Group();
     this.gameCoordsGroup.position.x = -worldSize / 2;
     this.gameCoordsGroup.position.y = -worldSize / 2;
