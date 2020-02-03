@@ -68993,7 +68993,7 @@ function main() {
     let game = rtt_engine.gameFromConfig(config, renderer.gameCoordsGroup);
     for (let player of game.players) {
         player.units.factories.push(new rtt_engine.Factory(new rtt_engine.Vector(map.worldSize * Math.random(), map.worldSize * Math.random()), player, true));
-        for (let i = 0; i < 4500; i++) {
+        for (let i = 0; i < 150; i++) {
             const bot = new rtt_engine.Bot(new rtt_engine.Vector(map.worldSize * Math.random(), map.worldSize * Math.random()), 2 * Math.PI * Math.random(), player, true, renderer.gameCoordsGroup);
             player.units.vehicles.push(bot);
         }
@@ -69032,10 +69032,12 @@ function main() {
         const start = new Date();
         for (let i in game.players) {
             const player = game.players[i];
-            player.units.factories[0].orders[0] = {
-                kind: 'construct',
-                unitClass: rtt_engine.Bot,
-            };
+            for (let factory of player.units.factories) {
+                factory.orders[0] = {
+                    kind: 'construct',
+                    unitClass: rtt_engine.Bot,
+                };
+            }
             const opposingPlayer = game.players[(parseInt(i) + 1) % game.players.length];
             const opposingUnits = opposingPlayer.units.allKillableCollidableUnits();
             const opposingUnitCount = opposingUnits.length;
@@ -69608,7 +69610,7 @@ class Commander extends abilities_1.Engineerable(lib_1.Vehicle) {
             scene,
             newPresenter: (commander, scene) => new commander_presenter_1.CommanderPresenter(commander, scene),
         });
-        this.energyOutput = 1;
+        this.energyOutput = 5;
         this.orderExecutionCallbacks['construct'] = (constructionOrder) => {
             return this.construct(constructionOrder);
         };
