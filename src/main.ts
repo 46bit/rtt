@@ -107,19 +107,21 @@ function main() {
       };
 
       const opposingPlayer = game.players[(parseInt(i) + 1) % game.players.length];
-      if (opposingPlayer.units.vehicles.length == 0) {
+      const opposingUnits = opposingPlayer.units.allKillableCollidableUnits();
+      const opposingUnitCount = opposingUnits.length;
+      if (opposingUnitCount == 0) {
         continue;
       }
       for (let j in player.units.vehicles) {
         if (player.units.vehicles[j].orders.length > 0) {
           continue;
         }
-        const target = opposingPlayer.units.vehicles[j % opposingPlayer.units.vehicles.length];
+        const target = opposingUnits[j % opposingUnitCount];
         player.units.vehicles[j].orders[0] = { kind: 'attack', target: target };
       }
     }
 
-    const units = game.players.map((p) => p.units.vehicles).flat();
+    const units = game.players.map((p) => p.units.allKillableCollidableUnits()).flat();
     const quadtree = rtt_engine.IQuadrant.fromEntityCollisions(units);
     if (quadtreePresenter == null) {
       quadtreePresenter = new rtt_threejs_renderer.QuadtreePresenter(quadtree, renderer.gameCoordsGroup);
