@@ -69008,8 +69008,9 @@ function main() {
         const player = game.players[i];
         if (player.units.commander != null) {
             player.units.commander.orders[0] = {
-                kind: 'manoeuvre',
-                destination: new rtt_engine.Vector(Math.random() * map.worldSize, Math.random() * map.worldSize)
+                kind: 'construct',
+                structureClass: rtt_engine.Factory,
+                position: new rtt_engine.Vector(player.units.commander.position.x + 30, player.units.commander.position.y),
             };
         }
         for (let j in player.units.vehicles) {
@@ -69608,6 +69609,40 @@ class Commander extends abilities_1.Engineerable(lib_1.Vehicle) {
             newPresenter: (commander, scene) => new commander_presenter_1.CommanderPresenter(commander, scene),
         });
         this.energyOutput = 1;
+        this.orderExecutionCallbacks['construct'] = (constructionOrder) => {
+            return this.construct(constructionOrder);
+        };
+        this.constructing = false;
+    }
+    kill() {
+        var _a;
+        super.kill();
+        (_a = this.construction) === null || _a === void 0 ? void 0 : _a.kill();
+    }
+    update() {
+        super.update();
+        if (this.construction != null && this.construction.isBuilt()) {
+            this.construction = null;
+        }
+        this.updateProduction();
+        this.updateOrders();
+        if (this.construction == null) {
+            this.constructing = false;
+        }
+    }
+    construct(constructionOrder) {
+        if (this.construction == null) {
+            if (this.constructing) {
+                this.constructing = false;
+                return false;
+            }
+            else {
+                this.constructing = true;
+                this.construction = new constructionOrder.structureClass(constructionOrder.position, this.player, false);
+                return true;
+            }
+        }
+        return true;
     }
 }
 exports.Commander = Commander;
@@ -70094,10 +70129,16 @@ class Player {
     }
     updateEnergy() {
         this.storedEnergy += this.units.energyOutput();
-        const desiredEnergy = lodash_1.default.sum(this.units.factories.map((f) => f.energyConsumption()));
+        let desiredEnergy = lodash_1.default.sum(this.units.factories.map((f) => f.energyConsumption()));
+        if (this.units.commander != null) {
+            desiredEnergy += this.units.commander.energyConsumption();
+        }
         const proportionOfEnergyProvided = Math.min(this.storedEnergy / desiredEnergy, 1);
         for (let factory of this.units.factories) {
             factory.energyProvided = factory.energyConsumption() * proportionOfEnergyProvided;
+        }
+        if (this.units.commander != null) {
+            this.units.commander.energyProvided = this.units.commander.energyConsumption() * proportionOfEnergyProvided;
         }
         this.storedEnergy -= desiredEnergy * proportionOfEnergyProvided;
     }
@@ -70177,6 +70218,9 @@ class PlayerUnits {
                 this.constructions[factory.construction.id] = factory.construction;
             }
         }
+        if (this.commander != null && this.commander.construction != null) {
+            this.constructions[this.commander.construction.id] = this.commander.construction;
+        }
         for (let unitId in this.constructions) {
             const unit = this.constructions[unitId];
             if (this.isAtUnitCap()) {
@@ -70187,6 +70231,9 @@ class PlayerUnits {
             }
             delete (this.constructions[unitId]);
             switch (unit.constructor) {
+                case entities_1.Factory:
+                    this.factories.push(unit);
+                    break;
                 case entities_1.PowerGenerator:
                     this.powerGenerators.push(unit);
                     break;
@@ -70704,7 +70751,7 @@ class HealthinessPresenter {
             '#include <common>'
         ].join('\n');
         var colorChunk = [
-            'float opacity = (vRequiredHealthiness <= vHealthiness) ? 1.0 : 0.0;',
+            'float opacity = (vRequiredHealthiness <= vHealthiness) ? 1.0 : 0.2;',
             'vec4 diffuseColor = vec4( diffuse, opacity );'
         ].join('\n');
         material.blending = THREE.AdditiveBlending;
@@ -70831,6 +70878,7 @@ class Renderer {
         this.camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, worldSize * 200);
         //this.camera.position.z = worldSize;
         this.scene = new THREE.Scene();
+        this.scene.background = new THREE.Color(0);
         this.gameCoordsGroup = new THREE.Group();
         this.gameCoordsGroup.position.x = -worldSize / 2;
         this.gameCoordsGroup.position.y = -worldSize / 2;
