@@ -24,7 +24,7 @@ export class Commander extends Engineerable(Vehicle) {
       scene,
       newPresenter: (commander: this, scene: THREE.Group) => new CommanderPresenter(commander, scene),
     } as any);
-    this.energyOutput = 1;
+    this.energyOutput = 5;
     this.orderExecutionCallbacks['construct'] = (constructionOrder: any): boolean => {
       return this.construct(constructionOrder);
     };

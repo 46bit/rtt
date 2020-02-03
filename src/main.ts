@@ -46,9 +46,9 @@ function main() {
       ),
       player,
       true
-     ));
+    ));
 
-    for (let i = 0; i < 4500; i++) {
+    for (let i = 0; i < 150; i++) {
       const bot = new rtt_engine.Bot(
         new rtt_engine.Vector(
           map.worldSize * Math.random(),
@@ -102,10 +102,12 @@ function main() {
     for (let i in game.players) {
       const player = game.players[i];
 
-      player.units.factories[0].orders[0] = {
-        kind: 'construct',
-        unitClass: rtt_engine.Bot,
-      };
+      for (let factory of player.units.factories) {
+        factory.orders[0] = {
+          kind: 'construct',
+          unitClass: rtt_engine.Bot,
+        };
+      }
 
       const opposingPlayer = game.players[(parseInt(i) + 1) % game.players.length];
       const opposingUnits = opposingPlayer.units.allKillableCollidableUnits();
