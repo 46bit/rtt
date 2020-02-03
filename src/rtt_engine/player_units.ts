@@ -89,10 +89,11 @@ export class PlayerUnits {
 
     for (let unitId in this.constructions) {
       const unit = this.constructions[unitId];
-      if (this.isAtUnitCap()) {
-        break;
+      if (unit.isDead()) {
+        delete(this.constructions[unitId]);
+        continue;
       }
-      if (!unit.isBuilt()) {
+      if (this.isAtUnitCap() || !unit.isBuilt()) {
         continue;
       }
       delete(this.constructions[unitId]);

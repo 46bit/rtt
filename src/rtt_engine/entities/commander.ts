@@ -38,7 +38,7 @@ export class Commander extends Engineerable(Vehicle) {
 
   update() {
     super.update();
-    if (this.construction != null && this.construction.isBuilt()) {
+    if (this.construction != null && (this.construction.isBuilt() || this.construction.isDead())) {
       this.construction = null;
     }
     this.updateProduction();
