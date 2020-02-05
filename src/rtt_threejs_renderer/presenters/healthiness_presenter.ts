@@ -26,13 +26,7 @@ export class HealthinessPresenter {
     geometry.setAttribute('healthiness', new THREE.InstancedBufferAttribute(this.healthiness, 1));
     geometry.setAttribute('requiredHealthiness', new THREE.Float32BufferAttribute(requiredHealthiness, 1));
 
-    var material = new THREE.MeshBasicMaterial({
-      color: new THREE.Color(
-        this.player.color.r,
-        this.player.color.g,
-        this.player.color.b,
-      ),
-    });
+    var material = new THREE.MeshBasicMaterial({ color: this.player.color });
     var colorParsChunk = [
       'attribute float healthiness;',
       'attribute float requiredHealthiness;',

@@ -26,13 +26,7 @@ export class PowerGeneratorPresenter {
   }
 
   predraw() {
-    this.meshMaterial = new THREE.MeshBasicMaterial({
-      color: new THREE.Color(
-        this.player.color.r,
-        this.player.color.g,
-        this.player.color.b,
-      ),
-    });
+    this.meshMaterial = new THREE.MeshBasicMaterial({ color: this.player.color });
     this.powerGeneratorGeometry = new THREE.ShapeBufferGeometry(powerGeneratorShape());
   }
 

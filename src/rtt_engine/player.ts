@@ -1,16 +1,11 @@
 import { PowerSource } from './entities/index';
 import { PlayerUnits } from './player_units';
 import lodash from 'lodash';
-
-export interface IColor {
-  r: number;
-  g: number;
-  b: number;
-}
+import * as THREE from 'three';
 
 export class Player {
   public name: string;
-  public color: IColor;
+  public color: THREE.Color;
   public units: PlayerUnits;
   public storedEnergy: number;
 

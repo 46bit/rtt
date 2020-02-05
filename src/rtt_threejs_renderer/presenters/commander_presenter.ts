@@ -31,13 +31,7 @@ export class CommanderPresenter {
 
   predraw() {
     this.predrawn = true;
-    const meshMaterial = new THREE.MeshBasicMaterial({
-      color: new THREE.Color(
-        this.commander.player!.color.r,
-        this.commander.player!.color.g,
-        this.commander.player!.color.b,
-      ),
-    });
+    const meshMaterial = new THREE.MeshBasicMaterial({ color: this.commander.player!.color });
     const commanderGeometry = new THREE.ShapeBufferGeometry(commanderShape());
     this.mesh = new THREE.Mesh(commanderGeometry, meshMaterial);
     this.scene.add(this.mesh);
