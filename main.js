@@ -69015,30 +69015,6 @@ function main() {
     // grid.rotation.x = Math.PI / 2;
     // renderer.scene.add(grid);
     let game = rtt_engine.gameFromConfig(config);
-    // game.players[0].units.powerGenerators.push(new rtt_engine.PowerGenerator(game.powerSources[0].position, game.players[0], true, game.powerSources[0]));
-    // game.players[1].units.powerGenerators.push(new rtt_engine.PowerGenerator(game.powerSources[2].position, game.players[1], true, game.powerSources[2]));
-    for (let player of game.players) {
-        // player.units.factories.push(new rtt_engine.Factory(
-        //   new rtt_engine.Vector(
-        //     map.worldSize * Math.random(),
-        //     map.worldSize * Math.random(),
-        //   ),
-        //   player,
-        //   true
-        // ));
-        // for (let i = 0; i < 150; i++) {
-        //   const bot = new rtt_engine.Bot(
-        //     new rtt_engine.Vector(
-        //       map.worldSize * Math.random(),
-        //       map.worldSize * Math.random(),
-        //     ),
-        //     2 * Math.PI * Math.random(),
-        //     player,
-        //     true,
-        //   );
-        //   player.units.vehicles.push(bot);
-        // }
-    }
     window.game = game;
     window.rtt_engine = rtt_engine;
     window.rtt_threejs_renderer = rtt_threejs_renderer;
@@ -69061,11 +69037,6 @@ function main() {
                 position: new rtt_engine.Vector(player.units.commander.position.x + 30, player.units.commander.position.y),
             };
         }
-        for (let j in player.units.vehicles) {
-            const k = (parseInt(i) + 1) % game.players.length;
-            const target = game.players[k].units.vehicles[j];
-            player.units.vehicles[j].orders[0] = { kind: 'attack', target: target };
-        }
         const botPresenter = new rtt_threejs_renderer.BotPresenter(player, renderer.gameCoordsGroup);
         botPresenter.predraw();
         botPresenters.push(botPresenter);
@@ -69081,15 +69052,16 @@ function main() {
     let quadtreePresenter = null;
     setInterval(() => {
         const start = new Date();
-        for (let i in game.players) {
-            const player = game.players[i];
+        let livingPlayers = game.players.filter((p) => !p.isDefeated());
+        for (let i in livingPlayers) {
+            const player = livingPlayers[i];
             for (let factory of player.units.factories) {
                 factory.orders[0] = {
                     kind: 'construct',
                     unitClass: rtt_engine.Bot,
                 };
             }
-            const opposingPlayer = game.players[(parseInt(i) + 1) % game.players.length];
+            const opposingPlayer = livingPlayers[(parseInt(i) + 1) % livingPlayers.length];
             const opposingUnits = opposingPlayer.units.allKillableCollidableUnits();
             const opposingUnitCount = opposingUnits.length;
             if (opposingUnitCount == 0) {
@@ -69103,7 +69075,7 @@ function main() {
                 player.units.vehicles[j].orders[0] = { kind: 'attack', target: target };
             }
         }
-        const units = game.players.map((p) => p.units.allKillableCollidableUnits()).flat();
+        const units = livingPlayers.map((p) => p.units.allKillableCollidableUnits()).flat();
         const quadtree = rtt_engine.IQuadrant.fromEntityCollisions(units);
         if (quadtreePresenter == null) {
             quadtreePresenter = new rtt_threejs_renderer.QuadtreePresenter(quadtree, renderer.gameCoordsGroup);
