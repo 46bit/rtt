@@ -11,15 +11,15 @@ import {
   Orderable,
   IKillable,
 } from '../abilities';
-import { Entity, IEntityConfig } from './entity';
+import { Unit, IUnitConfig } from './unit';
 import { Vector } from '../../vector';
 
-export interface IVehicleConfig extends ICollidableConfig, IConstructableConfig, IManoeuverableConfig, IOwnableConfig, IEntityConfig, IOrderableConfig {
+export interface IVehicleConfig extends IUnitConfig, IManoeuverableConfig {
   movementRate: number;
   turnRate: number;
 }
 
-export class Vehicle extends Collidable(Constructable(Manoeuvrable(Orderable(Ownable(Entity))))) {
+export class Vehicle extends Manoeuvrable(Unit) {
   public movementRate: number;
   public turnRate: number;
 

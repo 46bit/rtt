@@ -1,13 +1,5 @@
-import {
-  Collidable,
-  Constructable,
-  ICollidableConfig,
-  IConstructableConfig,
-  IOwnableConfig,
-  Ownable,
-} from '../abilities';
-import { Entity, IEntityConfig } from './entity';
+import { Unit, IUnitConfig } from './unit';
 
-export interface IStructureConfig extends ICollidableConfig, IConstructableConfig, IOwnableConfig, IEntityConfig {}
+export interface IStructureConfig extends IUnitConfig {}
 
-export class Structure extends Collidable(Constructable(Ownable(Entity))) {}
+export class Structure extends Unit {}
