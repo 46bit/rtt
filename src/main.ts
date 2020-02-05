@@ -101,6 +101,52 @@ function main() {
     powerGeneratorPresenter.predraw();
     powerGeneratorPresenters.push(powerGeneratorPresenter);
   }
+
+  let selected = undefined;
+  let selectedBox = undefined;
+  document.addEventListener('mousedown', function (e) {
+    let x = (e.clientX / window.innerWidth) * 2 - 1;
+    let y = -(e.clientY / window.innerHeight) * 2 + 1;
+    let mouse = new THREE.Vector2(x, y);
+
+    let raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera(mouse, renderer.camera);
+
+    let plane = new THREE.Plane(new THREE.Vector3(0, 0, 1));
+    //console.log(raycaster.intersectObject(plane));
+    let result = new THREE.Vector3();
+    raycaster.ray.intersectPlane(plane, result);
+    let rtsPosition = result.add(new THREE.Vector3(
+      map.worldSize / 2,
+      map.worldSize / 2,
+      0,
+    ));
+    let rttPosition = new rtt_engine.Vector(rtsPosition.x, rtsPosition.y);
+    let collisions = quadtreePresenter!.quadtree.getCollisionsFor({
+      collisionRadius: 1,
+      position: rttPosition,
+      player: null,
+    });
+    console.log(collisions);
+    // Based upon https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button
+    if (e.button == 0) {
+      if (collisions.length == 1) {
+        selected = collisions[0];
+      } else {
+        selected = undefined;
+      }
+    } else if (e.button == 2) {
+      // FIXME: There needs to be a better way than this to detect movable stuff
+      if (selected != null && selected.movementRate != null) {
+        console.log("order");
+        selected.orders[0] = {
+          kind: 'manoeuvre',
+          destination: rttPosition,
+        }
+      }
+    }
+  }, false);
+
   let quadtreePresenter: rtt_threejs_renderer.QuadtreePresenter | null = null;
   setInterval(() => {
     const start = new Date();
@@ -160,7 +206,7 @@ function main() {
       }
     }
     game.update();
-    console.log("game update time: " + ((new Date()) - start));
+    //console.log("game update time: " + ((new Date()) - start));
 
     const start2 = new Date();
     game.draw();
@@ -180,7 +226,21 @@ function main() {
     for (let powerGeneratorPresenter of powerGeneratorPresenters) {
       powerGeneratorPresenter.draw();
     }
-    console.log("game draw time: " + ((new Date()) - start2));
+    if (selected != null) {
+      if (selectedBox == null) {
+        const geo = new THREE.RingBufferGeometry(selected.collisionRadius * 1.5, selected.collisionRadius * 1.5 + 4);
+        let material = new THREE.MeshBasicMaterial({ color: selected.player.color, opacity: 0.5 });
+        material.blending = THREE.AdditiveBlending;
+        selectedBox = new THREE.Mesh(geo, material);
+        renderer.gameCoordsGroup.add(selectedBox);
+      }
+      selectedBox.position.x = selected.position.x;
+      selectedBox.position.y = selected.position.y;
+    } else if (selectedBox != null) {
+      renderer.gameCoordsGroup.remove(selectedBox);
+      selectedBox = undefined;
+    }
+    //console.log("game draw time: " + ((new Date()) - start2));
   }, 1000 / 30);
 }
 

@@ -1,5 +1,5 @@
 import { Vector } from '../../vector';
-import { Entity } from '../lib/entity';
+import { Entity, IEntity } from '../lib/entity';
 import { Physics } from '../lib/physics';
 import { IMovableConfig, Movable } from './movable';
 import { ComposableConstructor } from '../lib/mixins';

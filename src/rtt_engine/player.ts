@@ -9,7 +9,7 @@ export class Player {
   public units: PlayerUnits;
   public storedEnergy: number;
 
-  constructor(name: string, color: IColor, units: PlayerUnits) {
+  constructor(name: string, color: THREE.Color, units: PlayerUnits) {
     this.name = name;
     this.color = color;
     this.units = units;

@@ -51,10 +51,10 @@ export class Renderer {
     requestAnimationFrame(() => this.animate());
 
     //if (force || hasControlsUpdated) {
-      console.log("draw calls: " + this.renderer.info.render.calls);
+      //console.log("draw calls: " + this.renderer.info.render.calls);
       const start = new Date();
       this.renderer.render(this.scene, this.camera);
-      console.log("render time: " + ((new Date()) - start));
+      //console.log("render time: " + ((new Date()) - start));
     //}
   }
 }

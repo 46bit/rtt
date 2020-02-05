@@ -133,7 +133,7 @@ export class IQuadrant<E extends ICollidable> {
     }
     let collisions = [];
     for (let quadtreeEntity of this.entities) {
-      if (quadtreeEntity.player != collidingEntity.player && collidingEntity.isCollidingWith(quadtreeEntity, 0)) {
+      if (quadtreeEntity.player != collidingEntity.player && quadtreeEntity.isCollidingWith(collidingEntity, 0)) {
         collisions.push(quadtreeEntity);
       }
     }
