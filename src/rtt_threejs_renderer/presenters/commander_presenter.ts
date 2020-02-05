@@ -44,6 +44,12 @@ export class CommanderPresenter {
   }
 
   draw() {
+    if (this.commander.isDead()) {
+      if (this.predrawn) {
+        this.dedraw();
+      }
+      return;
+    }
     if (!this.predrawn) {
       this.predraw();
     }

@@ -8,7 +8,7 @@ function main() {
   const map = {
     name: 'test-map',
     worldSize: 2600,
-    powerGenerators: [
+    powerSources: [
       new rtt_engine.Vector(100, 100),
       new rtt_engine.Vector(100, 700),
       new rtt_engine.Vector(700, 100),
@@ -38,6 +38,8 @@ function main() {
   // renderer.scene.add(grid);
 
   let game = rtt_engine.gameFromConfig(config, renderer.gameCoordsGroup);
+  game.players[0].units.powerGenerators.push(new rtt_engine.PowerGenerator(game.powerSources[0].position, game.players[0], true, game.powerSources[0]));
+  game.players[1].units.powerGenerators.push(new rtt_engine.PowerGenerator(game.powerSources[2].position, game.players[1], true, game.powerSources[2]));
   for (let player of game.players) {
     player.units.factories.push(new rtt_engine.Factory(
       new rtt_engine.Vector(
@@ -66,9 +68,12 @@ function main() {
   window.rtt_engine = rtt_engine;
   window.rtt_threejs_renderer = rtt_threejs_renderer;
 
+  let powerSourcePresenter = new rtt_threejs_renderer.PowerSourcePresenter(game, renderer.gameCoordsGroup);
+  powerSourcePresenter.predraw();
   let botPresenters: rtt_threejs_renderer.BotPresenter[] = [];
   let factoryPresenters: rtt_threejs_renderer.FactoryPresenter[] = [];
   let healthinessPresenters: rtt_threejs_renderer.HealthinessPresenter[] = [];
+  let powerGeneratorPresenters: rtt_threejs_renderer.PowerGeneratorPresenter[] = [];
   for (let i in game.players) {
     const player = game.players[i];
     if (player.units.commander != null) {
@@ -94,6 +99,9 @@ function main() {
     factoryPresenters.push(factoryPresenter);
     const healthinessPresenter = new rtt_threejs_renderer.HealthinessPresenter(player, renderer.gameCoordsGroup);
     healthinessPresenters.push(healthinessPresenter);
+    const powerGeneratorPresenter = new rtt_threejs_renderer.PowerGeneratorPresenter(player, renderer.gameCoordsGroup);
+    powerGeneratorPresenter.predraw();
+    powerGeneratorPresenters.push(powerGeneratorPresenter);
   }
   let quadtreePresenter: rtt_threejs_renderer.QuadtreePresenter | null = null;
   setInterval(() => {
@@ -157,6 +165,7 @@ function main() {
 
     const start2 = new Date();
     game.draw();
+    powerSourcePresenter.draw();
     for (let botPresenter of botPresenters) {
       botPresenter.draw();
     }
@@ -165,6 +174,9 @@ function main() {
     }
     for (let healthinessPresenter of healthinessPresenters) {
       healthinessPresenter.draw();
+    }
+    for (let powerGeneratorPresenter of powerGeneratorPresenters) {
+      powerGeneratorPresenter.draw();
     }
     console.log("game draw time: " + ((new Date()) - start2));
   }, 1000 / 30);

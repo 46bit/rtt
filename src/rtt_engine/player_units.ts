@@ -61,7 +61,6 @@ export class PlayerUnits {
 
   public update() {
     this.removeDeadUnits();
-    this.updateEachOf(this.powerGenerators);
     if (this.commander != null) {
       this.commander.update();
     }
@@ -114,10 +113,11 @@ export class PlayerUnits {
   }
 
   public removeDeadUnits() {
-    this.powerGenerators = this.powerGenerators.filter((powerGenerator) => powerGenerator.isAlive());
     if (this.commander != null && this.commander.dead) {
       this.commander = null;
     }
+    this.powerGenerators = this.powerGenerators.filter((powerGenerator) => powerGenerator.isAlive());
+    this.factories = this.factories.filter((factory) => factory.isAlive());
     this.vehicles = this.vehicles.filter((vehicle) => vehicle.isAlive());
   }
 

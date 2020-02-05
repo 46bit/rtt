@@ -20,11 +20,11 @@ export interface IPlayerConfig {
 export interface IMap {
   name: string;
   worldSize: number;
-  powerGenerators: Vector[];
+  powerSources: Vector[];
 }
 
 export function gameFromConfig(gameConfig: IGameConfig, scene?: THREE.Group): Game {
-  let powerSources = gameConfig.map.powerGenerators.map((v) => new PowerSource(v));
+  let powerSources = gameConfig.map.powerSources.map((v) => new PowerSource(v));
   let players = gameConfig.players.map((p) => {
     const player = new Player(p.name, p.color, new PlayerUnits(gameConfig.unitCap));
     player.units.commander = new Commander(p.commanderPosition, Math.random() * 2 * Math.PI, player, scene);

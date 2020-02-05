@@ -48,7 +48,10 @@ export class Commander extends Engineerable(Vehicle) {
     }
   }
 
-  construct(constructionOrder: { position: Vector, structureClass: any }): boolean {
+  construct(constructionOrder: { position: Vector, structureClass: any, extra?: any[] }): boolean {
+    if (constructionOrder.extra == null) {
+      constructionOrder.extra = [];
+    }
     if (this.construction == null) {
       if (this.constructing) {
         this.constructing = false;
@@ -59,6 +62,7 @@ export class Commander extends Engineerable(Vehicle) {
           constructionOrder.position,
           this.player,
           false,
+          ...constructionOrder.extra,
         );
         return true;
       }
