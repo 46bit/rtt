@@ -6,26 +6,50 @@ window.THREE = THREE;
 
 function main() {
   const map = {
-    name: 'test-map',
-    worldSize: 2600,
+    name: 'double-cross',
+    worldSize: 600,
     powerSources: [
-      new rtt_engine.Vector(100, 100),
-      new rtt_engine.Vector(100, 700),
-      new rtt_engine.Vector(700, 100),
-      new rtt_engine.Vector(700, 700),
+      new rtt_engine.Vector(155, 65),
+      new rtt_engine.Vector(65, 155),
+      new rtt_engine.Vector(445, 65),
+      new rtt_engine.Vector(535, 155),
+      new rtt_engine.Vector(65, 445),
+      new rtt_engine.Vector(155, 535),
+      new rtt_engine.Vector(445, 535),
+      new rtt_engine.Vector(535, 445),
+      new rtt_engine.Vector(75, 300),
+      new rtt_engine.Vector(165, 300),
+      new rtt_engine.Vector(255, 300),
+      new rtt_engine.Vector(345, 300),
+      new rtt_engine.Vector(435, 300),
+      new rtt_engine.Vector(525, 300),
+      new rtt_engine.Vector(300, 75),
+      new rtt_engine.Vector(300, 165),
+      new rtt_engine.Vector(300, 255),
+      new rtt_engine.Vector(300, 345),
+      new rtt_engine.Vector(300, 435),
+      new rtt_engine.Vector(300, 525),
     ],
   };
   const config = {
     map,
-    unitCap: 1500,
+    unitCap: 500,
     players: [{
-      name: 'red',
-      color: { r: 255, g: 0, b: 0 },
-      commanderPosition: new rtt_engine.Vector(150, 150),
-    }, {
       name: 'green',
-      color: { r: 0, g: 255, b: 0 },
-      commanderPosition: new rtt_engine.Vector(650, 650),
+      color: new THREE.Color("rgb(0, 255, 0)"),
+      commanderPosition: new rtt_engine.Vector(535, 65),
+    }, {
+      name: 'red',
+      color: new THREE.Color("rgb(255, 0, 0)"),
+      commanderPosition: new rtt_engine.Vector(535, 535),
+    }, {
+      name: 'purple',
+      color: new THREE.Color('magenta'),
+      commanderPosition: new rtt_engine.Vector(65, 65),
+    }, {
+      name: 'blue',
+      color: new THREE.Color('deepskyblue'),
+      commanderPosition: new rtt_engine.Vector(65, 535),
     }]
   };
 
@@ -38,30 +62,30 @@ function main() {
   // renderer.scene.add(grid);
 
   let game = rtt_engine.gameFromConfig(config);
-  game.players[0].units.powerGenerators.push(new rtt_engine.PowerGenerator(game.powerSources[0].position, game.players[0], true, game.powerSources[0]));
-  game.players[1].units.powerGenerators.push(new rtt_engine.PowerGenerator(game.powerSources[2].position, game.players[1], true, game.powerSources[2]));
+  // game.players[0].units.powerGenerators.push(new rtt_engine.PowerGenerator(game.powerSources[0].position, game.players[0], true, game.powerSources[0]));
+  // game.players[1].units.powerGenerators.push(new rtt_engine.PowerGenerator(game.powerSources[2].position, game.players[1], true, game.powerSources[2]));
   for (let player of game.players) {
-    player.units.factories.push(new rtt_engine.Factory(
-      new rtt_engine.Vector(
-        map.worldSize * Math.random(),
-        map.worldSize * Math.random(),
-      ),
-      player,
-      true
-    ));
+    // player.units.factories.push(new rtt_engine.Factory(
+    //   new rtt_engine.Vector(
+    //     map.worldSize * Math.random(),
+    //     map.worldSize * Math.random(),
+    //   ),
+    //   player,
+    //   true
+    // ));
 
-    for (let i = 0; i < 150; i++) {
-      const bot = new rtt_engine.Bot(
-        new rtt_engine.Vector(
-          map.worldSize * Math.random(),
-          map.worldSize * Math.random(),
-        ),
-        2 * Math.PI * Math.random(),
-        player,
-        true,
-      );
-      player.units.vehicles.push(bot);
-    }
+    // for (let i = 0; i < 150; i++) {
+    //   const bot = new rtt_engine.Bot(
+    //     new rtt_engine.Vector(
+    //       map.worldSize * Math.random(),
+    //       map.worldSize * Math.random(),
+    //     ),
+    //     2 * Math.PI * Math.random(),
+    //     player,
+    //     true,
+    //   );
+    //   player.units.vehicles.push(bot);
+    // }
   }
   window.game = game;
   window.rtt_engine = rtt_engine;
