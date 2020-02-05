@@ -37,7 +37,7 @@ function main() {
   // grid.rotation.x = Math.PI / 2;
   // renderer.scene.add(grid);
 
-  let game = rtt_engine.gameFromConfig(config, renderer.gameCoordsGroup);
+  let game = rtt_engine.gameFromConfig(config);
   game.players[0].units.powerGenerators.push(new rtt_engine.PowerGenerator(game.powerSources[0].position, game.players[0], true, game.powerSources[0]));
   game.players[1].units.powerGenerators.push(new rtt_engine.PowerGenerator(game.powerSources[2].position, game.players[1], true, game.powerSources[2]));
   for (let player of game.players) {
@@ -59,7 +59,6 @@ function main() {
         2 * Math.PI * Math.random(),
         player,
         true,
-        renderer.gameCoordsGroup,
       );
       player.units.vehicles.push(bot);
     }
@@ -68,6 +67,7 @@ function main() {
   window.rtt_engine = rtt_engine;
   window.rtt_threejs_renderer = rtt_threejs_renderer;
 
+  let commanderPresenters: rtt_threejs_renderer.CommanderPresenter[] = [];
   let powerSourcePresenter = new rtt_threejs_renderer.PowerSourcePresenter(game, renderer.gameCoordsGroup);
   powerSourcePresenter.predraw();
   let botPresenters: rtt_threejs_renderer.BotPresenter[] = [];
@@ -77,6 +77,10 @@ function main() {
   for (let i in game.players) {
     const player = game.players[i];
     if (player.units.commander != null) {
+      const commanderPresenter = new rtt_threejs_renderer.CommanderPresenter(player.units.commander, renderer.gameCoordsGroup);
+      commanderPresenter.predraw();
+      commanderPresenters.push(commanderPresenter);
+
       player.units.commander.orders[0] = {
         kind: 'construct',
         structureClass: rtt_engine.Factory,
@@ -166,6 +170,9 @@ function main() {
     const start2 = new Date();
     game.draw();
     powerSourcePresenter.draw();
+    for (let commanderPresenter of commanderPresenters) {
+      commanderPresenter.draw();
+    }
     for (let botPresenter of botPresenters) {
       botPresenter.draw();
     }

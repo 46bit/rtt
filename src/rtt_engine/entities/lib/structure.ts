@@ -4,12 +4,10 @@ import {
   ICollidableConfig,
   IConstructableConfig,
   IOwnableConfig,
-  IPresentableConfig,
   Ownable,
-  Presentable,
 } from '../abilities';
 import { Entity, IEntityConfig } from './entity';
 
-export interface IStructureConfig extends ICollidableConfig, IConstructableConfig, IOwnableConfig, IEntityConfig, IPresentableConfig {}
+export interface IStructureConfig extends ICollidableConfig, IConstructableConfig, IOwnableConfig, IEntityConfig {}
 
-export class Structure extends Collidable(Constructable(Ownable(Presentable(Entity)))) {}
+export class Structure extends Collidable(Constructable(Ownable(Entity))) {}

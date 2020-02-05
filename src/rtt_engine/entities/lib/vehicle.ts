@@ -10,18 +10,16 @@ import {
   Ownable,
   Orderable,
   IKillable,
-  Presentable,
-  IPresentableConfig,
 } from '../abilities';
 import { Entity, IEntityConfig } from './entity';
 import { Vector } from '../../vector';
 
-export interface IVehicleConfig extends ICollidableConfig, IConstructableConfig, IManoeuverableConfig, IOwnableConfig, IEntityConfig, IOrderableConfig, IPresentableConfig {
+export interface IVehicleConfig extends ICollidableConfig, IConstructableConfig, IManoeuverableConfig, IOwnableConfig, IEntityConfig, IOrderableConfig {
   movementRate: number;
   turnRate: number;
 }
 
-export class Vehicle extends Collidable(Constructable(Manoeuvrable(Orderable(Ownable(Presentable(Entity)))))) {
+export class Vehicle extends Collidable(Constructable(Manoeuvrable(Orderable(Ownable(Entity))))) {
   public movementRate: number;
   public turnRate: number;
 

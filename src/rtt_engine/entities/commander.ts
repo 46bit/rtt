@@ -8,7 +8,7 @@ export class Commander extends Engineerable(Vehicle) {
   public energyOutput: number;
   constructing: boolean;
 
-  constructor(position: Vector, direction: number, player: Player, scene: THREE.Group) {
+  constructor(position: Vector, direction: number, player: Player) {
     super({
       position,
       direction,
@@ -21,8 +21,6 @@ export class Commander extends Engineerable(Vehicle) {
       movementRate: 0.03,
       turnRate: 2.0 / 3.0,
       productionRange: 35.0,
-      scene,
-      newPresenter: (commander: this, scene: THREE.Group) => new CommanderPresenter(commander, scene),
     } as any);
     this.energyOutput = 5;
     this.orderExecutionCallbacks['construct'] = (constructionOrder: any): boolean => {

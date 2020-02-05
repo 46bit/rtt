@@ -5,7 +5,7 @@ import { Vehicle } from './lib';
 import { BotPresenter } from '../../rtt_threejs_renderer/presenters/bot_presenter';
 
 export class Bot extends Engineerable(Vehicle) {
-  constructor(position: Vector, direction: number, player: Player, built: boolean, scene: THREE.Group) {
+  constructor(position: Vector, direction: number, player: Player, built: boolean) {
     super({
       position,
       direction,
@@ -18,8 +18,6 @@ export class Bot extends Engineerable(Vehicle) {
       movementRate: 0.1,
       turnRate: 4.0 / 3.0,
       productionRange: 25.0,
-      scene,
-      newPresenter: (bot: this, scene: THREE.Group) => null,
     } as any);
   }
 }
