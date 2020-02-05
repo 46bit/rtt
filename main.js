@@ -68962,26 +68962,50 @@ const rtt_threejs_renderer = tslib_1.__importStar(__webpack_require__(/*! ./rtt_
 window.THREE = THREE;
 function main() {
     const map = {
-        name: 'test-map',
-        worldSize: 2600,
-        powerGenerators: [
-            new rtt_engine.Vector(100, 100),
-            new rtt_engine.Vector(100, 700),
-            new rtt_engine.Vector(700, 100),
-            new rtt_engine.Vector(700, 700),
+        name: 'double-cross',
+        worldSize: 600,
+        powerSources: [
+            new rtt_engine.Vector(155, 65),
+            new rtt_engine.Vector(65, 155),
+            new rtt_engine.Vector(445, 65),
+            new rtt_engine.Vector(535, 155),
+            new rtt_engine.Vector(65, 445),
+            new rtt_engine.Vector(155, 535),
+            new rtt_engine.Vector(445, 535),
+            new rtt_engine.Vector(535, 445),
+            new rtt_engine.Vector(75, 300),
+            new rtt_engine.Vector(165, 300),
+            new rtt_engine.Vector(255, 300),
+            new rtt_engine.Vector(345, 300),
+            new rtt_engine.Vector(435, 300),
+            new rtt_engine.Vector(525, 300),
+            new rtt_engine.Vector(300, 75),
+            new rtt_engine.Vector(300, 165),
+            new rtt_engine.Vector(300, 255),
+            new rtt_engine.Vector(300, 345),
+            new rtt_engine.Vector(300, 435),
+            new rtt_engine.Vector(300, 525),
         ],
     };
     const config = {
         map,
-        unitCap: 1500,
+        unitCap: 500,
         players: [{
-                name: 'red',
-                color: { r: 255, g: 0, b: 0 },
-                commanderPosition: new rtt_engine.Vector(150, 150),
-            }, {
                 name: 'green',
-                color: { r: 0, g: 255, b: 0 },
-                commanderPosition: new rtt_engine.Vector(650, 650),
+                color: new THREE.Color("rgb(0, 255, 0)"),
+                commanderPosition: new rtt_engine.Vector(535, 65),
+            }, {
+                name: 'red',
+                color: new THREE.Color("rgb(255, 0, 0)"),
+                commanderPosition: new rtt_engine.Vector(535, 535),
+            }, {
+                name: 'purple',
+                color: new THREE.Color('magenta'),
+                commanderPosition: new rtt_engine.Vector(65, 65),
+            }, {
+                name: 'blue',
+                color: new THREE.Color('deepskyblue'),
+                commanderPosition: new rtt_engine.Vector(65, 535),
             }]
     };
     let renderer = new rtt_threejs_renderer.Renderer(map.worldSize, window, document);
@@ -68990,23 +69014,47 @@ function main() {
     // grid.position.z = -0.1;
     // grid.rotation.x = Math.PI / 2;
     // renderer.scene.add(grid);
-    let game = rtt_engine.gameFromConfig(config, renderer.gameCoordsGroup);
+    let game = rtt_engine.gameFromConfig(config);
+    // game.players[0].units.powerGenerators.push(new rtt_engine.PowerGenerator(game.powerSources[0].position, game.players[0], true, game.powerSources[0]));
+    // game.players[1].units.powerGenerators.push(new rtt_engine.PowerGenerator(game.powerSources[2].position, game.players[1], true, game.powerSources[2]));
     for (let player of game.players) {
-        player.units.factories.push(new rtt_engine.Factory(new rtt_engine.Vector(map.worldSize * Math.random(), map.worldSize * Math.random()), player, true));
-        for (let i = 0; i < 150; i++) {
-            const bot = new rtt_engine.Bot(new rtt_engine.Vector(map.worldSize * Math.random(), map.worldSize * Math.random()), 2 * Math.PI * Math.random(), player, true, renderer.gameCoordsGroup);
-            player.units.vehicles.push(bot);
-        }
+        // player.units.factories.push(new rtt_engine.Factory(
+        //   new rtt_engine.Vector(
+        //     map.worldSize * Math.random(),
+        //     map.worldSize * Math.random(),
+        //   ),
+        //   player,
+        //   true
+        // ));
+        // for (let i = 0; i < 150; i++) {
+        //   const bot = new rtt_engine.Bot(
+        //     new rtt_engine.Vector(
+        //       map.worldSize * Math.random(),
+        //       map.worldSize * Math.random(),
+        //     ),
+        //     2 * Math.PI * Math.random(),
+        //     player,
+        //     true,
+        //   );
+        //   player.units.vehicles.push(bot);
+        // }
     }
     window.game = game;
     window.rtt_engine = rtt_engine;
     window.rtt_threejs_renderer = rtt_threejs_renderer;
+    let commanderPresenters = [];
+    let powerSourcePresenter = new rtt_threejs_renderer.PowerSourcePresenter(game, renderer.gameCoordsGroup);
+    powerSourcePresenter.predraw();
     let botPresenters = [];
     let factoryPresenters = [];
     let healthinessPresenters = [];
+    let powerGeneratorPresenters = [];
     for (let i in game.players) {
         const player = game.players[i];
         if (player.units.commander != null) {
+            const commanderPresenter = new rtt_threejs_renderer.CommanderPresenter(player.units.commander, renderer.gameCoordsGroup);
+            commanderPresenter.predraw();
+            commanderPresenters.push(commanderPresenter);
             player.units.commander.orders[0] = {
                 kind: 'construct',
                 structureClass: rtt_engine.Factory,
@@ -69026,6 +69074,9 @@ function main() {
         factoryPresenters.push(factoryPresenter);
         const healthinessPresenter = new rtt_threejs_renderer.HealthinessPresenter(player, renderer.gameCoordsGroup);
         healthinessPresenters.push(healthinessPresenter);
+        const powerGeneratorPresenter = new rtt_threejs_renderer.PowerGeneratorPresenter(player, renderer.gameCoordsGroup);
+        powerGeneratorPresenter.predraw();
+        powerGeneratorPresenters.push(powerGeneratorPresenter);
     }
     let quadtreePresenter = null;
     setInterval(() => {
@@ -69084,6 +69135,10 @@ function main() {
         console.log("game update time: " + ((new Date()) - start));
         const start2 = new Date();
         game.draw();
+        powerSourcePresenter.draw();
+        for (let commanderPresenter of commanderPresenters) {
+            commanderPresenter.draw();
+        }
         for (let botPresenter of botPresenters) {
             botPresenter.draw();
         }
@@ -69092,6 +69147,9 @@ function main() {
         }
         for (let healthinessPresenter of healthinessPresenters) {
             healthinessPresenter.draw();
+        }
+        for (let powerGeneratorPresenter of powerGeneratorPresenters) {
+            powerGeneratorPresenter.draw();
         }
         console.log("game draw time: " + ((new Date()) - start2));
     }, 1000 / 30);
@@ -69116,11 +69174,11 @@ const player_1 = __webpack_require__(/*! ./player */ "./src/rtt_engine/player.ts
 const player_units_1 = __webpack_require__(/*! ./player_units */ "./src/rtt_engine/player_units.ts");
 const power_source_1 = __webpack_require__(/*! ./entities/power_source */ "./src/rtt_engine/entities/power_source.ts");
 const commander_1 = __webpack_require__(/*! ./entities/commander */ "./src/rtt_engine/entities/commander.ts");
-function gameFromConfig(gameConfig, scene) {
-    let powerSources = gameConfig.map.powerGenerators.map((v) => new power_source_1.PowerSource(v));
+function gameFromConfig(gameConfig) {
+    let powerSources = gameConfig.map.powerSources.map((v) => new power_source_1.PowerSource(v));
     let players = gameConfig.players.map((p) => {
         const player = new player_1.Player(p.name, p.color, new player_units_1.PlayerUnits(gameConfig.unitCap));
-        player.units.commander = new commander_1.Commander(p.commanderPosition, Math.random() * 2 * Math.PI, player, scene);
+        player.units.commander = new commander_1.Commander(p.commanderPosition, Math.random() * 2 * Math.PI, player);
         return player;
     });
     return new game_1.Game(powerSources, players);
@@ -69278,7 +69336,6 @@ tslib_1.__exportStar(__webpack_require__(/*! ./manoeuverable */ "./src/rtt_engin
 tslib_1.__exportStar(__webpack_require__(/*! ./movable */ "./src/rtt_engine/entities/abilities/movable.ts"), exports);
 tslib_1.__exportStar(__webpack_require__(/*! ./ownable */ "./src/rtt_engine/entities/abilities/ownable.ts"), exports);
 tslib_1.__exportStar(__webpack_require__(/*! ./orderable */ "./src/rtt_engine/entities/abilities/orderable.ts"), exports);
-tslib_1.__exportStar(__webpack_require__(/*! ./presentable */ "./src/rtt_engine/entities/abilities/presentable.ts"), exports);
 
 
 /***/ }),
@@ -69518,32 +69575,6 @@ exports.Ownable = Ownable;
 
 /***/ }),
 
-/***/ "./src/rtt_engine/entities/abilities/presentable.ts":
-/*!**********************************************************!*\
-  !*** ./src/rtt_engine/entities/abilities/presentable.ts ***!
-  \**********************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-function Presentable(base) {
-    class Presentable extends base {
-        constructor(cfg) {
-            super(cfg);
-            if (cfg.scene != null && cfg.newPresenter != null) {
-                this.presenter = cfg.newPresenter(this, cfg.scene);
-            }
-        }
-    }
-    return Presentable;
-}
-exports.Presentable = Presentable;
-
-
-/***/ }),
-
 /***/ "./src/rtt_engine/entities/bot.ts":
 /*!****************************************!*\
   !*** ./src/rtt_engine/entities/bot.ts ***!
@@ -69557,7 +69588,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const abilities_1 = __webpack_require__(/*! ./abilities */ "./src/rtt_engine/entities/abilities/index.ts");
 const lib_1 = __webpack_require__(/*! ./lib */ "./src/rtt_engine/entities/lib/index.ts");
 class Bot extends abilities_1.Engineerable(lib_1.Vehicle) {
-    constructor(position, direction, player, built, scene) {
+    constructor(position, direction, player, built) {
         super({
             position,
             direction,
@@ -69570,8 +69601,6 @@ class Bot extends abilities_1.Engineerable(lib_1.Vehicle) {
             movementRate: 0.1,
             turnRate: 4.0 / 3.0,
             productionRange: 25.0,
-            scene,
-            newPresenter: (bot, scene) => null,
         });
     }
 }
@@ -69592,9 +69621,8 @@ exports.Bot = Bot;
 Object.defineProperty(exports, "__esModule", { value: true });
 const abilities_1 = __webpack_require__(/*! ./abilities */ "./src/rtt_engine/entities/abilities/index.ts");
 const lib_1 = __webpack_require__(/*! ./lib */ "./src/rtt_engine/entities/lib/index.ts");
-const commander_presenter_1 = __webpack_require__(/*! ../../rtt_threejs_renderer/presenters/commander_presenter */ "./src/rtt_threejs_renderer/presenters/commander_presenter.ts");
 class Commander extends abilities_1.Engineerable(lib_1.Vehicle) {
-    constructor(position, direction, player, scene) {
+    constructor(position, direction, player) {
         super({
             position,
             direction,
@@ -69607,8 +69635,6 @@ class Commander extends abilities_1.Engineerable(lib_1.Vehicle) {
             movementRate: 0.03,
             turnRate: 2.0 / 3.0,
             productionRange: 35.0,
-            scene,
-            newPresenter: (commander, scene) => new commander_presenter_1.CommanderPresenter(commander, scene),
         });
         this.energyOutput = 5;
         this.orderExecutionCallbacks['construct'] = (constructionOrder) => {
@@ -69633,6 +69659,9 @@ class Commander extends abilities_1.Engineerable(lib_1.Vehicle) {
         }
     }
     construct(constructionOrder) {
+        if (constructionOrder.extra == null) {
+            constructionOrder.extra = [];
+        }
         if (this.construction == null) {
             if (this.constructing) {
                 this.constructing = false;
@@ -69640,7 +69669,7 @@ class Commander extends abilities_1.Engineerable(lib_1.Vehicle) {
             }
             else {
                 this.constructing = true;
-                this.construction = new constructionOrder.structureClass(constructionOrder.position, this.player, false);
+                this.construction = new constructionOrder.structureClass(constructionOrder.position, this.player, false, ...constructionOrder.extra);
                 return true;
             }
         }
@@ -69865,6 +69894,25 @@ exports.PointOfInterest = PointOfInterest;
 
 /***/ }),
 
+/***/ "./src/rtt_engine/entities/lib/solid_entity.ts":
+/*!*****************************************************!*\
+  !*** ./src/rtt_engine/entities/lib/solid_entity.ts ***!
+  \*****************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const abilities_1 = __webpack_require__(/*! ../abilities */ "./src/rtt_engine/entities/abilities/index.ts");
+const entity_1 = __webpack_require__(/*! ./entity */ "./src/rtt_engine/entities/lib/entity.ts");
+class SolidEntity extends abilities_1.Collidable(abilities_1.Killable(entity_1.Entity)) {
+}
+exports.SolidEntity = SolidEntity;
+
+
+/***/ }),
+
 /***/ "./src/rtt_engine/entities/lib/structure.ts":
 /*!**************************************************!*\
   !*** ./src/rtt_engine/entities/lib/structure.ts ***!
@@ -69875,11 +69923,29 @@ exports.PointOfInterest = PointOfInterest;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const abilities_1 = __webpack_require__(/*! ../abilities */ "./src/rtt_engine/entities/abilities/index.ts");
-const entity_1 = __webpack_require__(/*! ./entity */ "./src/rtt_engine/entities/lib/entity.ts");
-class Structure extends abilities_1.Collidable(abilities_1.Constructable(abilities_1.Ownable(abilities_1.Presentable(entity_1.Entity)))) {
+const unit_1 = __webpack_require__(/*! ./unit */ "./src/rtt_engine/entities/lib/unit.ts");
+class Structure extends unit_1.Unit {
 }
 exports.Structure = Structure;
+
+
+/***/ }),
+
+/***/ "./src/rtt_engine/entities/lib/unit.ts":
+/*!*********************************************!*\
+  !*** ./src/rtt_engine/entities/lib/unit.ts ***!
+  \*********************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const abilities_1 = __webpack_require__(/*! ../abilities */ "./src/rtt_engine/entities/abilities/index.ts");
+const solid_entity_1 = __webpack_require__(/*! ./solid_entity */ "./src/rtt_engine/entities/lib/solid_entity.ts");
+class Unit extends abilities_1.Constructable(abilities_1.Orderable(abilities_1.Ownable(solid_entity_1.SolidEntity))) {
+}
+exports.Unit = Unit;
 
 
 /***/ }),
@@ -69895,9 +69961,9 @@ exports.Structure = Structure;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 const abilities_1 = __webpack_require__(/*! ../abilities */ "./src/rtt_engine/entities/abilities/index.ts");
-const entity_1 = __webpack_require__(/*! ./entity */ "./src/rtt_engine/entities/lib/entity.ts");
+const unit_1 = __webpack_require__(/*! ./unit */ "./src/rtt_engine/entities/lib/unit.ts");
 const vector_1 = __webpack_require__(/*! ../../vector */ "./src/rtt_engine/vector.ts");
-class Vehicle extends abilities_1.Collidable(abilities_1.Constructable(abilities_1.Manoeuvrable(abilities_1.Orderable(abilities_1.Ownable(abilities_1.Presentable(entity_1.Entity)))))) {
+class Vehicle extends abilities_1.Manoeuvrable(unit_1.Unit) {
     constructor(cfg) {
         cfg.constructableByMobileUnits = false;
         cfg.orderExecutionCallbacks = {
@@ -69983,18 +70049,26 @@ exports.Vehicle = Vehicle;
 Object.defineProperty(exports, "__esModule", { value: true });
 const lib_1 = __webpack_require__(/*! ./lib */ "./src/rtt_engine/entities/lib/index.ts");
 class PowerGenerator extends lib_1.Structure {
-    constructor(source, player, built, energyOutput = 1) {
+    constructor(position, player, built, powerSource, energyOutput = 1) {
+        if (powerSource.position != position) {
+            throw new Error("trying to build a power generator at a different location to the power source.");
+        }
         super({
-            position: source.position,
-            collisionRadius: 5,
+            position: position,
+            collisionRadius: 8,
             player,
             built,
             buildCost: 100,
             fullHealth: 60,
             health: built ? 60 : 0,
         });
-        this.powerSource = source;
+        this.powerSource = powerSource;
+        this.powerSource.structure = this;
         this.energyOutput = energyOutput;
+    }
+    kill() {
+        super.kill();
+        this.powerSource.structure = null;
     }
 }
 exports.PowerGenerator = PowerGenerator;
@@ -70200,7 +70274,6 @@ class PlayerUnits {
     }
     update() {
         this.removeDeadUnits();
-        this.updateEachOf(this.powerGenerators);
         if (this.commander != null) {
             this.commander.update();
         }
@@ -70249,10 +70322,11 @@ class PlayerUnits {
         }
     }
     removeDeadUnits() {
-        this.powerGenerators = this.powerGenerators.filter((powerGenerator) => powerGenerator.isAlive());
         if (this.commander != null && this.commander.dead) {
             this.commander = null;
         }
+        this.powerGenerators = this.powerGenerators.filter((powerGenerator) => powerGenerator.isAlive());
+        this.factories = this.factories.filter((factory) => factory.isAlive());
         this.vehicles = this.vehicles.filter((vehicle) => vehicle.isAlive());
     }
     draw() {
@@ -70496,6 +70570,8 @@ tslib_1.__exportStar(__webpack_require__(/*! ./presenters/commander_presenter */
 tslib_1.__exportStar(__webpack_require__(/*! ./presenters/quadtree_presenter */ "./src/rtt_threejs_renderer/presenters/quadtree_presenter.ts"), exports);
 tslib_1.__exportStar(__webpack_require__(/*! ./presenters/factory_presenter */ "./src/rtt_threejs_renderer/presenters/factory_presenter.ts"), exports);
 tslib_1.__exportStar(__webpack_require__(/*! ./presenters/healthiness_presenter */ "./src/rtt_threejs_renderer/presenters/healthiness_presenter.ts"), exports);
+tslib_1.__exportStar(__webpack_require__(/*! ./presenters/power_source_presenter */ "./src/rtt_threejs_renderer/presenters/power_source_presenter.ts"), exports);
+tslib_1.__exportStar(__webpack_require__(/*! ./presenters/power_generator_presenter */ "./src/rtt_threejs_renderer/presenters/power_generator_presenter.ts"), exports);
 
 
 /***/ }),
@@ -70528,9 +70604,7 @@ class BotPresenter {
         this.scene = scene;
     }
     predraw() {
-        this.meshMaterial = new THREE.MeshBasicMaterial({
-            color: new THREE.Color(this.player.color.r, this.player.color.g, this.player.color.b),
-        });
+        this.meshMaterial = new THREE.MeshBasicMaterial({ color: this.player.color });
         this.botGeometry = new THREE.ShapeBufferGeometry(botShape());
     }
     draw() {
@@ -70602,14 +70676,18 @@ class CommanderPresenter {
     }
     predraw() {
         this.predrawn = true;
-        const meshMaterial = new THREE.MeshBasicMaterial({
-            color: new THREE.Color(this.commander.player.color.r, this.commander.player.color.g, this.commander.player.color.b),
-        });
+        const meshMaterial = new THREE.MeshBasicMaterial({ color: this.commander.player.color });
         const commanderGeometry = new THREE.ShapeBufferGeometry(commanderShape());
         this.mesh = new THREE.Mesh(commanderGeometry, meshMaterial);
         this.scene.add(this.mesh);
     }
     draw() {
+        if (this.commander.isDead()) {
+            if (this.predrawn) {
+                this.dedraw();
+            }
+            return;
+        }
         if (!this.predrawn) {
             this.predraw();
         }
@@ -70669,9 +70747,7 @@ class FactoryPresenter {
         this.scene = scene;
     }
     predraw() {
-        this.meshMaterial = new THREE.MeshBasicMaterial({
-            color: new THREE.Color(this.player.color.r, this.player.color.g, this.player.color.b),
-        });
+        this.meshMaterial = new THREE.MeshBasicMaterial({ color: this.player.color });
         this.factoryGeometry = new THREE.ShapeBufferGeometry(factoryShape());
     }
     draw() {
@@ -70733,9 +70809,7 @@ class HealthinessPresenter {
         const geometry = new THREE.PlaneBufferGeometry(1, 1);
         geometry.setAttribute('healthiness', new THREE.InstancedBufferAttribute(this.healthiness, 1));
         geometry.setAttribute('requiredHealthiness', new THREE.Float32BufferAttribute(requiredHealthiness, 1));
-        var material = new THREE.MeshBasicMaterial({
-            color: new THREE.Color(this.player.color.r, this.player.color.g, this.player.color.b),
-        });
+        var material = new THREE.MeshBasicMaterial({ color: this.player.color });
         var colorParsChunk = [
             'attribute float healthiness;',
             'attribute float requiredHealthiness;',
@@ -70801,6 +70875,137 @@ class HealthinessPresenter {
     }
 }
 exports.HealthinessPresenter = HealthinessPresenter;
+
+
+/***/ }),
+
+/***/ "./src/rtt_threejs_renderer/presenters/power_generator_presenter.ts":
+/*!**************************************************************************!*\
+  !*** ./src/rtt_threejs_renderer/presenters/power_generator_presenter.ts ***!
+  \**************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const tslib_1 = __webpack_require__(/*! tslib */ "./node_modules/tslib/tslib.es6.js");
+const THREE = tslib_1.__importStar(__webpack_require__(/*! three */ "./node_modules/three/build/three.module.js"));
+const vector_1 = __webpack_require__(/*! ../../rtt_engine/vector */ "./src/rtt_engine/vector.ts");
+function powerGeneratorShape() {
+    let shape = new THREE.Shape();
+    shape.moveTo(0, 8);
+    const bottomRight = vector_1.Vector.from_magnitude_and_direction(7, 2 * Math.PI / 3);
+    shape.lineTo(bottomRight.x, bottomRight.y);
+    const bottomLeft = vector_1.Vector.from_magnitude_and_direction(7, -2 * Math.PI / 3);
+    shape.lineTo(bottomLeft.x, bottomLeft.y);
+    return shape;
+}
+exports.powerGeneratorShape = powerGeneratorShape;
+class PowerGeneratorPresenter {
+    constructor(player, scene) {
+        this.player = player;
+        this.scene = scene;
+    }
+    predraw() {
+        this.meshMaterial = new THREE.MeshBasicMaterial({ color: this.player.color });
+        this.powerGeneratorGeometry = new THREE.ShapeBufferGeometry(powerGeneratorShape());
+    }
+    draw() {
+        const numberOfPowerGenerators = this.player.units.powerGenerators.length;
+        if (this.instancedMesh != undefined && this.instancedMesh.count != numberOfPowerGenerators) {
+            this.scene.remove(this.instancedMesh);
+            this.instancedMesh = undefined;
+        }
+        if (this.instancedMesh == undefined) {
+            this.instancedMesh = new THREE.InstancedMesh(this.powerGeneratorGeometry, this.meshMaterial, numberOfPowerGenerators);
+            this.instancedMesh.count = numberOfPowerGenerators;
+            this.instancedMesh.frustumCulled = false;
+            this.scene.add(this.instancedMesh);
+        }
+        let m = new THREE.Matrix4();
+        for (let i = 0; i < numberOfPowerGenerators; i++) {
+            const powerGenerator = this.player.units.powerGenerators[i];
+            m.setPosition(powerGenerator.position.x, powerGenerator.position.y, 0);
+            this.instancedMesh.setMatrixAt(i, m);
+        }
+        this.instancedMesh.instanceMatrix.needsUpdate = true;
+    }
+    dedraw() {
+        if (this.instancedMesh) {
+            this.scene.remove(this.instancedMesh);
+            this.instancedMesh = undefined;
+        }
+    }
+}
+exports.PowerGeneratorPresenter = PowerGeneratorPresenter;
+
+
+/***/ }),
+
+/***/ "./src/rtt_threejs_renderer/presenters/power_source_presenter.ts":
+/*!***********************************************************************!*\
+  !*** ./src/rtt_threejs_renderer/presenters/power_source_presenter.ts ***!
+  \***********************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const tslib_1 = __webpack_require__(/*! tslib */ "./node_modules/tslib/tslib.es6.js");
+const THREE = tslib_1.__importStar(__webpack_require__(/*! three */ "./node_modules/three/build/three.module.js"));
+const vector_1 = __webpack_require__(/*! ../../rtt_engine/vector */ "./src/rtt_engine/vector.ts");
+function powerSourceShape() {
+    var shape = new THREE.Shape();
+    shape.moveTo(0, 7);
+    const bottomRight = vector_1.Vector.from_magnitude_and_direction(7, 2 * Math.PI / 3);
+    shape.lineTo(bottomRight.x, bottomRight.y);
+    const bottomLeft = vector_1.Vector.from_magnitude_and_direction(7, -2 * Math.PI / 3);
+    shape.lineTo(bottomLeft.x, bottomLeft.y);
+    return shape;
+}
+exports.powerSourceShape = powerSourceShape;
+class PowerSourcePresenter {
+    constructor(game, scene) {
+        this.game = game;
+        this.scene = scene;
+    }
+    predraw() {
+        this.meshMaterial = new THREE.MeshBasicMaterial({
+            color: new THREE.Color(0xffffff),
+        });
+        this.powerSourceGeometry = new THREE.ShapeBufferGeometry(powerSourceShape());
+    }
+    draw() {
+        const unoccupiedPowerSources = this.game.powerSources.filter((p) => p.structure == null);
+        const numberOfUnoccupiedPowerSources = unoccupiedPowerSources.length;
+        if (this.instancedMesh != undefined && this.instancedMesh.count != numberOfUnoccupiedPowerSources) {
+            this.scene.remove(this.instancedMesh);
+            this.instancedMesh = undefined;
+        }
+        if (this.instancedMesh == undefined) {
+            this.instancedMesh = new THREE.InstancedMesh(this.powerSourceGeometry, this.meshMaterial, numberOfUnoccupiedPowerSources);
+            this.instancedMesh.count = numberOfUnoccupiedPowerSources;
+            this.instancedMesh.frustumCulled = false;
+            this.scene.add(this.instancedMesh);
+        }
+        let m = new THREE.Matrix4();
+        for (let i = 0; i < numberOfUnoccupiedPowerSources; i++) {
+            const unoccupiedPowerSource = unoccupiedPowerSources[i];
+            m.setPosition(unoccupiedPowerSource.position.x, unoccupiedPowerSource.position.y, 0);
+            this.instancedMesh.setMatrixAt(i, m);
+        }
+        this.instancedMesh.instanceMatrix.needsUpdate = true;
+    }
+    dedraw() {
+        if (this.instancedMesh) {
+            this.scene.remove(this.instancedMesh);
+            this.instancedMesh = undefined;
+        }
+    }
+}
+exports.PowerSourcePresenter = PowerSourcePresenter;
 
 
 /***/ }),
@@ -70886,7 +71091,11 @@ class Renderer {
         this.gameCoordsGroup.position.x = -worldSize / 2;
         this.gameCoordsGroup.position.y = -worldSize / 2;
         this.scene.add(this.gameCoordsGroup);
-        this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        this.renderer = new THREE.WebGLRenderer({
+            antialias: true,
+            alpha: true,
+            powerPreference: "high-performance"
+        });
         if (window.devicePixelRatio != null) {
             this.renderer.setPixelRatio(window.devicePixelRatio);
         }
