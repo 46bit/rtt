@@ -69025,6 +69025,8 @@ function main() {
     let factoryPresenters = [];
     let healthinessPresenters = [];
     let powerGeneratorPresenters = [];
+    let turretPresenters = [];
+    let turretProjectilePresenters = [];
     for (let i in game.players) {
         const player = game.players[i];
         if (player.units.commander != null) {
@@ -69048,7 +69050,112 @@ function main() {
         const powerGeneratorPresenter = new rtt_threejs_renderer.PowerGeneratorPresenter(player, renderer.gameCoordsGroup);
         powerGeneratorPresenter.predraw();
         powerGeneratorPresenters.push(powerGeneratorPresenter);
+        const turretPresenter = new rtt_threejs_renderer.TurretPresenter(player, renderer.gameCoordsGroup);
+        turretPresenter.predraw();
+        turretPresenters.push(turretPresenter);
+        const turretProjectilePresenter = new rtt_threejs_renderer.TurretProjectilePresenter(player, renderer.gameCoordsGroup);
+        turretProjectilePresenter.predraw();
+        turretProjectilePresenters.push(turretProjectilePresenter);
     }
+    let selected = undefined;
+    let selectedBox = undefined;
+    let buildChoice = undefined;
+    document.addEventListener('mousedown', function (e) {
+        let x = (e.clientX / window.innerWidth) * 2 - 1;
+        let y = -(e.clientY / window.innerHeight) * 2 + 1;
+        let mouse = new THREE.Vector2(x, y);
+        let raycaster = new THREE.Raycaster();
+        raycaster.setFromCamera(mouse, renderer.camera);
+        let plane = new THREE.Plane(new THREE.Vector3(0, 0, 1));
+        //console.log(raycaster.intersectObject(plane));
+        let result = new THREE.Vector3();
+        raycaster.ray.intersectPlane(plane, result);
+        let rtsPosition = result.add(new THREE.Vector3(map.worldSize / 2, map.worldSize / 2, 0));
+        let rttPosition = new rtt_engine.Vector(rtsPosition.x, rtsPosition.y);
+        let collisions = quadtreePresenter.quadtree.getCollisionsFor({
+            collisionRadius: 1,
+            position: rttPosition,
+            player: null,
+        });
+        console.log(collisions);
+        // Based upon https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button
+        if (e.button == 0) {
+            if (collisions.length == 1) {
+                selected = collisions[0];
+                if (selected instanceof rtt_engine.Commander) {
+                    document.getElementById("build-controls").style.display = "block";
+                }
+                else {
+                    document.getElementById("build-controls").style.display = "none";
+                    buildChoice = undefined;
+                }
+            }
+            else {
+                selected = undefined;
+                document.getElementById("build-controls").style.display = "none";
+                buildChoice = undefined;
+            }
+        }
+        else if (e.button == 2) {
+            // FIXME: There needs to be a better way than this to detect movable stuff
+            if (selected != null && selected.movementRate != null) {
+                console.log("order");
+                if (selected instanceof rtt_engine.Commander && (buildChoice == "factory" || buildChoice == "power-generator" || buildChoice == "turret")) {
+                    if (buildChoice == "factory") {
+                        selected.orders[0] = {
+                            kind: 'construct',
+                            structureClass: rtt_engine.Factory,
+                            position: rttPosition,
+                        };
+                    }
+                    else if (buildChoice == "power-generator") {
+                        const nearestPowerSource = _.minBy(game.powerSources.filter((p) => p.structure == null), (p) => (rtt_engine.Vector.subtract(rttPosition, p.position).magnitude()));
+                        if (rtt_engine.Vector.subtract(rttPosition, nearestPowerSource.position).magnitude() < nearestPowerSource.collisionRadius + 2) {
+                            selected.orders[0] = {
+                                kind: 'construct',
+                                structureClass: rtt_engine.PowerGenerator,
+                                position: nearestPowerSource.position,
+                                extra: [nearestPowerSource],
+                            };
+                        }
+                    }
+                    else if (buildChoice == "turret") {
+                        selected.orders[0] = {
+                            kind: 'construct',
+                            structureClass: rtt_engine.Turret,
+                            position: rttPosition,
+                        };
+                    }
+                    // Reset the build choice. Temporary hack until the user interface is better designed.
+                    buildChoice = undefined;
+                }
+                else if (collisions.length == 1 && collisions[0].player != selected.player) {
+                    selected.orders[0] = {
+                        kind: 'attack',
+                        target: collisions[0],
+                    };
+                }
+                else {
+                    selected.orders[0] = {
+                        kind: 'manoeuvre',
+                        destination: rttPosition,
+                    };
+                }
+            }
+        }
+    }, false);
+    document.getElementById("build-factory").addEventListener('mousedown', function (e) {
+        e.stopPropagation();
+        buildChoice = "factory";
+    }, false);
+    document.getElementById("build-power-generator").addEventListener('mousedown', function (e) {
+        e.stopPropagation();
+        buildChoice = "power-generator";
+    }, false);
+    document.getElementById("build-turret").addEventListener('mousedown', function (e) {
+        e.stopPropagation();
+        buildChoice = "turret";
+    }, false);
     let quadtreePresenter = null;
     setInterval(() => {
         const start = new Date();
@@ -69075,7 +69182,8 @@ function main() {
                 player.units.vehicles[j].orders[0] = { kind: 'attack', target: target };
             }
         }
-        const units = livingPlayers.map((p) => p.units.allKillableCollidableUnits()).flat();
+        let units = livingPlayers.map((p) => p.units.allKillableCollidableUnits()).flat();
+        units.push(...game.players.map((p) => p.turretProjectiles).flat());
         const quadtree = rtt_engine.IQuadrant.fromEntityCollisions(units);
         if (quadtreePresenter == null) {
             quadtreePresenter = new rtt_threejs_renderer.QuadtreePresenter(quadtree, renderer.gameCoordsGroup);
@@ -69104,7 +69212,7 @@ function main() {
             }
         }
         game.update();
-        console.log("game update time: " + ((new Date()) - start));
+        //console.log("game update time: " + ((new Date()) - start));
         const start2 = new Date();
         game.draw();
         powerSourcePresenter.draw();
@@ -69123,7 +69231,28 @@ function main() {
         for (let powerGeneratorPresenter of powerGeneratorPresenters) {
             powerGeneratorPresenter.draw();
         }
-        console.log("game draw time: " + ((new Date()) - start2));
+        for (let turretPresenter of turretPresenters) {
+            turretPresenter.draw();
+        }
+        for (let turretProjectilePresenter of turretProjectilePresenters) {
+            turretProjectilePresenter.draw();
+        }
+        if (selected != null) {
+            if (selectedBox == null) {
+                const geo = new THREE.RingBufferGeometry(selected.collisionRadius * 1.5, selected.collisionRadius * 1.5 + 4);
+                let material = new THREE.MeshBasicMaterial({ color: selected.player.color, opacity: 0.5 });
+                material.blending = THREE.AdditiveBlending;
+                selectedBox = new THREE.Mesh(geo, material);
+                renderer.gameCoordsGroup.add(selectedBox);
+            }
+            selectedBox.position.x = selected.position.x;
+            selectedBox.position.y = selected.position.y;
+        }
+        else if (selectedBox != null) {
+            renderer.gameCoordsGroup.remove(selectedBox);
+            selectedBox = undefined;
+        }
+        //console.log("game draw time: " + ((new Date()) - start2));
     }, 1000 / 30);
 }
 main();
@@ -69454,8 +69583,9 @@ const vector_1 = __webpack_require__(/*! ../../vector */ "./src/rtt_engine/vecto
 function Movable(base) {
     class Movable extends base {
         constructor(cfg) {
+            var _a;
             super(cfg);
-            this.velocity = 0;
+            this.velocity = (_a = cfg.velocity, (_a !== null && _a !== void 0 ? _a : 0));
             this.direction = cfg.direction == null ? 0 : cfg.direction;
         }
         updatePosition(multiplier = 1) {
@@ -69591,6 +69721,7 @@ exports.Bot = Bot;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+const vector_1 = __webpack_require__(/*! ../vector */ "./src/rtt_engine/vector.ts");
 const abilities_1 = __webpack_require__(/*! ./abilities */ "./src/rtt_engine/entities/abilities/index.ts");
 const lib_1 = __webpack_require__(/*! ./lib */ "./src/rtt_engine/entities/lib/index.ts");
 class Commander extends abilities_1.Engineerable(lib_1.Vehicle) {
@@ -69631,6 +69762,10 @@ class Commander extends abilities_1.Engineerable(lib_1.Vehicle) {
         }
     }
     construct(constructionOrder) {
+        if (vector_1.Vector.subtract(this.position, constructionOrder.position).magnitude() > this.productionRange) {
+            this.manoeuvre({ destination: constructionOrder.position });
+            return true;
+        }
         if (constructionOrder.extra == null) {
             constructionOrder.extra = [];
         }
@@ -69737,6 +69872,7 @@ tslib_1.__exportStar(__webpack_require__(/*! ./commander */ "./src/rtt_engine/en
 tslib_1.__exportStar(__webpack_require__(/*! ./factory */ "./src/rtt_engine/entities/factory.ts"), exports);
 tslib_1.__exportStar(__webpack_require__(/*! ./power_generator */ "./src/rtt_engine/entities/power_generator.ts"), exports);
 tslib_1.__exportStar(__webpack_require__(/*! ./power_source */ "./src/rtt_engine/entities/power_source.ts"), exports);
+tslib_1.__exportStar(__webpack_require__(/*! ./turret */ "./src/rtt_engine/entities/turret.ts"), exports);
 
 
 /***/ }),
@@ -69778,7 +69914,10 @@ const tslib_1 = __webpack_require__(/*! tslib */ "./node_modules/tslib/tslib.es6
 tslib_1.__exportStar(__webpack_require__(/*! ./entity */ "./src/rtt_engine/entities/lib/entity.ts"), exports);
 tslib_1.__exportStar(__webpack_require__(/*! ./physics */ "./src/rtt_engine/entities/lib/physics.ts"), exports);
 tslib_1.__exportStar(__webpack_require__(/*! ./point_of_interest */ "./src/rtt_engine/entities/lib/point_of_interest.ts"), exports);
+tslib_1.__exportStar(__webpack_require__(/*! ./projectile */ "./src/rtt_engine/entities/lib/projectile.ts"), exports);
+tslib_1.__exportStar(__webpack_require__(/*! ./solid_entity */ "./src/rtt_engine/entities/lib/solid_entity.ts"), exports);
 tslib_1.__exportStar(__webpack_require__(/*! ./structure */ "./src/rtt_engine/entities/lib/structure.ts"), exports);
+tslib_1.__exportStar(__webpack_require__(/*! ./unit */ "./src/rtt_engine/entities/lib/unit.ts"), exports);
 tslib_1.__exportStar(__webpack_require__(/*! ./vehicle */ "./src/rtt_engine/entities/lib/vehicle.ts"), exports);
 
 
@@ -69862,6 +70001,40 @@ class PointOfInterest extends collidable_1.Collidable(entity_1.Entity) {
     }
 }
 exports.PointOfInterest = PointOfInterest;
+
+
+/***/ }),
+
+/***/ "./src/rtt_engine/entities/lib/projectile.ts":
+/*!***************************************************!*\
+  !*** ./src/rtt_engine/entities/lib/projectile.ts ***!
+  \***************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const abilities_1 = __webpack_require__(/*! ../abilities */ "./src/rtt_engine/entities/abilities/index.ts");
+const solid_entity_1 = __webpack_require__(/*! ./solid_entity */ "./src/rtt_engine/entities/lib/solid_entity.ts");
+class Projectile extends abilities_1.Ownable(abilities_1.Movable(solid_entity_1.SolidEntity)) {
+    constructor(cfg) {
+        super(cfg);
+        this.lifetime = cfg.lifetime;
+    }
+    update() {
+        if (this.dead) {
+            return;
+        }
+        if (this.lifetime <= 0) {
+            this.kill();
+            return;
+        }
+        this.lifetime--;
+        this.updatePosition();
+    }
+}
+exports.Projectile = Projectile;
 
 
 /***/ }),
@@ -70072,6 +70245,84 @@ exports.PowerSource = PowerSource;
 
 /***/ }),
 
+/***/ "./src/rtt_engine/entities/turret.ts":
+/*!*******************************************!*\
+  !*** ./src/rtt_engine/entities/turret.ts ***!
+  \*******************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const tslib_1 = __webpack_require__(/*! tslib */ "./node_modules/tslib/tslib.es6.js");
+const vector_1 = __webpack_require__(/*! ../vector */ "./src/rtt_engine/vector.ts");
+const lib_1 = __webpack_require__(/*! ./lib */ "./src/rtt_engine/entities/lib/index.ts");
+const lodash_1 = tslib_1.__importDefault(__webpack_require__(/*! lodash */ "./node_modules/lodash/lodash.js"));
+const TURRET_RANGE = 180;
+class Turret extends lib_1.Structure {
+    constructor(position, player, built) {
+        super({
+            position,
+            collisionRadius: 5,
+            player,
+            built,
+            buildCost: 600,
+            fullHealth: 60,
+            health: built ? 60 : 0,
+            constructableByMobileUnits: true,
+            orderExecutionCallbacks: {},
+        });
+        this.firingRate = 5;
+        this.updateCounter = 0;
+    }
+    update(enemies) {
+        if (this.dead) {
+            return;
+        }
+        this.updateCounter++;
+        if (this.updateCounter >= this.firingRate) {
+            const angleToFireProjectile = this.angleToNearestEnemy(enemies);
+            if (angleToFireProjectile == null) {
+                return;
+            }
+            const projectile = new TurretProjectile(this.position, this.player, angleToFireProjectile);
+            this.player.turretProjectiles.push(projectile);
+            this.updateCounter = 0;
+        }
+    }
+    angleToNearestEnemy(enemies) {
+        const nearestEnemy = lodash_1.default.minBy(enemies, (e) => vector_1.Vector.subtract(this.position, e.position).magnitude());
+        if (nearestEnemy == null) {
+            return null;
+        }
+        const offset = vector_1.Vector.subtract(nearestEnemy.position, this.position);
+        if (offset.magnitude() > TURRET_RANGE * 1.3) {
+            return null;
+        }
+        return offset.angle();
+    }
+}
+exports.Turret = Turret;
+class TurretProjectile extends lib_1.Projectile {
+    constructor(position, player, direction) {
+        super({
+            player,
+            position,
+            direction,
+            velocity: 3.5,
+            lifetime: TURRET_RANGE / 3.5,
+            collisionRadius: 4,
+            health: 7,
+            fullHealth: 7,
+        });
+    }
+}
+exports.TurretProjectile = TurretProjectile;
+
+
+/***/ }),
+
 /***/ "./src/rtt_engine/game.ts":
 /*!********************************!*\
   !*** ./src/rtt_engine/game.ts ***!
@@ -70100,7 +70351,7 @@ class Game {
     }
     updatePlayers() {
         this.players.forEach((player) => {
-            player.update(this.powerSources, this.players);
+            player.update(this.powerSources, this.players.filter((p) => p != player));
         });
     }
     updateWinner() {
@@ -70167,13 +70418,19 @@ class Player {
         this.color = color;
         this.units = units;
         this.storedEnergy = 0;
+        this.turretProjectiles = [];
     }
     isDefeated() {
         return this.units.unitCount() === 0;
     }
     update(powerSources, otherPlayers) {
         this.updateEnergy();
-        this.units.update();
+        const enemies = otherPlayers.map((p) => p.units.allKillableCollidableUnits()).flat();
+        this.units.update(enemies);
+        for (let turretProjectile of this.turretProjectiles) {
+            turretProjectile.update();
+        }
+        this.turretProjectiles = this.turretProjectiles.filter((turretProjectile) => turretProjectile.isAlive());
     }
     updateEnergy() {
         this.storedEnergy += this.units.energyOutput();
@@ -70217,6 +70474,7 @@ class PlayerUnits {
         this.vehicles = [];
         this.factories = [];
         this.powerGenerators = [];
+        this.turrets = [];
         this.constructions = {};
     }
     allKillableCollidableUnits() {
@@ -70224,6 +70482,7 @@ class PlayerUnits {
         units.push(...this.vehicles);
         units.push(...this.factories);
         units.push(...this.powerGenerators);
+        units.push(...this.turrets);
         units.push(...Object.values(this.constructions));
         if (this.commander != null) {
             units.push(this.commander);
@@ -70235,6 +70494,7 @@ class PlayerUnits {
             + this.vehicles.length
             + this.factories.length
             + this.powerGenerators.length
+            + this.turrets.length
             + Object.keys(this.constructions).length;
     }
     isAtUnitCap() {
@@ -70244,12 +70504,15 @@ class PlayerUnits {
         return (this.commander ? this.commander.energyOutput : 0)
             + this.powerGenerators.reduce((sum, powerGenerator) => sum + powerGenerator.energyOutput, 0);
     }
-    update() {
+    update(enemies) {
         this.removeDeadUnits();
         if (this.commander != null) {
             this.commander.update();
         }
         this.updateEachOf(this.vehicles);
+        for (const turret of this.turrets) {
+            turret.update(enemies);
+        }
         this.updateFactoriesAndConstructions();
         this.removeDeadUnits();
     }
@@ -70288,6 +70551,9 @@ class PlayerUnits {
                 case entities_1.Bot:
                     this.vehicles.push(unit);
                     break;
+                case entities_1.Turret:
+                    this.turrets.push(unit);
+                    break;
                 default:
                     throw new TypeError('unexpected kind of construction completed: ' + unit);
             }
@@ -70300,6 +70566,7 @@ class PlayerUnits {
         this.powerGenerators = this.powerGenerators.filter((powerGenerator) => powerGenerator.isAlive());
         this.factories = this.factories.filter((factory) => factory.isAlive());
         this.vehicles = this.vehicles.filter((vehicle) => vehicle.isAlive());
+        this.turrets = this.turrets.filter((turret) => turret.isAlive());
     }
     draw() {
         var _a, _b, _c;
@@ -70434,7 +70701,7 @@ class IQuadrant {
         }
         let collisions = [];
         for (let quadtreeEntity of this.entities) {
-            if (quadtreeEntity.player != collidingEntity.player && collidingEntity.isCollidingWith(quadtreeEntity, 0)) {
+            if (quadtreeEntity.player != collidingEntity.player && quadtreeEntity.isCollidingWith(collidingEntity, 0)) {
                 collisions.push(quadtreeEntity);
             }
         }
@@ -70544,6 +70811,8 @@ tslib_1.__exportStar(__webpack_require__(/*! ./presenters/factory_presenter */ "
 tslib_1.__exportStar(__webpack_require__(/*! ./presenters/healthiness_presenter */ "./src/rtt_threejs_renderer/presenters/healthiness_presenter.ts"), exports);
 tslib_1.__exportStar(__webpack_require__(/*! ./presenters/power_source_presenter */ "./src/rtt_threejs_renderer/presenters/power_source_presenter.ts"), exports);
 tslib_1.__exportStar(__webpack_require__(/*! ./presenters/power_generator_presenter */ "./src/rtt_threejs_renderer/presenters/power_generator_presenter.ts"), exports);
+tslib_1.__exportStar(__webpack_require__(/*! ./presenters/turret_presenter */ "./src/rtt_threejs_renderer/presenters/turret_presenter.ts"), exports);
+tslib_1.__exportStar(__webpack_require__(/*! ./presenters/turret_projectile_presenter */ "./src/rtt_threejs_renderer/presenters/turret_projectile_presenter.ts"), exports);
 
 
 /***/ }),
@@ -71038,6 +71307,132 @@ exports.QuadtreePresenter = QuadtreePresenter;
 
 /***/ }),
 
+/***/ "./src/rtt_threejs_renderer/presenters/turret_presenter.ts":
+/*!*****************************************************************!*\
+  !*** ./src/rtt_threejs_renderer/presenters/turret_presenter.ts ***!
+  \*****************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const tslib_1 = __webpack_require__(/*! tslib */ "./node_modules/tslib/tslib.es6.js");
+const THREE = tslib_1.__importStar(__webpack_require__(/*! three */ "./node_modules/three/build/three.module.js"));
+const vector_1 = __webpack_require__(/*! ../../rtt_engine/vector */ "./src/rtt_engine/vector.ts");
+function turretShape() {
+    let shape = new THREE.Shape();
+    shape.moveTo(0, 8);
+    const bottomRight = vector_1.Vector.from_magnitude_and_direction(7, 2 * Math.PI / 3);
+    shape.lineTo(bottomRight.x, bottomRight.y);
+    const bottomLeft = vector_1.Vector.from_magnitude_and_direction(7, -2 * Math.PI / 3);
+    shape.lineTo(bottomLeft.x, bottomLeft.y);
+    return shape;
+}
+exports.turretShape = turretShape;
+class TurretPresenter {
+    constructor(player, scene) {
+        this.player = player;
+        this.scene = scene;
+    }
+    predraw() {
+        this.meshMaterial = new THREE.MeshBasicMaterial({ color: this.player.color });
+        this.geometry = new THREE.ShapeBufferGeometry(turretShape());
+    }
+    draw() {
+        const count = this.player.units.turrets.length;
+        if (this.instancedMesh != undefined && this.instancedMesh.count != count) {
+            this.scene.remove(this.instancedMesh);
+            this.instancedMesh = undefined;
+        }
+        if (this.instancedMesh == undefined) {
+            this.instancedMesh = new THREE.InstancedMesh(this.geometry, this.meshMaterial, count);
+            this.instancedMesh.count = count;
+            this.instancedMesh.frustumCulled = false;
+            this.scene.add(this.instancedMesh);
+        }
+        let m = new THREE.Matrix4();
+        for (let i = 0; i < count; i++) {
+            const turret = this.player.units.turrets[i];
+            m.setPosition(turret.position.x, turret.position.y, 0);
+            this.instancedMesh.setMatrixAt(i, m);
+        }
+        this.instancedMesh.instanceMatrix.needsUpdate = true;
+    }
+    dedraw() {
+        if (this.instancedMesh) {
+            this.scene.remove(this.instancedMesh);
+            this.instancedMesh = undefined;
+        }
+    }
+}
+exports.TurretPresenter = TurretPresenter;
+
+
+/***/ }),
+
+/***/ "./src/rtt_threejs_renderer/presenters/turret_projectile_presenter.ts":
+/*!****************************************************************************!*\
+  !*** ./src/rtt_threejs_renderer/presenters/turret_projectile_presenter.ts ***!
+  \****************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const tslib_1 = __webpack_require__(/*! tslib */ "./node_modules/tslib/tslib.es6.js");
+const THREE = tslib_1.__importStar(__webpack_require__(/*! three */ "./node_modules/three/build/three.module.js"));
+function turretProjectileShape() {
+    var shape = new THREE.Shape();
+    shape.moveTo(4, 0);
+    shape.quadraticCurveTo(4, 4, -4, 0);
+    shape.quadraticCurveTo(4, -4, 4, 0);
+    return shape;
+}
+exports.turretProjectileShape = turretProjectileShape;
+class TurretProjectilePresenter {
+    constructor(player, scene) {
+        this.player = player;
+        this.scene = scene;
+    }
+    predraw() {
+        this.meshMaterial = new THREE.MeshBasicMaterial({ color: this.player.color });
+        this.geometry = new THREE.ShapeBufferGeometry(turretProjectileShape());
+    }
+    draw() {
+        const count = this.player.turretProjectiles.length;
+        if (this.instancedMesh != undefined && this.instancedMesh.count != count) {
+            this.scene.remove(this.instancedMesh);
+            this.instancedMesh = undefined;
+        }
+        if (this.instancedMesh == undefined) {
+            this.instancedMesh = new THREE.InstancedMesh(this.geometry, this.meshMaterial, count);
+            this.instancedMesh.count = count;
+            this.instancedMesh.frustumCulled = false;
+            this.scene.add(this.instancedMesh);
+        }
+        let m = new THREE.Matrix4();
+        for (let i = 0; i < count; i++) {
+            const turretProjectile = this.player.turretProjectiles[i];
+            m.makeRotationZ(Math.PI / 2 - turretProjectile.direction);
+            m.setPosition(turretProjectile.position.x, turretProjectile.position.y, 0);
+            this.instancedMesh.setMatrixAt(i, m);
+        }
+        this.instancedMesh.instanceMatrix.needsUpdate = true;
+    }
+    dedraw() {
+        if (this.instancedMesh) {
+            this.scene.remove(this.instancedMesh);
+            this.instancedMesh = undefined;
+        }
+    }
+}
+exports.TurretProjectilePresenter = TurretProjectilePresenter;
+
+
+/***/ }),
+
 /***/ "./src/rtt_threejs_renderer/renderer.ts":
 /*!**********************************************!*\
   !*** ./src/rtt_threejs_renderer/renderer.ts ***!
@@ -71091,10 +71486,10 @@ class Renderer {
         const hasControlsUpdated = this.controls.update(delta);
         requestAnimationFrame(() => this.animate());
         //if (force || hasControlsUpdated) {
-        console.log("draw calls: " + this.renderer.info.render.calls);
+        //console.log("draw calls: " + this.renderer.info.render.calls);
         const start = new Date();
         this.renderer.render(this.scene, this.camera);
-        console.log("render time: " + ((new Date()) - start));
+        //console.log("render time: " + ((new Date()) - start));
         //}
     }
 }
