@@ -47,6 +47,10 @@ export class Commander extends Engineerable(Vehicle) {
   }
 
   construct(constructionOrder: { position: Vector, structureClass: any, extra?: any[] }): boolean {
+    if (Vector.subtract(this.position, constructionOrder.position).magnitude() > this.productionRange) {
+      this.manoeuvre({ destination: constructionOrder.position });
+      return true;
+    }
     if (constructionOrder.extra == null) {
       constructionOrder.extra = [];
     }

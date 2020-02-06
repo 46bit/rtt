@@ -100,10 +100,17 @@ function main() {
     const powerGeneratorPresenter = new rtt_threejs_renderer.PowerGeneratorPresenter(player, renderer.gameCoordsGroup);
     powerGeneratorPresenter.predraw();
     powerGeneratorPresenters.push(powerGeneratorPresenter);
+    const turretPresenter = new rtt_threejs_renderer.TurretPresenter(player, renderer.gameCoordsGroup);
+    turretPresenter.predraw();
+    turretPresenters.push(turretPresenter);
+    const turretProjectilePresenter = new rtt_threejs_renderer.TurretProjectilePresenter(player, renderer.gameCoordsGroup);
+    turretProjectilePresenter.predraw();
+    turretProjectilePresenters.push(turretProjectilePresenter);
   }
 
   let selected = undefined;
   let selectedBox = undefined;
+  let buildChoice = undefined;
   document.addEventListener('mousedown', function (e) {
     let x = (e.clientX / window.innerWidth) * 2 - 1;
     let y = -(e.clientY / window.innerHeight) * 2 + 1;
@@ -132,19 +139,62 @@ function main() {
     if (e.button == 0) {
       if (collisions.length == 1) {
         selected = collisions[0];
+        if (selected instanceof rtt_engine.Commander) {
+          document.getElementById("build-controls").style.display = "block";
+        } else {
+          document.getElementById("build-controls").style.display = "none";
+          buildChoice = undefined;
+        }
       } else {
         selected = undefined;
+        document.getElementById("build-controls").style.display = "none";
+        buildChoice = undefined;
       }
     } else if (e.button == 2) {
       // FIXME: There needs to be a better way than this to detect movable stuff
       if (selected != null && selected.movementRate != null) {
         console.log("order");
-        selected.orders[0] = {
-          kind: 'manoeuvre',
-          destination: rttPosition,
+        if (selected instanceof rtt_engine.Commander && (buildChoice == "factory" || buildChoice == "power-generator")) {
+          if (buildChoice == "factory") {
+            selected.orders[0] = {
+              kind: 'construct',
+              structureClass: rtt_engine.Factory,
+              position: rttPosition,
+            }
+          } else if (buildChoice == "power-generator") {
+            const nearestPowerSource = _.minBy(game.powerSources.filter((p) => p.structure == null), (p) => (rtt_engine.Vector.subtract(rttPosition, p.position).magnitude()));
+            if (rtt_engine.Vector.subtract(rttPosition, nearestPowerSource.position).magnitude() < nearestPowerSource.collisionRadius + 2) {
+              selected.orders[0] = {
+                kind: 'construct',
+                structureClass: rtt_engine.PowerGenerator,
+                position: nearestPowerSource.position,
+                extra: [nearestPowerSource],
+              }
+            }
+          }
+          // Reset the build choice. Temporary hack until the user interface is better designed.
+          buildChoice = undefined;
+        } else if (collisions.length == 1 && collisions[0].player != selected.player) {
+          selected.orders[0] = {
+            kind: 'attack',
+            target: collisions[0],
+          }
+        } else {
+          selected.orders[0] = {
+            kind: 'manoeuvre',
+            destination: rttPosition,
+          }
         }
       }
     }
+  }, false);
+  document.getElementById("build-factory").addEventListener('mousedown', function (e) {
+    e.stopPropagation();
+    buildChoice = "factory";
+  }, false);
+  document.getElementById("build-power-generator").addEventListener('mousedown', function (e) {
+    e.stopPropagation();
+    buildChoice = "power-generator";
   }, false);
 
   let quadtreePresenter: rtt_threejs_renderer.QuadtreePresenter | null = null;
