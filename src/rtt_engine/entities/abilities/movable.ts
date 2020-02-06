@@ -3,6 +3,7 @@ import { Entity } from '../lib/entity';
 import { ComposableConstructor } from '../lib/mixins';
 
 export interface IMovableConfig {
+  velocity: number?;
   direction: number;
 }
 
@@ -14,7 +15,7 @@ export function Movable<T extends new(o: any) => any>(base: T) {
 
     constructor(cfg: IMovableConfig) {
       super(cfg);
-      this.velocity = 0;
+      this.velocity = cfg.velocity ?? 0;
       this.direction = cfg.direction == null ? 0 : cfg.direction;
     }
 

@@ -6,3 +6,5 @@ export * from './presenters/factory_presenter';
 export * from './presenters/healthiness_presenter';
 export * from './presenters/power_source_presenter';
 export * from './presenters/power_generator_presenter';
+export * from './presenters/turret_presenter';
+export * from './presenters/turret_projectile_presenter';

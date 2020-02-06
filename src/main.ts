@@ -73,6 +73,8 @@ function main() {
   let factoryPresenters: rtt_threejs_renderer.FactoryPresenter[] = [];
   let healthinessPresenters: rtt_threejs_renderer.HealthinessPresenter[] = [];
   let powerGeneratorPresenters: rtt_threejs_renderer.PowerGeneratorPresenter[] = [];
+  let turretPresenters: rtt_threejs_renderer.TurretPresenter[] = [];
+  let turretProjectilePresenters: rtt_threejs_renderer.TurretProjectilePresenter[] = [];
   for (let i in game.players) {
     const player = game.players[i];
     if (player.units.commander != null) {
@@ -154,7 +156,7 @@ function main() {
       // FIXME: There needs to be a better way than this to detect movable stuff
       if (selected != null && selected.movementRate != null) {
         console.log("order");
-        if (selected instanceof rtt_engine.Commander && (buildChoice == "factory" || buildChoice == "power-generator")) {
+        if (selected instanceof rtt_engine.Commander && (buildChoice == "factory" || buildChoice == "power-generator" || buildChoice == "turret")) {
           if (buildChoice == "factory") {
             selected.orders[0] = {
               kind: 'construct',
@@ -170,6 +172,12 @@ function main() {
                 position: nearestPowerSource.position,
                 extra: [nearestPowerSource],
               }
+            }
+          } else if (buildChoice == "turret") {
+            selected.orders[0] = {
+              kind: 'construct',
+              structureClass: rtt_engine.Turret,
+              position: rttPosition,
             }
           }
           // Reset the build choice. Temporary hack until the user interface is better designed.
@@ -195,6 +203,10 @@ function main() {
   document.getElementById("build-power-generator").addEventListener('mousedown', function (e) {
     e.stopPropagation();
     buildChoice = "power-generator";
+  }, false);
+  document.getElementById("build-turret").addEventListener('mousedown', function (e) {
+    e.stopPropagation();
+    buildChoice = "turret";
   }, false);
 
   let quadtreePresenter: rtt_threejs_renderer.QuadtreePresenter | null = null;
@@ -227,7 +239,8 @@ function main() {
       }
     }
 
-    const units = livingPlayers.map((p) => p.units.allKillableCollidableUnits()).flat();
+    let units = livingPlayers.map((p) => p.units.allKillableCollidableUnits()).flat();
+    units.push(...game.players.map((p) => p.turretProjectiles).flat());
     const quadtree = rtt_engine.IQuadrant.fromEntityCollisions(units);
     if (quadtreePresenter == null) {
       quadtreePresenter = new rtt_threejs_renderer.QuadtreePresenter(quadtree, renderer.gameCoordsGroup);
@@ -275,6 +288,12 @@ function main() {
     }
     for (let powerGeneratorPresenter of powerGeneratorPresenters) {
       powerGeneratorPresenter.draw();
+    }
+    for (let turretPresenter of turretPresenters) {
+      turretPresenter.draw();
+    }
+    for (let turretProjectilePresenter of turretProjectilePresenters) {
+      turretProjectilePresenter.draw();
     }
     if (selected != null) {
       if (selectedBox == null) {

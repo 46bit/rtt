@@ -30,7 +30,7 @@ export class Game {
 
   public updatePlayers() {
     this.players.forEach((player) => {
-      player.update(this.powerSources, this.players);
+      player.update(this.powerSources, this.players.filter((p) => p != player));
     });
   }
 

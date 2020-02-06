@@ -3,8 +3,10 @@ import {
   Commander,
   Factory,
   PowerGenerator,
+  Turret,
   IKillable,
   ICollidable,
+  IEntity,
 } from './entities';
 
 // FIXME: Do this based upon an `IUnit`?
@@ -19,6 +21,7 @@ export class PlayerUnits {
   public vehicles: Vehicle[];
   public factories: Factory[];
   public powerGenerators: PowerGenerator[];
+  public turrets: Turret[];
   public constructions: {[id: string]: Unit};
 
   public constructor(unitCap: number | null) {
@@ -27,6 +30,7 @@ export class PlayerUnits {
     this.vehicles = [];
     this.factories = [];
     this.powerGenerators = [];
+    this.turrets = [];
     this.constructions = {};
   }
 
@@ -35,6 +39,7 @@ export class PlayerUnits {
     units.push(...this.vehicles);
     units.push(...this.factories);
     units.push(...this.powerGenerators);
+    units.push(...this.turrets);
     units.push(...Object.values(this.constructions));
     if (this.commander != null) {
       units.push(this.commander);
@@ -47,6 +52,7 @@ export class PlayerUnits {
       + this.vehicles.length
       + this.factories.length
       + this.powerGenerators.length
+      + this.turrets.length
       + Object.keys(this.constructions).length;
   }
 
@@ -59,12 +65,15 @@ export class PlayerUnits {
       + this.powerGenerators.reduce((sum, powerGenerator) => sum + powerGenerator.energyOutput, 0);
   }
 
-  public update() {
+  public update(enemies: IEntity[]) {
     this.removeDeadUnits();
     if (this.commander != null) {
       this.commander.update();
     }
     this.updateEachOf(this.vehicles);
+    for (const turret of this.turrets) {
+      turret.update(enemies);
+    }
     this.updateFactoriesAndConstructions();
     this.removeDeadUnits();
   }
@@ -106,6 +115,9 @@ export class PlayerUnits {
         case Bot:
           this.vehicles.push(unit as Bot);
           break;
+        case Turret:
+          this.turrets.push(unit as Turret);
+          break;
         default:
           throw new TypeError('unexpected kind of construction completed: ' + unit);
       }
@@ -119,6 +131,7 @@ export class PlayerUnits {
     this.powerGenerators = this.powerGenerators.filter((powerGenerator) => powerGenerator.isAlive());
     this.factories = this.factories.filter((factory) => factory.isAlive());
     this.vehicles = this.vehicles.filter((vehicle) => vehicle.isAlive());
+    this.turrets = this.turrets.filter((turret) => turret.isAlive());
   }
 
   public draw() {
