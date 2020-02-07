@@ -29,7 +29,8 @@ export class TurretProjectilePresenter {
   }
 
   draw() {
-    const count = this.player.turretProjectiles.length;
+    const projectiles = this.player.turretProjectiles.filter(v => v instanceof TurretProjectile),;
+    const count = projectiles.length;
     if (this.instancedMesh != undefined && this.instancedMesh.count != count) {
       this.scene.remove(this.instancedMesh);
       this.instancedMesh = undefined;
@@ -42,7 +43,7 @@ export class TurretProjectilePresenter {
     }
     let m = new THREE.Matrix4();
     for (let i = 0; i < count; i++) {
-      const turretProjectile = this.player.turretProjectiles[i];
+      const turretProjectile = projectiles[i];
       m.makeRotationZ(Math.PI/2 - turretProjectile.direction);
       m.setPosition(turretProjectile.position.x, turretProjectile.position.y, 0);
       this.instancedMesh.setMatrixAt(i, m);

@@ -1,6 +1,7 @@
 export * from './abilities';
 export * from './lib';
 export * from './bot';
+export * from './shotgun_tank';
 export * from './commander';
 export * from './factory';
 export * from './power_generator';

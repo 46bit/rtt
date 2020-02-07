@@ -70,6 +70,8 @@ function main() {
   let powerSourcePresenter = new rtt_threejs_renderer.PowerSourcePresenter(game, renderer.gameCoordsGroup);
   powerSourcePresenter.predraw();
   let botPresenters: rtt_threejs_renderer.BotPresenter[] = [];
+  let shotgunTankPresenters: rtt_threejs_renderer.ShotgunTankPresenter[] = [];
+  let shotgunProjectilePresenters: rtt_threejs_renderer.ShotgunProjectilePresenter[] = [];
   let factoryPresenters: rtt_threejs_renderer.FactoryPresenter[] = [];
   let healthinessPresenters: rtt_threejs_renderer.HealthinessPresenter[] = [];
   let powerGeneratorPresenters: rtt_threejs_renderer.PowerGeneratorPresenter[] = [];
@@ -94,6 +96,12 @@ function main() {
     const botPresenter = new rtt_threejs_renderer.BotPresenter(player, renderer.gameCoordsGroup);
     botPresenter.predraw();
     botPresenters.push(botPresenter);
+    const shotgunTankPresenter = new rtt_threejs_renderer.ShotgunTankPresenter(player, renderer.gameCoordsGroup);
+    shotgunTankPresenter.predraw();
+    shotgunTankPresenters.push(shotgunTankPresenter);
+    const shotgunProjectilePresenter = new rtt_threejs_renderer.ShotgunProjectilePresenter(player, renderer.gameCoordsGroup);
+    shotgunProjectilePresenter.predraw();
+    shotgunProjectilePresenters.push(shotgunProjectilePresenter);
     const factoryPresenter = new rtt_threejs_renderer.FactoryPresenter(player, renderer.gameCoordsGroup);
     factoryPresenter.predraw();
     factoryPresenters.push(factoryPresenter);
@@ -220,7 +228,7 @@ function main() {
       for (let factory of player.units.factories) {
         factory.orders[0] = {
           kind: 'construct',
-          unitClass: rtt_engine.Bot,
+          unitClass: Math.random() < 0.8 ? rtt_engine.Bot : rtt_engine.ShotgunTank;
         };
       }
 
@@ -279,6 +287,12 @@ function main() {
     }
     for (let botPresenter of botPresenters) {
       botPresenter.draw();
+    }
+    for (let shotgunTankPresenter of shotgunTankPresenters) {
+      shotgunTankPresenter.draw();
+    }
+    for (let shotgunProjectilePresenter of shotgunProjectilePresenters) {
+      shotgunProjectilePresenter.draw();
     }
     for (let factoryPresenter of factoryPresenters) {
       factoryPresenter.draw();

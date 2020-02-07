@@ -1,5 +1,5 @@
 import { Vector } from '../../vector';
-import { Entity } from '../lib/entity';
+import { Entity, IEntity } from '../lib/entity';
 import { ComposableConstructor } from '../lib/mixins';
 
 export interface IMovableConfig {
@@ -7,8 +7,13 @@ export interface IMovableConfig {
   direction: number;
 }
 
+export interface IMovable extends IEntity {
+  velocity: number;
+  direction: number;
+}
+
 export function Movable<T extends new(o: any) => any>(base: T) {
-  class Movable extends (base as new(o: any) => Entity) {
+  class Movable extends (base as new(o: any) => Entity) implements IMovable {
     // FIXME: Store velocity as a Vector instead?
     public velocity: number;
     public direction: number;
