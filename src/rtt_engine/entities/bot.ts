@@ -15,8 +15,8 @@ export class Bot extends Engineerable(Vehicle) {
       player,
       fullHealth: 10,
       health: built ? 10 : 0,
-      movementRate: 0.1,
-      turnRate: 4.0 / 3.0,
+      movementRate: 0.15,
+      turnRate: 5.0 / 3.0,
       productionRange: 25.0,
     } as any);
   }
