@@ -247,9 +247,9 @@ function main() {
       }
     }
 
-    let units = livingPlayers.map((p) => p.units.allKillableCollidableUnits()).flat();
-    units.push(...game.players.map((p) => p.turretProjectiles).flat());
-    const quadtree = rtt_engine.IQuadrant.fromEntityCollisions(units);
+    let unitsAndProjectiles = livingPlayers.map((p) => p.units.allKillableCollidableUnits()).flat();
+    unitsAndProjectiles.push(...game.players.map((p) => p.turretProjectiles).flat());
+    const quadtree = rtt_engine.IQuadrant.fromEntityCollisions(unitsAndProjectiles);
     if (quadtreePresenter == null) {
       quadtreePresenter = new rtt_threejs_renderer.QuadtreePresenter(quadtree, renderer.gameCoordsGroup);
     } else if (Math.random() > 0.9) {
@@ -258,19 +258,26 @@ function main() {
     //quadtreePresenter.draw();
     //console.log(quadtree.entities.length);
     let unitOriginalHealths: {[id: string]: number} = {};
-    for (let unit of units) {
+    for (let unit of unitsAndProjectiles) {
       if (unit.damage != null) {
         unitOriginalHealths[unit.id] = unit.health;
       }
     }
 
-    let collisions = quadtree.getCollisions(units);
+    let collisions = quadtree.getCollisions(unitsAndProjectiles);
     for (let unitId in collisions) {
-      const unit: rtt_engine.IKillable = units.filter((u: rtt_engine.IKillable) => u.id == unitId)[0];
-      const numberOfCollidingUnits = collisions[unitId].length;
+      const unit: rtt_engine.IKillable = unitsAndProjectiles.filter((u: rtt_engine.IKillable) => u.id == unitId)[0];
+      let unitCollisions = collisions[unitId];
+      if (unit instanceof rtt_engine.Projectile) {
+        unitCollisions = unitCollisions.filter((u) => !(u instanceof rtt_engine.Projectile));
+      }
+      const numberOfCollidingUnits = unitCollisions.length;
+      if (numberOfCollidingUnits == 0) {
+        continue;
+      }
       // FIXME: We need to only apply damage if it fulfils IKillable…
       const damagePerCollidingUnit = unitOriginalHealths[unitId] / numberOfCollidingUnits;
-      for (let collidingUnit of collisions[unitId]) {
+      for (let collidingUnit of unitCollisions) {
         if (collidingUnit.damage != null) {
           collidingUnit.damage(damagePerCollidingUnit);
         }
