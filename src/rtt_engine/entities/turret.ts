@@ -3,7 +3,7 @@ import { Player } from '../player';
 import { Structure, Projectile, IEntity } from './lib';
 import lodash from 'lodash';
 
-const TURRET_RANGE = 180;
+export const TURRET_RANGE = 180;
 
 export class Turret extends Structure {
   firingRate: number;
