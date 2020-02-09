@@ -10,3 +10,4 @@ export * from './presenters/power_source_presenter';
 export * from './presenters/power_generator_presenter';
 export * from './presenters/turret_presenter';
 export * from './presenters/turret_projectile_presenter';
+export * from './presenters/map_presenter';

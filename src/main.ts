@@ -56,6 +56,10 @@ function main() {
   let renderer = new rtt_threejs_renderer.Renderer(map.worldSize, window, document);
   renderer.animate(true);
 
+  let mapPresenter = new rtt_threejs_renderer.MapPresenter(map, renderer.gameCoordsGroup);
+  mapPresenter.predraw();
+  const bounds = new rtt_engine.Bounds(0, map.worldSize, 0, map.worldSize);
+
   // const grid = new THREE.GridHelper(map.worldSize, map.worldSize / 25);
   // grid.position.z = -0.1;
   // grid.rotation.x = Math.PI / 2;
@@ -63,6 +67,7 @@ function main() {
 
   let game = rtt_engine.gameFromConfig(config);
   window.game = game;
+  window.renderer = renderer;
   window.rtt_engine = rtt_engine;
   window.rtt_threejs_renderer = rtt_threejs_renderer;
 
@@ -257,7 +262,15 @@ function main() {
 
     let unitsAndProjectiles = livingPlayers.map((p) => p.units.allKillableCollidableUnits()).flat();
     unitsAndProjectiles.push(...game.players.map((p) => p.turretProjectiles).flat());
-    const quadtree = rtt_engine.IQuadrant.fromEntityCollisions(unitsAndProjectiles);
+
+    for (let unitOrProjectile of unitsAndProjectiles) {
+      if (!bounds.contains(unitOrProjectile, () => 0)) {
+        console.log("bounds " + JSON.stringify(bounds) + " killed " + unitOrProjectile.position.x + " " + unitOrProjectile.position.y);
+        unitOrProjectile.kill();
+      }
+    }
+
+    const quadtree = rtt_engine.IQuadrant.fromEntityCollisions(bounds, unitsAndProjectiles);
     if (quadtreePresenter == null) {
       quadtreePresenter = new rtt_threejs_renderer.QuadtreePresenter(quadtree, renderer.gameCoordsGroup);
     } else if (Math.random() > 0.9) {
@@ -296,6 +309,7 @@ function main() {
 
     const start2 = new Date();
     game.draw();
+    mapPresenter.draw();
     powerSourcePresenter.draw();
     for (let commanderPresenter of commanderPresenters) {
       commanderPresenter.draw();

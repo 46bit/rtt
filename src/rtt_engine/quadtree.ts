@@ -38,25 +38,13 @@ export class Bounds {
 }
 
 export class IQuadrant<E extends ICollidable> {
-  public static fromEntityCollisions<E extends ICollidable>(entities: E[]): IQuadrant<E> {
+  public static fromEntityCollisions<E extends ICollidable>(bounds: Bounds, entities: E[]): IQuadrant<E> {
     const entityRadius = (e: E) => e.collisionRadius;
-    return this.fromEntitiesAndRadii(entities, entityRadius);
+    return this.fromEntitiesAndRadii(bounds, entities, entityRadius);
   }
 
-  public static fromEntitiesAndRadii<E extends ICollidable>(entities: E[], entityRadius: (e: E) => number): IQuadrant<E> {
-    return new IQuadrant<E>(
-      this.boundsOfEntities(entities, entityRadius),
-      entities,
-      entityRadius
-    );
-  }
-
-  public static boundsOfEntities<E extends ICollidable>(entities: E[], entityRadius: (e: E) => number): Bounds {
-    const left = Math.min(...entities.map((i) => (i.position.x - entityRadius(i))));
-    const right = Math.max(...entities.map((i) => (i.position.x + entityRadius(i))));
-    const top = Math.min(...entities.map((i) => (i.position.y - entityRadius(i))));
-    const bottom = Math.max(...entities.map((i) => (i.position.y + entityRadius(i))));
-    return new Bounds(left, right, top, bottom);
+  public static fromEntitiesAndRadii<E extends ICollidable>(bounds: Bounds, entities: E[], entityRadius: (e: E) => number): IQuadrant<E> {
+    return new IQuadrant<E>(bounds, entities, entityRadius);
   }
 
   bounds: Bounds;
