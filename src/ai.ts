@@ -83,8 +83,30 @@ export class AttackNearestAI implements IAI {
   }
 
   updateFactoryConstruction() {
-    let numberOfBots = this.player.units.vehicles.filter((v) => v instanceof rtt_engine.Bot).length;
-    let unitClass = numberOfBots < 1 ? rtt_engine.Bot : rtt_engine.ShotgunTank;
+    // STRATEGY:
+    // 1. If opponents have turrets:
+    //    70% of the time build Shotgun Tanks
+    //    28–30% of the time build Artillery Tanks
+    //    if the player has 6+ vehicles then 2% of the time build a Titan
+    // 2. Otherwise:
+    //    if the player has 0 bots then build a Bot
+    //    if the player has 1+ bots then build a Shotgun Tank
+
+    const opponentsHaveTurrets = this.opponents.filter((o) => o.units.turrets.length > 0).length > 0;
+    let unitClass;
+    if (opponentsHaveTurrets) {
+      const rand = Math.random();
+      if (rand < 0.7) {
+        unitClass = rtt_engine.ShotgunTank;
+      } else if (rand < 0.98 || this.player.units.vehicles.length < 6) {
+        unitClass = rtt_engine.ArtilleryTank;
+      } else {
+        unitClass = rtt_engine.Titan;
+      }
+    } else {
+      const numberOfBots = this.player.units.vehicles.filter((v) => v instanceof rtt_engine.Bot).length;
+      unitClass = numberOfBots < 1 ? rtt_engine.Bot : rtt_engine.ShotgunTank;
+    }
     for (let factory of this.player.units.factories) {
       if (factory.orders.length > 0) {
         continue;
