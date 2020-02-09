@@ -4,7 +4,7 @@ import { Vehicle, IEntity, Projectile } from './lib';
 import { IKillable } from './abilities';
 import lodash from 'lodash';
 
-export const ARTILLERY_RANGE = 190;
+export const ARTILLERY_RANGE = 210;
 
 export class ArtilleryTank extends Vehicle {
   firingRate: number;
@@ -51,7 +51,7 @@ export class ArtilleryTank extends Vehicle {
       return null;
     }
     const offset = Vector.subtract(nearestEnemy.position, this.position);
-    if (offset.magnitude() > ARTILLERY_RANGE * 1.2) {
+    if (offset.magnitude() > ARTILLERY_RANGE * 1.1) {
       return null;
     }
     return offset.angle();
@@ -76,7 +76,7 @@ export class ArtilleryProjectile extends Projectile {
       position,
       direction,
       velocity: 1.8,
-      lifetime: ARTILLERY_RANGE / 2,
+      lifetime: ARTILLERY_RANGE / 1.8,
       collisionRadius: 5,
       health: 18,
       fullHealth: 18,
