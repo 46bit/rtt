@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import * as rtt_engine from './rtt_engine';
 import * as rtt_threejs_renderer from './rtt_threejs_renderer';
-import { IAI, ExistingAI } from './ai';
+import { IAI, ExistingAI, AttackNearestAI } from './ai';
 
 window.THREE = THREE;
 
@@ -243,7 +243,7 @@ function main() {
   }, false);
 
   let ais: IAI[] = game.players.map((player) => {
-    const aiClass = ExistingAI;
+    const aiClass = Math.random() > 0.7 ? AttackNearestAI : ExistingAI;
     console.log("player " + player.name + " using AI " + aiClass.name);
     return new aiClass(game, player, game.players.filter((p) => p != player));
   });
