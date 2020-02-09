@@ -2,6 +2,7 @@ import {
   Bot,
   ArtilleryTank,
   ShotgunTank,
+  Titan,
   Commander,
   Factory,
   PowerGenerator,
@@ -12,10 +13,10 @@ import {
 } from './entities';
 
 // FIXME: Do this based upon an `IUnit`?
-type Unit = Bot | ArtilleryTank | ShotgunTank | Commander | PowerGenerator | Factory | Turret;
+type Unit = Bot | ArtilleryTank | ShotgunTank | Titan | Commander | PowerGenerator | Factory | Turret;
 
 // FIXME: Do this based upon an `IVehicle`?
-type Vehicle = Bot | ArtilleryTank | ShotgunTank;
+type Vehicle = Bot | ArtilleryTank | ShotgunTank | Titan;
 
 export class PlayerUnits {
   public unitCap: number | null;
@@ -83,6 +84,9 @@ export class PlayerUnits {
         case ArtilleryTank:
           (vehicle as ArtilleryTank).update(enemies);
           break;
+        case Titan:
+          (vehicle as Titan).update(enemies);
+          break;
       }
     }
     for (const turret of this.turrets) {
@@ -128,6 +132,9 @@ export class PlayerUnits {
           break;
         case ArtilleryTank:
           this.vehicles.push(unit as ArtilleryTank);
+          break;
+        case Titan:
+          this.vehicles.push(unit as Titan);
           break;
         case Turret:
           this.turrets.push(unit as Turret);

@@ -91,6 +91,8 @@ function main() {
   let shotgunProjectilePresenters: rtt_threejs_renderer.ShotgunProjectilePresenter[] = [];
   let artilleryTankPresenters: rtt_threejs_renderer.ArtilleryTankPresenter[] = [];
   let artilleryProjectilePresenters: rtt_threejs_renderer.ArtilleryProjectilePresenter[] = [];
+  let titanPresenters: rtt_threejs_renderer.TitanPresenter[] = [];
+  let titanProjectilePresenters: rtt_threejs_renderer.TitanProjectilePresenter[] = [];
   let factoryPresenters: rtt_threejs_renderer.FactoryPresenter[] = [];
   let healthinessPresenters: rtt_threejs_renderer.HealthinessPresenter[] = [];
   let powerGeneratorPresenters: rtt_threejs_renderer.PowerGeneratorPresenter[] = [];
@@ -127,6 +129,12 @@ function main() {
     const artilleryProjectilePresenter = new rtt_threejs_renderer.ArtilleryProjectilePresenter(player, renderer.gameCoordsGroup);
     artilleryProjectilePresenter.predraw();
     artilleryProjectilePresenters.push(artilleryProjectilePresenter);
+    const titanPresenter = new rtt_threejs_renderer.TitanPresenter(player, renderer.gameCoordsGroup);
+    titanPresenter.predraw();
+    titanPresenters.push(titanPresenter);
+    const titanProjectilePresenter = new rtt_threejs_renderer.TitanProjectilePresenter(player, renderer.gameCoordsGroup);
+    titanProjectilePresenter.predraw();
+    titanProjectilePresenters.push(titanProjectilePresenter);
     const factoryPresenter = new rtt_threejs_renderer.FactoryPresenter(player, renderer.gameCoordsGroup);
     factoryPresenter.predraw();
     factoryPresenters.push(factoryPresenter);
@@ -251,6 +259,9 @@ function main() {
       const player = livingPlayers[i];
 
       for (let factory of player.units.factories) {
+        if (factory.orders.length > 0) {
+          continue;
+        }
         factory.orders[0] = {
           kind: 'construct',
           unitClass: Math.random() < 0.6 ? rtt_engine.Bot : (Math.random() < 0.7 ? rtt_engine.ShotgunTank : rtt_engine.ArtilleryTank),
@@ -340,6 +351,12 @@ function main() {
     }
     for (let artilleryProjectilePresenter of artilleryProjectilePresenters) {
       artilleryProjectilePresenter.draw();
+    }
+    for (let titanPresenter of titanPresenters) {
+      titanPresenter.draw();
+    }
+    for (let titanProjectilePresenter of titanProjectilePresenters) {
+      titanProjectilePresenter.draw();
     }
     for (let factoryPresenter of factoryPresenters) {
       factoryPresenter.draw();

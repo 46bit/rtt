@@ -4,9 +4,9 @@ import { Vehicle, IEntity, Projectile } from './lib';
 import { IKillable } from './abilities';
 import lodash from 'lodash';
 
-export const SHOTGUN_RANGE = 80;
+export const TITAN_RANGE = 150;
 
-export class ShotgunTank extends Vehicle {
+export class Titan extends Vehicle {
   firingRate: number;
   updateCounter: number;
 
@@ -14,16 +14,16 @@ export class ShotgunTank extends Vehicle {
     super({
       position,
       direction,
-      collisionRadius: 8,
+      collisionRadius: 16,
       built,
-      buildCost: 400,
+      buildCost: 4000,
       player,
-      fullHealth: 35,
-      health: built ? 35 : 0,
-      movementRate: 0.07,
-      turnRate: 4.0 / 3.0,
+      fullHealth: 700,
+      health: built ? 700 : 0,
+      movementRate: 0.05,
+      turnRate: 3.0 / 3.0,
     } as any);
-    this.firingRate = 40;
+    this.firingRate = 7;
     this.updateCounter = 0;
   }
 
@@ -39,8 +39,8 @@ export class ShotgunTank extends Vehicle {
       if (angleToFireProjectile == null) {
         return;
       }
-      for (let projectileOffsetAngle = -4.8; projectileOffsetAngle <= 4.8; projectileOffsetAngle += 2.4) {
-        const projectile = new ShotgunProjectile(this.position, this.player!, angleToFireProjectile + projectileOffsetAngle*Math.PI/180);
+      for (let projectileOffsetAngle = -6; projectileOffsetAngle <= 6; projectileOffsetAngle += 3) {
+        const projectile = new TitanProjectile(this.position, this.player!, angleToFireProjectile + projectileOffsetAngle*Math.PI/180);
         this.player!.turretProjectiles.push(projectile);
       }
       this.updateCounter = 0;
@@ -53,7 +53,7 @@ export class ShotgunTank extends Vehicle {
       return null;
     }
     const offset = Vector.subtract(nearestEnemy.position, this.position);
-    if (offset.magnitude() > SHOTGUN_RANGE * 1.2) {
+    if (offset.magnitude() > TITAN_RANGE * 1.2) {
       return null;
     }
     return offset.angle();
@@ -64,24 +64,24 @@ export class ShotgunTank extends Vehicle {
       return false;
     }
     const distance = Vector.subtract(this.position, attackOrder.target.position).magnitude();
-    if (distance > SHOTGUN_RANGE) {
+    if (distance > TITAN_RANGE) {
       this.manoeuvre({ destination: attackOrder.target.position });
     }
     return true;
   }
 }
 
-export class ShotgunProjectile extends Projectile {
+export class TitanProjectile extends Projectile {
   constructor(position: Vector, player: Player, direction: number) {
     super({
       player,
       position,
       direction,
-      velocity: 6.5,
-      lifetime: SHOTGUN_RANGE / 5,
+      velocity: 9,
+      lifetime: TITAN_RANGE / 9,
       collisionRadius: 3,
-      health: 2.5,
-      fullHealth: 2.5,
+      health: 9,
+      fullHealth: 9,
     })
   }
 }

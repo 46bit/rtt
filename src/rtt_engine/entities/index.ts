@@ -3,6 +3,7 @@ export * from './lib';
 export * from './bot';
 export * from './artillery_tank';
 export * from './shotgun_tank';
+export * from './titan';
 export * from './commander';
 export * from './factory';
 export * from './power_generator';
