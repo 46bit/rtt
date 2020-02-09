@@ -69038,6 +69038,8 @@ function main() {
     let shotgunProjectilePresenters = [];
     let artilleryTankPresenters = [];
     let artilleryProjectilePresenters = [];
+    let titanPresenters = [];
+    let titanProjectilePresenters = [];
     let factoryPresenters = [];
     let healthinessPresenters = [];
     let powerGeneratorPresenters = [];
@@ -69070,6 +69072,12 @@ function main() {
         const artilleryProjectilePresenter = new rtt_threejs_renderer.ArtilleryProjectilePresenter(player, renderer.gameCoordsGroup);
         artilleryProjectilePresenter.predraw();
         artilleryProjectilePresenters.push(artilleryProjectilePresenter);
+        const titanPresenter = new rtt_threejs_renderer.TitanPresenter(player, renderer.gameCoordsGroup);
+        titanPresenter.predraw();
+        titanPresenters.push(titanPresenter);
+        const titanProjectilePresenter = new rtt_threejs_renderer.TitanProjectilePresenter(player, renderer.gameCoordsGroup);
+        titanProjectilePresenter.predraw();
+        titanProjectilePresenters.push(titanProjectilePresenter);
         const factoryPresenter = new rtt_threejs_renderer.FactoryPresenter(player, renderer.gameCoordsGroup);
         factoryPresenter.predraw();
         factoryPresenters.push(factoryPresenter);
@@ -69191,6 +69199,9 @@ function main() {
         for (let i in livingPlayers) {
             const player = livingPlayers[i];
             for (let factory of player.units.factories) {
+                if (factory.orders.length > 0) {
+                    continue;
+                }
                 factory.orders[0] = {
                     kind: 'construct',
                     unitClass: Math.random() < 0.6 ? rtt_engine.Bot : (Math.random() < 0.7 ? rtt_engine.ShotgunTank : rtt_engine.ArtilleryTank),
@@ -69275,6 +69286,12 @@ function main() {
         }
         for (let artilleryProjectilePresenter of artilleryProjectilePresenters) {
             artilleryProjectilePresenter.draw();
+        }
+        for (let titanPresenter of titanPresenters) {
+            titanPresenter.draw();
+        }
+        for (let titanProjectilePresenter of titanProjectilePresenters) {
+            titanProjectilePresenter.draw();
         }
         for (let factoryPresenter of factoryPresenters) {
             factoryPresenter.draw();
@@ -70014,6 +70031,7 @@ tslib_1.__exportStar(__webpack_require__(/*! ./lib */ "./src/rtt_engine/entities
 tslib_1.__exportStar(__webpack_require__(/*! ./bot */ "./src/rtt_engine/entities/bot.ts"), exports);
 tslib_1.__exportStar(__webpack_require__(/*! ./artillery_tank */ "./src/rtt_engine/entities/artillery_tank.ts"), exports);
 tslib_1.__exportStar(__webpack_require__(/*! ./shotgun_tank */ "./src/rtt_engine/entities/shotgun_tank.ts"), exports);
+tslib_1.__exportStar(__webpack_require__(/*! ./titan */ "./src/rtt_engine/entities/titan.ts"), exports);
 tslib_1.__exportStar(__webpack_require__(/*! ./commander */ "./src/rtt_engine/entities/commander.ts"), exports);
 tslib_1.__exportStar(__webpack_require__(/*! ./factory */ "./src/rtt_engine/entities/factory.ts"), exports);
 tslib_1.__exportStar(__webpack_require__(/*! ./power_generator */ "./src/rtt_engine/entities/power_generator.ts"), exports);
@@ -70483,6 +70501,98 @@ exports.ShotgunProjectile = ShotgunProjectile;
 
 /***/ }),
 
+/***/ "./src/rtt_engine/entities/titan.ts":
+/*!******************************************!*\
+  !*** ./src/rtt_engine/entities/titan.ts ***!
+  \******************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const tslib_1 = __webpack_require__(/*! tslib */ "./node_modules/tslib/tslib.es6.js");
+const vector_1 = __webpack_require__(/*! ../vector */ "./src/rtt_engine/vector.ts");
+const lib_1 = __webpack_require__(/*! ./lib */ "./src/rtt_engine/entities/lib/index.ts");
+const lodash_1 = tslib_1.__importDefault(__webpack_require__(/*! lodash */ "./node_modules/lodash/lodash.js"));
+exports.TITAN_RANGE = 150;
+class Titan extends lib_1.Vehicle {
+    constructor(position, direction, player, built) {
+        super({
+            position,
+            direction,
+            collisionRadius: 16,
+            built,
+            buildCost: 4000,
+            player,
+            fullHealth: 700,
+            health: built ? 700 : 0,
+            movementRate: 0.05,
+            turnRate: 3.0 / 3.0,
+        });
+        this.firingRate = 7;
+        this.updateCounter = 0;
+    }
+    update(enemies) {
+        if (this.dead) {
+            return;
+        }
+        super.update();
+        this.updateCounter++;
+        if (this.updateCounter >= this.firingRate) {
+            const angleToFireProjectile = this.angleToNearestEnemy(enemies);
+            if (angleToFireProjectile == null) {
+                return;
+            }
+            for (let projectileOffsetAngle = -6; projectileOffsetAngle <= 6; projectileOffsetAngle += 3) {
+                const projectile = new TitanProjectile(this.position, this.player, angleToFireProjectile + projectileOffsetAngle * Math.PI / 180);
+                this.player.turretProjectiles.push(projectile);
+            }
+            this.updateCounter = 0;
+        }
+    }
+    angleToNearestEnemy(enemies) {
+        const nearestEnemy = lodash_1.default.minBy(enemies, (e) => vector_1.Vector.subtract(this.position, e.position).magnitude());
+        if (nearestEnemy == null) {
+            return null;
+        }
+        const offset = vector_1.Vector.subtract(nearestEnemy.position, this.position);
+        if (offset.magnitude() > exports.TITAN_RANGE * 1.2) {
+            return null;
+        }
+        return offset.angle();
+    }
+    attack(attackOrder) {
+        if (attackOrder.target.dead) {
+            return false;
+        }
+        const distance = vector_1.Vector.subtract(this.position, attackOrder.target.position).magnitude();
+        if (distance > exports.TITAN_RANGE) {
+            this.manoeuvre({ destination: attackOrder.target.position });
+        }
+        return true;
+    }
+}
+exports.Titan = Titan;
+class TitanProjectile extends lib_1.Projectile {
+    constructor(position, player, direction) {
+        super({
+            player,
+            position,
+            direction,
+            velocity: 9,
+            lifetime: exports.TITAN_RANGE / 9,
+            collisionRadius: 3,
+            health: 9,
+            fullHealth: 9,
+        });
+    }
+}
+exports.TitanProjectile = TitanProjectile;
+
+
+/***/ }),
+
 /***/ "./src/rtt_engine/entities/turret.ts":
 /*!*******************************************!*\
   !*** ./src/rtt_engine/entities/turret.ts ***!
@@ -70758,6 +70868,9 @@ class PlayerUnits {
                 case entities_1.ArtilleryTank:
                     vehicle.update(enemies);
                     break;
+                case entities_1.Titan:
+                    vehicle.update(enemies);
+                    break;
             }
         }
         for (const turret of this.turrets) {
@@ -70800,6 +70913,9 @@ class PlayerUnits {
                     this.vehicles.push(unit);
                     break;
                 case entities_1.ArtilleryTank:
+                    this.vehicles.push(unit);
+                    break;
+                case entities_1.Titan:
                     this.vehicles.push(unit);
                     break;
                 case entities_1.Turret:
@@ -71051,6 +71167,7 @@ tslib_1.__exportStar(__webpack_require__(/*! ./renderer */ "./src/rtt_threejs_re
 tslib_1.__exportStar(__webpack_require__(/*! ./presenters/bot_presenter */ "./src/rtt_threejs_renderer/presenters/bot_presenter.ts"), exports);
 tslib_1.__exportStar(__webpack_require__(/*! ./presenters/shotgun_tank_presenter */ "./src/rtt_threejs_renderer/presenters/shotgun_tank_presenter.ts"), exports);
 tslib_1.__exportStar(__webpack_require__(/*! ./presenters/artillery_tank_presenter */ "./src/rtt_threejs_renderer/presenters/artillery_tank_presenter.ts"), exports);
+tslib_1.__exportStar(__webpack_require__(/*! ./presenters/titan_presenter */ "./src/rtt_threejs_renderer/presenters/titan_presenter.ts"), exports);
 tslib_1.__exportStar(__webpack_require__(/*! ./presenters/commander_presenter */ "./src/rtt_threejs_renderer/presenters/commander_presenter.ts"), exports);
 tslib_1.__exportStar(__webpack_require__(/*! ./presenters/quadtree_presenter */ "./src/rtt_threejs_renderer/presenters/quadtree_presenter.ts"), exports);
 tslib_1.__exportStar(__webpack_require__(/*! ./presenters/factory_presenter */ "./src/rtt_threejs_renderer/presenters/factory_presenter.ts"), exports);
@@ -71794,6 +71911,54 @@ class ShotgunProjectilePresenter extends lib_1.InstancedRotateablePresenter {
     }
 }
 exports.ShotgunProjectilePresenter = ShotgunProjectilePresenter;
+
+
+/***/ }),
+
+/***/ "./src/rtt_threejs_renderer/presenters/titan_presenter.ts":
+/*!****************************************************************!*\
+  !*** ./src/rtt_threejs_renderer/presenters/titan_presenter.ts ***!
+  \****************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const tslib_1 = __webpack_require__(/*! tslib */ "./node_modules/tslib/tslib.es6.js");
+const THREE = tslib_1.__importStar(__webpack_require__(/*! three */ "./node_modules/three/build/three.module.js"));
+const entities_1 = __webpack_require__(/*! ../../rtt_engine/entities */ "./src/rtt_engine/entities/index.ts");
+const lib_1 = __webpack_require__(/*! ./lib */ "./src/rtt_threejs_renderer/presenters/lib/index.ts");
+function titanShape() {
+    var shape = new THREE.Shape();
+    shape.moveTo(16, 0);
+    const closeness = 0.8;
+    shape.ellipse(-16, 0, 16, 16, 0, Math.PI * closeness * 2, false, -Math.PI * closeness);
+    shape.lineTo(-0.5, 0);
+    return shape;
+}
+exports.titanShape = titanShape;
+class TitanPresenter extends lib_1.InstancedRotateablePresenter {
+    constructor(player, scene) {
+        super(player, (p) => p.units.vehicles.filter(v => v instanceof entities_1.Titan), new THREE.ShapeBufferGeometry(titanShape()), scene);
+    }
+}
+exports.TitanPresenter = TitanPresenter;
+function titanProjectileShape() {
+    var shape = new THREE.Shape();
+    shape.moveTo(-3, -1);
+    shape.lineTo(-3, 1);
+    shape.lineTo(3, 1.2);
+    shape.lineTo(3, -1.2);
+    return shape;
+}
+exports.titanProjectileShape = titanProjectileShape;
+class TitanProjectilePresenter extends lib_1.InstancedRotateablePresenter {
+    constructor(player, scene) {
+        super(player, (p) => p.turretProjectiles.filter(v => v instanceof entities_1.TitanProjectile), new THREE.ShapeBufferGeometry(titanProjectileShape()), scene);
+    }
+}
+exports.TitanProjectilePresenter = TitanProjectilePresenter;
 
 
 /***/ }),
