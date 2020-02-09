@@ -11,7 +11,7 @@ export class Bot extends Engineerable(Vehicle) {
       direction,
       collisionRadius: 5,
       built,
-      buildCost: 100,
+      buildCost: 70,
       player,
       fullHealth: 10,
       health: built ? 10 : 0,
