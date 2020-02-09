@@ -69857,7 +69857,7 @@ class Bot extends abilities_1.Engineerable(lib_1.Vehicle) {
             direction,
             collisionRadius: 5,
             built,
-            buildCost: 100,
+            buildCost: 70,
             player,
             fullHealth: 10,
             health: built ? 10 : 0,
