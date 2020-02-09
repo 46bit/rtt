@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import * as rtt_engine from './rtt_engine';
 import * as rtt_threejs_renderer from './rtt_threejs_renderer';
+import { IAI, ExistingAI } from './ai';
 
 window.THREE = THREE;
 
@@ -104,15 +105,6 @@ function main() {
       const commanderPresenter = new rtt_threejs_renderer.CommanderPresenter(player.units.commander, renderer.gameCoordsGroup);
       commanderPresenter.predraw();
       commanderPresenters.push(commanderPresenter);
-
-      player.units.commander.orders[0] = {
-        kind: 'construct',
-        structureClass: rtt_engine.Factory,
-        position: new rtt_engine.Vector(
-          player.units.commander.position.x + 30,
-          player.units.commander.position.y,
-        ),
-      };
     }
     const botPresenter = new rtt_threejs_renderer.BotPresenter(player, renderer.gameCoordsGroup);
     botPresenter.predraw();
@@ -177,7 +169,7 @@ function main() {
       position: rttPosition,
       player: null,
     });
-    console.log(collisions);
+    //console.log(collisions);
     // Based upon https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button
     if (e.button == 0) {
       if (collisions.length == 1) {
@@ -196,7 +188,7 @@ function main() {
     } else if (e.button == 2) {
       // FIXME: There needs to be a better way than this to detect movable stuff
       if (selected != null && selected.movementRate != null) {
-        console.log("order");
+        //console.log("order");
         if (selected instanceof rtt_engine.Commander && (buildChoice == "factory" || buildChoice == "power-generator" || buildChoice == "turret")) {
           if (buildChoice == "factory") {
             selected.orders[0] = {
@@ -250,45 +242,30 @@ function main() {
     buildChoice = "turret";
   }, false);
 
+  let ais: IAI[] = game.players.map((player) => {
+    const aiClass = ExistingAI;
+    console.log("player " + player.name + " using AI " + aiClass.name);
+    return new aiClass(game, player, game.players.filter((p) => p != player));
+  });
+
   let quadtreePresenter: rtt_threejs_renderer.QuadtreePresenter | null = null;
   setInterval(() => {
     const start = new Date();
 
-    let livingPlayers = game.players.filter((p) => !p.isDefeated());
-    for (let i in livingPlayers) {
-      const player = livingPlayers[i];
-
-      for (let factory of player.units.factories) {
-        if (factory.orders.length > 0) {
-          continue;
-        }
-        factory.orders[0] = {
-          kind: 'construct',
-          unitClass: Math.random() < 0.6 ? rtt_engine.Bot : (Math.random() < 0.7 ? rtt_engine.ShotgunTank : rtt_engine.ArtilleryTank),
-        };
-      }
-
-      const opposingPlayer = livingPlayers[(parseInt(i) + 1) % livingPlayers.length];
-      const opposingUnits = opposingPlayer.units.allKillableCollidableUnits();
-      const opposingUnitCount = opposingUnits.length;
-      if (opposingUnitCount == 0) {
+    for (let ai of ais) {
+      if (ai.player.isDefeated()) {
         continue;
       }
-      for (let j in player.units.vehicles) {
-        if (player.units.vehicles[j].orders.length > 0) {
-          continue;
-        }
-        const target = opposingUnits[j % opposingUnitCount];
-        player.units.vehicles[j].orders[0] = { kind: 'attack', target: target };
-      }
+      ai.update();
     }
 
+    let livingPlayers = game.players.filter((p) => !p.isDefeated());
     let unitsAndProjectiles = livingPlayers.map((p) => p.units.allKillableCollidableUnits()).flat();
     unitsAndProjectiles.push(...game.players.map((p) => p.turretProjectiles).flat());
 
     for (let unitOrProjectile of unitsAndProjectiles) {
       if (!bounds.contains(unitOrProjectile, () => 0)) {
-        console.log("bounds " + JSON.stringify(bounds) + " killed " + unitOrProjectile.position.x + " " + unitOrProjectile.position.y);
+        //console.log("bounds " + JSON.stringify(bounds) + " killed " + unitOrProjectile.position.x + " " + unitOrProjectile.position.y);
         unitOrProjectile.kill();
       }
     }

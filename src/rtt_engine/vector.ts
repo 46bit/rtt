@@ -17,6 +17,10 @@ export class Vector {
     return v2.angle() - v1.angle();
   }
 
+  public static distance(v1: Vector, v2: Vector): number {
+    return this.subtract(v1, v2).magnitude();
+  }
+
   public x: number;
   public y: number;
 
