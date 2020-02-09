@@ -68965,14 +68965,22 @@ function main() {
         name: 'double-cross',
         worldSize: 600,
         powerSources: [
-            new rtt_engine.Vector(155, 65),
-            new rtt_engine.Vector(65, 155),
-            new rtt_engine.Vector(445, 65),
-            new rtt_engine.Vector(535, 155),
-            new rtt_engine.Vector(65, 445),
-            new rtt_engine.Vector(155, 535),
-            new rtt_engine.Vector(445, 535),
-            new rtt_engine.Vector(535, 445),
+            new rtt_engine.Vector(50, 50),
+            new rtt_engine.Vector(120, 50),
+            new rtt_engine.Vector(120, 120),
+            new rtt_engine.Vector(50, 120),
+            new rtt_engine.Vector(550, 50),
+            new rtt_engine.Vector(480, 50),
+            new rtt_engine.Vector(480, 120),
+            new rtt_engine.Vector(550, 120),
+            new rtt_engine.Vector(550, 480),
+            new rtt_engine.Vector(480, 480),
+            new rtt_engine.Vector(480, 550),
+            new rtt_engine.Vector(550, 550),
+            new rtt_engine.Vector(120, 550),
+            new rtt_engine.Vector(50, 550),
+            new rtt_engine.Vector(50, 480),
+            new rtt_engine.Vector(120, 480),
             new rtt_engine.Vector(75, 300),
             new rtt_engine.Vector(165, 300),
             new rtt_engine.Vector(255, 300),
@@ -69010,12 +69018,16 @@ function main() {
     };
     let renderer = new rtt_threejs_renderer.Renderer(map.worldSize, window, document);
     renderer.animate(true);
+    let mapPresenter = new rtt_threejs_renderer.MapPresenter(map, renderer.gameCoordsGroup);
+    mapPresenter.predraw();
+    const bounds = new rtt_engine.Bounds(0, map.worldSize, 0, map.worldSize);
     // const grid = new THREE.GridHelper(map.worldSize, map.worldSize / 25);
     // grid.position.z = -0.1;
     // grid.rotation.x = Math.PI / 2;
     // renderer.scene.add(grid);
     let game = rtt_engine.gameFromConfig(config);
     window.game = game;
+    window.renderer = renderer;
     window.rtt_engine = rtt_engine;
     window.rtt_threejs_renderer = rtt_threejs_renderer;
     let commanderPresenters = [];
@@ -69200,7 +69212,13 @@ function main() {
         }
         let unitsAndProjectiles = livingPlayers.map((p) => p.units.allKillableCollidableUnits()).flat();
         unitsAndProjectiles.push(...game.players.map((p) => p.turretProjectiles).flat());
-        const quadtree = rtt_engine.IQuadrant.fromEntityCollisions(unitsAndProjectiles);
+        for (let unitOrProjectile of unitsAndProjectiles) {
+            if (!bounds.contains(unitOrProjectile, () => 0)) {
+                console.log("bounds " + JSON.stringify(bounds) + " killed " + unitOrProjectile.position.x + " " + unitOrProjectile.position.y);
+                unitOrProjectile.kill();
+            }
+        }
+        const quadtree = rtt_engine.IQuadrant.fromEntityCollisions(bounds, unitsAndProjectiles);
         if (quadtreePresenter == null) {
             quadtreePresenter = new rtt_threejs_renderer.QuadtreePresenter(quadtree, renderer.gameCoordsGroup);
         }
@@ -69238,6 +69256,7 @@ function main() {
         //console.log("game update time: " + ((new Date()) - start));
         const start2 = new Date();
         game.draw();
+        mapPresenter.draw();
         powerSourcePresenter.draw();
         for (let commanderPresenter of commanderPresenters) {
             commanderPresenter.draw();
@@ -69726,7 +69745,7 @@ const tslib_1 = __webpack_require__(/*! tslib */ "./node_modules/tslib/tslib.es6
 const vector_1 = __webpack_require__(/*! ../vector */ "./src/rtt_engine/vector.ts");
 const lib_1 = __webpack_require__(/*! ./lib */ "./src/rtt_engine/entities/lib/index.ts");
 const lodash_1 = tslib_1.__importDefault(__webpack_require__(/*! lodash */ "./node_modules/lodash/lodash.js"));
-exports.ARTILLERY_RANGE = 190;
+exports.ARTILLERY_RANGE = 210;
 class ArtilleryTank extends lib_1.Vehicle {
     constructor(position, direction, player, built) {
         super({
@@ -69766,7 +69785,7 @@ class ArtilleryTank extends lib_1.Vehicle {
             return null;
         }
         const offset = vector_1.Vector.subtract(nearestEnemy.position, this.position);
-        if (offset.magnitude() > exports.ARTILLERY_RANGE * 1.2) {
+        if (offset.magnitude() > exports.ARTILLERY_RANGE * 1.1) {
             return null;
         }
         return offset.angle();
@@ -69790,7 +69809,7 @@ class ArtilleryProjectile extends lib_1.Projectile {
             position,
             direction,
             velocity: 1.8,
-            lifetime: exports.ARTILLERY_RANGE / 2,
+            lifetime: exports.ARTILLERY_RANGE / 1.8,
             collisionRadius: 5,
             health: 18,
             fullHealth: 18,
@@ -70887,19 +70906,12 @@ class IQuadrant {
             this.subtrees.push(subquadrant);
         }
     }
-    static fromEntityCollisions(entities) {
+    static fromEntityCollisions(bounds, entities) {
         const entityRadius = (e) => e.collisionRadius;
-        return this.fromEntitiesAndRadii(entities, entityRadius);
+        return this.fromEntitiesAndRadii(bounds, entities, entityRadius);
     }
-    static fromEntitiesAndRadii(entities, entityRadius) {
-        return new IQuadrant(this.boundsOfEntities(entities, entityRadius), entities, entityRadius);
-    }
-    static boundsOfEntities(entities, entityRadius) {
-        const left = Math.min(...entities.map((i) => (i.position.x - entityRadius(i))));
-        const right = Math.max(...entities.map((i) => (i.position.x + entityRadius(i))));
-        const top = Math.min(...entities.map((i) => (i.position.y - entityRadius(i))));
-        const bottom = Math.max(...entities.map((i) => (i.position.y + entityRadius(i))));
-        return new Bounds(left, right, top, bottom);
+    static fromEntitiesAndRadii(bounds, entities, entityRadius) {
+        return new IQuadrant(bounds, entities, entityRadius);
     }
     contains(entity) {
         return this.bounds.contains(entity, this.entityRadius);
@@ -71047,6 +71059,7 @@ tslib_1.__exportStar(__webpack_require__(/*! ./presenters/power_source_presenter
 tslib_1.__exportStar(__webpack_require__(/*! ./presenters/power_generator_presenter */ "./src/rtt_threejs_renderer/presenters/power_generator_presenter.ts"), exports);
 tslib_1.__exportStar(__webpack_require__(/*! ./presenters/turret_presenter */ "./src/rtt_threejs_renderer/presenters/turret_presenter.ts"), exports);
 tslib_1.__exportStar(__webpack_require__(/*! ./presenters/turret_projectile_presenter */ "./src/rtt_threejs_renderer/presenters/turret_projectile_presenter.ts"), exports);
+tslib_1.__exportStar(__webpack_require__(/*! ./presenters/map_presenter */ "./src/rtt_threejs_renderer/presenters/map_presenter.ts"), exports);
 
 
 /***/ }),
@@ -71498,6 +71511,58 @@ exports.InstancedRotateablePresenter = InstancedRotateablePresenter;
 
 /***/ }),
 
+/***/ "./src/rtt_threejs_renderer/presenters/map_presenter.ts":
+/*!**************************************************************!*\
+  !*** ./src/rtt_threejs_renderer/presenters/map_presenter.ts ***!
+  \**************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const tslib_1 = __webpack_require__(/*! tslib */ "./node_modules/tslib/tslib.es6.js");
+const THREE = tslib_1.__importStar(__webpack_require__(/*! three */ "./node_modules/three/build/three.module.js"));
+class MapPresenter {
+    constructor(map, scene) {
+        this.map = map;
+        this.scene = scene;
+    }
+    predraw() {
+        const geometry = new THREE.PlaneGeometry(this.map.worldSize, this.map.worldSize);
+        const material = new THREE.MeshBasicMaterial({ color: new THREE.Color(0) });
+        this.mesh = new THREE.Mesh(geometry, material);
+        this.mesh.position.x = this.map.worldSize / 2;
+        this.mesh.position.y = this.map.worldSize / 2;
+        this.scene.add(this.mesh);
+        this.edgeMaterial = new THREE.LineDashedMaterial({ color: 0x808080, gapSize: 3 });
+        this.edges = new THREE.LineSegments(new THREE.EdgesGeometry(geometry), this.edgeMaterial);
+        this.edges.computeLineDistances();
+        this.edges.position.x = this.map.worldSize / 2;
+        this.edges.position.y = this.map.worldSize / 2;
+        this.scene.add(this.edges);
+    }
+    draw() {
+        if (this.edgeMaterial != null) {
+            //this.edgeMaterial!.color.offsetHSL(0.005, 0, 0);
+        }
+    }
+    dedraw() {
+        if (this.mesh != null) {
+            this.scene.remove(this.mesh);
+            this.mesh = undefined;
+        }
+        if (this.edges != null) {
+            this.scene.remove(this.edges);
+            this.edges = undefined;
+        }
+    }
+}
+exports.MapPresenter = MapPresenter;
+
+
+/***/ }),
+
 /***/ "./src/rtt_threejs_renderer/presenters/power_generator_presenter.ts":
 /*!**************************************************************************!*\
   !*** ./src/rtt_threejs_renderer/presenters/power_generator_presenter.ts ***!
@@ -71881,7 +71946,7 @@ class Renderer {
         this.camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, worldSize * 200);
         //this.camera.position.z = worldSize;
         this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0);
+        this.scene.background = new THREE.Color(0x202020);
         this.gameCoordsGroup = new THREE.Group();
         this.gameCoordsGroup.position.x = -worldSize / 2;
         this.gameCoordsGroup.position.y = -worldSize / 2;
