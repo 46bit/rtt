@@ -69022,6 +69022,10 @@ function main() {
     let powerSourcePresenter = new rtt_threejs_renderer.PowerSourcePresenter(game, renderer.gameCoordsGroup);
     powerSourcePresenter.predraw();
     let botPresenters = [];
+    let shotgunTankPresenters = [];
+    let shotgunProjectilePresenters = [];
+    let artilleryTankPresenters = [];
+    let artilleryProjectilePresenters = [];
     let factoryPresenters = [];
     let healthinessPresenters = [];
     let powerGeneratorPresenters = [];
@@ -69042,6 +69046,18 @@ function main() {
         const botPresenter = new rtt_threejs_renderer.BotPresenter(player, renderer.gameCoordsGroup);
         botPresenter.predraw();
         botPresenters.push(botPresenter);
+        const shotgunTankPresenter = new rtt_threejs_renderer.ShotgunTankPresenter(player, renderer.gameCoordsGroup);
+        shotgunTankPresenter.predraw();
+        shotgunTankPresenters.push(shotgunTankPresenter);
+        const shotgunProjectilePresenter = new rtt_threejs_renderer.ShotgunProjectilePresenter(player, renderer.gameCoordsGroup);
+        shotgunProjectilePresenter.predraw();
+        shotgunProjectilePresenters.push(shotgunProjectilePresenter);
+        const artilleryTankPresenter = new rtt_threejs_renderer.ArtilleryTankPresenter(player, renderer.gameCoordsGroup);
+        artilleryTankPresenter.predraw();
+        artilleryTankPresenters.push(artilleryTankPresenter);
+        const artilleryProjectilePresenter = new rtt_threejs_renderer.ArtilleryProjectilePresenter(player, renderer.gameCoordsGroup);
+        artilleryProjectilePresenter.predraw();
+        artilleryProjectilePresenters.push(artilleryProjectilePresenter);
         const factoryPresenter = new rtt_threejs_renderer.FactoryPresenter(player, renderer.gameCoordsGroup);
         factoryPresenter.predraw();
         factoryPresenters.push(factoryPresenter);
@@ -69165,7 +69181,7 @@ function main() {
             for (let factory of player.units.factories) {
                 factory.orders[0] = {
                     kind: 'construct',
-                    unitClass: rtt_engine.Bot,
+                    unitClass: Math.random() < 0.6 ? rtt_engine.Bot : (Math.random() < 0.7 ? rtt_engine.ShotgunTank : rtt_engine.ArtilleryTank),
                 };
             }
             const opposingPlayer = livingPlayers[(parseInt(i) + 1) % livingPlayers.length];
@@ -69182,9 +69198,9 @@ function main() {
                 player.units.vehicles[j].orders[0] = { kind: 'attack', target: target };
             }
         }
-        let units = livingPlayers.map((p) => p.units.allKillableCollidableUnits()).flat();
-        units.push(...game.players.map((p) => p.turretProjectiles).flat());
-        const quadtree = rtt_engine.IQuadrant.fromEntityCollisions(units);
+        let unitsAndProjectiles = livingPlayers.map((p) => p.units.allKillableCollidableUnits()).flat();
+        unitsAndProjectiles.push(...game.players.map((p) => p.turretProjectiles).flat());
+        const quadtree = rtt_engine.IQuadrant.fromEntityCollisions(unitsAndProjectiles);
         if (quadtreePresenter == null) {
             quadtreePresenter = new rtt_threejs_renderer.QuadtreePresenter(quadtree, renderer.gameCoordsGroup);
         }
@@ -69194,18 +69210,25 @@ function main() {
         //quadtreePresenter.draw();
         //console.log(quadtree.entities.length);
         let unitOriginalHealths = {};
-        for (let unit of units) {
+        for (let unit of unitsAndProjectiles) {
             if (unit.damage != null) {
                 unitOriginalHealths[unit.id] = unit.health;
             }
         }
-        let collisions = quadtree.getCollisions(units);
+        let collisions = quadtree.getCollisions(unitsAndProjectiles);
         for (let unitId in collisions) {
-            const unit = units.filter((u) => u.id == unitId)[0];
-            const numberOfCollidingUnits = collisions[unitId].length;
+            const unit = unitsAndProjectiles.filter((u) => u.id == unitId)[0];
+            let unitCollisions = collisions[unitId];
+            if (unit instanceof rtt_engine.Projectile) {
+                unitCollisions = unitCollisions.filter((u) => !(u instanceof rtt_engine.Projectile));
+            }
+            const numberOfCollidingUnits = unitCollisions.length;
+            if (numberOfCollidingUnits == 0) {
+                continue;
+            }
             // FIXME: We need to only apply damage if it fulfils IKillable…
             const damagePerCollidingUnit = unitOriginalHealths[unitId] / numberOfCollidingUnits;
-            for (let collidingUnit of collisions[unitId]) {
+            for (let collidingUnit of unitCollisions) {
                 if (collidingUnit.damage != null) {
                     collidingUnit.damage(damagePerCollidingUnit);
                 }
@@ -69221,6 +69244,18 @@ function main() {
         }
         for (let botPresenter of botPresenters) {
             botPresenter.draw();
+        }
+        for (let shotgunTankPresenter of shotgunTankPresenters) {
+            shotgunTankPresenter.draw();
+        }
+        for (let shotgunProjectilePresenter of shotgunProjectilePresenters) {
+            shotgunProjectilePresenter.draw();
+        }
+        for (let artilleryTankPresenter of artilleryTankPresenters) {
+            artilleryTankPresenter.draw();
+        }
+        for (let artilleryProjectilePresenter of artilleryProjectilePresenters) {
+            artilleryProjectilePresenter.draw();
         }
         for (let factoryPresenter of factoryPresenters) {
             factoryPresenter.draw();
@@ -69677,6 +69712,96 @@ exports.Ownable = Ownable;
 
 /***/ }),
 
+/***/ "./src/rtt_engine/entities/artillery_tank.ts":
+/*!***************************************************!*\
+  !*** ./src/rtt_engine/entities/artillery_tank.ts ***!
+  \***************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const tslib_1 = __webpack_require__(/*! tslib */ "./node_modules/tslib/tslib.es6.js");
+const vector_1 = __webpack_require__(/*! ../vector */ "./src/rtt_engine/vector.ts");
+const lib_1 = __webpack_require__(/*! ./lib */ "./src/rtt_engine/entities/lib/index.ts");
+const lodash_1 = tslib_1.__importDefault(__webpack_require__(/*! lodash */ "./node_modules/lodash/lodash.js"));
+exports.ARTILLERY_RANGE = 190;
+class ArtilleryTank extends lib_1.Vehicle {
+    constructor(position, direction, player, built) {
+        super({
+            position,
+            direction,
+            collisionRadius: 9,
+            built,
+            buildCost: 500,
+            player,
+            fullHealth: 50,
+            health: built ? 50 : 0,
+            movementRate: 0.04,
+            turnRate: 4.0 / 3.0,
+        });
+        this.firingRate = 75;
+        this.updateCounter = 0;
+    }
+    update(enemies) {
+        if (this.dead) {
+            return;
+        }
+        super.update();
+        this.updateCounter++;
+        if (this.updateCounter >= this.firingRate && this.velocity == 0) {
+            const angleToFireProjectile = this.angleToNearestEnemy(enemies);
+            if (angleToFireProjectile == null) {
+                return;
+            }
+            const projectile = new ArtilleryProjectile(this.position, this.player, angleToFireProjectile);
+            this.player.turretProjectiles.push(projectile);
+            this.updateCounter = 0;
+        }
+    }
+    angleToNearestEnemy(enemies) {
+        const nearestEnemy = lodash_1.default.minBy(enemies, (e) => vector_1.Vector.subtract(this.position, e.position).magnitude());
+        if (nearestEnemy == null) {
+            return null;
+        }
+        const offset = vector_1.Vector.subtract(nearestEnemy.position, this.position);
+        if (offset.magnitude() > exports.ARTILLERY_RANGE * 1.2) {
+            return null;
+        }
+        return offset.angle();
+    }
+    attack(attackOrder) {
+        if (attackOrder.target.dead) {
+            return false;
+        }
+        const distance = vector_1.Vector.subtract(this.position, attackOrder.target.position).magnitude();
+        if (distance > exports.ARTILLERY_RANGE) {
+            this.manoeuvre({ destination: attackOrder.target.position });
+        }
+        return true;
+    }
+}
+exports.ArtilleryTank = ArtilleryTank;
+class ArtilleryProjectile extends lib_1.Projectile {
+    constructor(position, player, direction) {
+        super({
+            player,
+            position,
+            direction,
+            velocity: 1.8,
+            lifetime: exports.ARTILLERY_RANGE / 2,
+            collisionRadius: 5,
+            health: 18,
+            fullHealth: 18,
+        });
+    }
+}
+exports.ArtilleryProjectile = ArtilleryProjectile;
+
+
+/***/ }),
+
 /***/ "./src/rtt_engine/entities/bot.ts":
 /*!****************************************!*\
   !*** ./src/rtt_engine/entities/bot.ts ***!
@@ -69700,8 +69825,8 @@ class Bot extends abilities_1.Engineerable(lib_1.Vehicle) {
             player,
             fullHealth: 10,
             health: built ? 10 : 0,
-            movementRate: 0.1,
-            turnRate: 4.0 / 3.0,
+            movementRate: 0.15,
+            turnRate: 5.0 / 3.0,
             productionRange: 25.0,
         });
     }
@@ -69868,6 +69993,8 @@ const tslib_1 = __webpack_require__(/*! tslib */ "./node_modules/tslib/tslib.es6
 tslib_1.__exportStar(__webpack_require__(/*! ./abilities */ "./src/rtt_engine/entities/abilities/index.ts"), exports);
 tslib_1.__exportStar(__webpack_require__(/*! ./lib */ "./src/rtt_engine/entities/lib/index.ts"), exports);
 tslib_1.__exportStar(__webpack_require__(/*! ./bot */ "./src/rtt_engine/entities/bot.ts"), exports);
+tslib_1.__exportStar(__webpack_require__(/*! ./artillery_tank */ "./src/rtt_engine/entities/artillery_tank.ts"), exports);
+tslib_1.__exportStar(__webpack_require__(/*! ./shotgun_tank */ "./src/rtt_engine/entities/shotgun_tank.ts"), exports);
 tslib_1.__exportStar(__webpack_require__(/*! ./commander */ "./src/rtt_engine/entities/commander.ts"), exports);
 tslib_1.__exportStar(__webpack_require__(/*! ./factory */ "./src/rtt_engine/entities/factory.ts"), exports);
 tslib_1.__exportStar(__webpack_require__(/*! ./power_generator */ "./src/rtt_engine/entities/power_generator.ts"), exports);
@@ -70245,6 +70372,98 @@ exports.PowerSource = PowerSource;
 
 /***/ }),
 
+/***/ "./src/rtt_engine/entities/shotgun_tank.ts":
+/*!*************************************************!*\
+  !*** ./src/rtt_engine/entities/shotgun_tank.ts ***!
+  \*************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const tslib_1 = __webpack_require__(/*! tslib */ "./node_modules/tslib/tslib.es6.js");
+const vector_1 = __webpack_require__(/*! ../vector */ "./src/rtt_engine/vector.ts");
+const lib_1 = __webpack_require__(/*! ./lib */ "./src/rtt_engine/entities/lib/index.ts");
+const lodash_1 = tslib_1.__importDefault(__webpack_require__(/*! lodash */ "./node_modules/lodash/lodash.js"));
+exports.SHOTGUN_RANGE = 80;
+class ShotgunTank extends lib_1.Vehicle {
+    constructor(position, direction, player, built) {
+        super({
+            position,
+            direction,
+            collisionRadius: 8,
+            built,
+            buildCost: 400,
+            player,
+            fullHealth: 35,
+            health: built ? 35 : 0,
+            movementRate: 0.07,
+            turnRate: 4.0 / 3.0,
+        });
+        this.firingRate = 40;
+        this.updateCounter = 0;
+    }
+    update(enemies) {
+        if (this.dead) {
+            return;
+        }
+        super.update();
+        this.updateCounter++;
+        if (this.updateCounter >= this.firingRate) {
+            const angleToFireProjectile = this.angleToNearestEnemy(enemies);
+            if (angleToFireProjectile == null) {
+                return;
+            }
+            for (let projectileOffsetAngle = -4.8; projectileOffsetAngle <= 4.8; projectileOffsetAngle += 2.4) {
+                const projectile = new ShotgunProjectile(this.position, this.player, angleToFireProjectile + projectileOffsetAngle * Math.PI / 180);
+                this.player.turretProjectiles.push(projectile);
+            }
+            this.updateCounter = 0;
+        }
+    }
+    angleToNearestEnemy(enemies) {
+        const nearestEnemy = lodash_1.default.minBy(enemies, (e) => vector_1.Vector.subtract(this.position, e.position).magnitude());
+        if (nearestEnemy == null) {
+            return null;
+        }
+        const offset = vector_1.Vector.subtract(nearestEnemy.position, this.position);
+        if (offset.magnitude() > exports.SHOTGUN_RANGE * 1.2) {
+            return null;
+        }
+        return offset.angle();
+    }
+    attack(attackOrder) {
+        if (attackOrder.target.dead) {
+            return false;
+        }
+        const distance = vector_1.Vector.subtract(this.position, attackOrder.target.position).magnitude();
+        if (distance > exports.SHOTGUN_RANGE) {
+            this.manoeuvre({ destination: attackOrder.target.position });
+        }
+        return true;
+    }
+}
+exports.ShotgunTank = ShotgunTank;
+class ShotgunProjectile extends lib_1.Projectile {
+    constructor(position, player, direction) {
+        super({
+            player,
+            position,
+            direction,
+            velocity: 6.5,
+            lifetime: exports.SHOTGUN_RANGE / 5,
+            collisionRadius: 3,
+            health: 2.5,
+            fullHealth: 2.5,
+        });
+    }
+}
+exports.ShotgunProjectile = ShotgunProjectile;
+
+
+/***/ }),
+
 /***/ "./src/rtt_engine/entities/turret.ts":
 /*!*******************************************!*\
   !*** ./src/rtt_engine/entities/turret.ts ***!
@@ -70259,7 +70478,7 @@ const tslib_1 = __webpack_require__(/*! tslib */ "./node_modules/tslib/tslib.es6
 const vector_1 = __webpack_require__(/*! ../vector */ "./src/rtt_engine/vector.ts");
 const lib_1 = __webpack_require__(/*! ./lib */ "./src/rtt_engine/entities/lib/index.ts");
 const lodash_1 = tslib_1.__importDefault(__webpack_require__(/*! lodash */ "./node_modules/lodash/lodash.js"));
-const TURRET_RANGE = 180;
+exports.TURRET_RANGE = 180;
 class Turret extends lib_1.Structure {
     constructor(position, player, built) {
         super({
@@ -70297,7 +70516,7 @@ class Turret extends lib_1.Structure {
             return null;
         }
         const offset = vector_1.Vector.subtract(nearestEnemy.position, this.position);
-        if (offset.magnitude() > TURRET_RANGE * 1.3) {
+        if (offset.magnitude() > exports.TURRET_RANGE * 1.3) {
             return null;
         }
         return offset.angle();
@@ -70311,7 +70530,7 @@ class TurretProjectile extends lib_1.Projectile {
             position,
             direction,
             velocity: 3.5,
-            lifetime: TURRET_RANGE / 3.5,
+            lifetime: exports.TURRET_RANGE / 3.5,
             collisionRadius: 4,
             health: 7,
             fullHealth: 7,
@@ -70509,17 +70728,24 @@ class PlayerUnits {
         if (this.commander != null) {
             this.commander.update();
         }
-        this.updateEachOf(this.vehicles);
+        for (let vehicle of this.vehicles) {
+            switch (vehicle.constructor) {
+                case entities_1.Bot:
+                    vehicle.update();
+                    break;
+                case entities_1.ShotgunTank:
+                    vehicle.update(enemies);
+                    break;
+                case entities_1.ArtilleryTank:
+                    vehicle.update(enemies);
+                    break;
+            }
+        }
         for (const turret of this.turrets) {
             turret.update(enemies);
         }
         this.updateFactoriesAndConstructions();
         this.removeDeadUnits();
-    }
-    updateEachOf(things) {
-        for (const thing of things) {
-            thing.update();
-        }
     }
     updateFactoriesAndConstructions() {
         for (let factory of this.factories) {
@@ -70549,6 +70775,12 @@ class PlayerUnits {
                     this.powerGenerators.push(unit);
                     break;
                 case entities_1.Bot:
+                    this.vehicles.push(unit);
+                    break;
+                case entities_1.ShotgunTank:
+                    this.vehicles.push(unit);
+                    break;
+                case entities_1.ArtilleryTank:
                     this.vehicles.push(unit);
                     break;
                 case entities_1.Turret:
@@ -70805,6 +71037,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const tslib_1 = __webpack_require__(/*! tslib */ "./node_modules/tslib/tslib.es6.js");
 tslib_1.__exportStar(__webpack_require__(/*! ./renderer */ "./src/rtt_threejs_renderer/renderer.ts"), exports);
 tslib_1.__exportStar(__webpack_require__(/*! ./presenters/bot_presenter */ "./src/rtt_threejs_renderer/presenters/bot_presenter.ts"), exports);
+tslib_1.__exportStar(__webpack_require__(/*! ./presenters/shotgun_tank_presenter */ "./src/rtt_threejs_renderer/presenters/shotgun_tank_presenter.ts"), exports);
+tslib_1.__exportStar(__webpack_require__(/*! ./presenters/artillery_tank_presenter */ "./src/rtt_threejs_renderer/presenters/artillery_tank_presenter.ts"), exports);
 tslib_1.__exportStar(__webpack_require__(/*! ./presenters/commander_presenter */ "./src/rtt_threejs_renderer/presenters/commander_presenter.ts"), exports);
 tslib_1.__exportStar(__webpack_require__(/*! ./presenters/quadtree_presenter */ "./src/rtt_threejs_renderer/presenters/quadtree_presenter.ts"), exports);
 tslib_1.__exportStar(__webpack_require__(/*! ./presenters/factory_presenter */ "./src/rtt_threejs_renderer/presenters/factory_presenter.ts"), exports);
@@ -70813,6 +71047,56 @@ tslib_1.__exportStar(__webpack_require__(/*! ./presenters/power_source_presenter
 tslib_1.__exportStar(__webpack_require__(/*! ./presenters/power_generator_presenter */ "./src/rtt_threejs_renderer/presenters/power_generator_presenter.ts"), exports);
 tslib_1.__exportStar(__webpack_require__(/*! ./presenters/turret_presenter */ "./src/rtt_threejs_renderer/presenters/turret_presenter.ts"), exports);
 tslib_1.__exportStar(__webpack_require__(/*! ./presenters/turret_projectile_presenter */ "./src/rtt_threejs_renderer/presenters/turret_projectile_presenter.ts"), exports);
+
+
+/***/ }),
+
+/***/ "./src/rtt_threejs_renderer/presenters/artillery_tank_presenter.ts":
+/*!*************************************************************************!*\
+  !*** ./src/rtt_threejs_renderer/presenters/artillery_tank_presenter.ts ***!
+  \*************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const tslib_1 = __webpack_require__(/*! tslib */ "./node_modules/tslib/tslib.es6.js");
+const THREE = tslib_1.__importStar(__webpack_require__(/*! three */ "./node_modules/three/build/three.module.js"));
+const entities_1 = __webpack_require__(/*! ../../rtt_engine/entities */ "./src/rtt_engine/entities/index.ts");
+const lib_1 = __webpack_require__(/*! ./lib */ "./src/rtt_threejs_renderer/presenters/lib/index.ts");
+function artilleryTankShape() {
+    var shape = new THREE.Shape();
+    shape.moveTo(-4, 0);
+    shape.lineTo(-8, -8);
+    shape.lineTo(8, -8);
+    shape.lineTo(8, 8);
+    shape.lineTo(-8, 8);
+    return shape;
+}
+exports.artilleryTankShape = artilleryTankShape;
+class ArtilleryTankPresenter extends lib_1.InstancedRotateablePresenter {
+    constructor(player, scene) {
+        super(player, (p) => p.units.vehicles.filter(v => v instanceof entities_1.ArtilleryTank), new THREE.ShapeBufferGeometry(artilleryTankShape()), scene);
+    }
+}
+exports.ArtilleryTankPresenter = ArtilleryTankPresenter;
+function artilleryProjectileShape() {
+    var shape = new THREE.Shape();
+    shape.moveTo(-5, 0);
+    shape.lineTo(-2.5, 1.5);
+    shape.lineTo(5, 2);
+    shape.lineTo(5, -2);
+    shape.lineTo(-2.5, -1.5);
+    return shape;
+}
+exports.artilleryProjectileShape = artilleryProjectileShape;
+class ArtilleryProjectilePresenter extends lib_1.InstancedRotateablePresenter {
+    constructor(player, scene) {
+        super(player, (p) => p.turretProjectiles.filter(v => v instanceof entities_1.ArtilleryProjectile), new THREE.ShapeBufferGeometry(artilleryProjectileShape()), scene);
+    }
+}
+exports.ArtilleryProjectilePresenter = ArtilleryProjectilePresenter;
 
 
 /***/ }),
@@ -70829,7 +71113,8 @@ tslib_1.__exportStar(__webpack_require__(/*! ./presenters/turret_projectile_pres
 Object.defineProperty(exports, "__esModule", { value: true });
 const tslib_1 = __webpack_require__(/*! tslib */ "./node_modules/tslib/tslib.es6.js");
 const THREE = tslib_1.__importStar(__webpack_require__(/*! three */ "./node_modules/three/build/three.module.js"));
-const bot_1 = __webpack_require__(/*! ../../rtt_engine/entities/bot */ "./src/rtt_engine/entities/bot.ts");
+const entities_1 = __webpack_require__(/*! ../../rtt_engine/entities */ "./src/rtt_engine/entities/index.ts");
+const lib_1 = __webpack_require__(/*! ./lib */ "./src/rtt_threejs_renderer/presenters/lib/index.ts");
 function botShape() {
     var shape = new THREE.Shape();
     shape.moveTo(5, 0);
@@ -70839,42 +71124,9 @@ function botShape() {
     return shape;
 }
 exports.botShape = botShape;
-class BotPresenter {
+class BotPresenter extends lib_1.InstancedRotateablePresenter {
     constructor(player, scene) {
-        this.player = player;
-        this.scene = scene;
-    }
-    predraw() {
-        this.meshMaterial = new THREE.MeshBasicMaterial({ color: this.player.color });
-        this.botGeometry = new THREE.ShapeBufferGeometry(botShape());
-    }
-    draw() {
-        const bots = this.player.units.vehicles.filter((v) => v instanceof bot_1.Bot);
-        const numberOfBots = bots.length;
-        if (this.instancedMesh != undefined && this.instancedMesh.count != numberOfBots) {
-            this.scene.remove(this.instancedMesh);
-            this.instancedMesh = undefined;
-        }
-        if (this.instancedMesh == undefined) {
-            this.instancedMesh = new THREE.InstancedMesh(this.botGeometry, this.meshMaterial, numberOfBots);
-            this.instancedMesh.count = numberOfBots;
-            this.instancedMesh.frustumCulled = false;
-            this.scene.add(this.instancedMesh);
-        }
-        let m = new THREE.Matrix4();
-        for (let i = 0; i < numberOfBots; i++) {
-            const bot = bots[i];
-            m.makeRotationZ(-Math.PI / 2 - bot.direction);
-            m.setPosition(bot.position.x, bot.position.y, 0);
-            this.instancedMesh.setMatrixAt(i, m);
-        }
-        this.instancedMesh.instanceMatrix.needsUpdate = true;
-    }
-    dedraw() {
-        if (this.instancedMesh) {
-            this.scene.remove(this.instancedMesh);
-            this.instancedMesh = undefined;
-        }
+        super(player, (p) => p.units.vehicles.filter(v => v instanceof entities_1.Bot), new THREE.ShapeBufferGeometry(botShape()), scene);
     }
 }
 exports.BotPresenter = BotPresenter;
@@ -71120,6 +71372,132 @@ exports.HealthinessPresenter = HealthinessPresenter;
 
 /***/ }),
 
+/***/ "./src/rtt_threejs_renderer/presenters/lib/index.ts":
+/*!**********************************************************!*\
+  !*** ./src/rtt_threejs_renderer/presenters/lib/index.ts ***!
+  \**********************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const tslib_1 = __webpack_require__(/*! tslib */ "./node_modules/tslib/tslib.es6.js");
+tslib_1.__exportStar(__webpack_require__(/*! ./instanced_presenter */ "./src/rtt_threejs_renderer/presenters/lib/instanced_presenter.ts"), exports);
+tslib_1.__exportStar(__webpack_require__(/*! ./instanced_rotateable_presenter */ "./src/rtt_threejs_renderer/presenters/lib/instanced_rotateable_presenter.ts"), exports);
+
+
+/***/ }),
+
+/***/ "./src/rtt_threejs_renderer/presenters/lib/instanced_presenter.ts":
+/*!************************************************************************!*\
+  !*** ./src/rtt_threejs_renderer/presenters/lib/instanced_presenter.ts ***!
+  \************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const tslib_1 = __webpack_require__(/*! tslib */ "./node_modules/tslib/tslib.es6.js");
+const THREE = tslib_1.__importStar(__webpack_require__(/*! three */ "./node_modules/three/build/three.module.js"));
+class InstancedPresenter {
+    constructor(player, instanceCallback, geometry, scene) {
+        this.player = player;
+        this.instanceCallback = instanceCallback;
+        this.geometry = geometry;
+        this.scene = scene;
+        this.material = new THREE.MeshBasicMaterial({ color: this.player.color });
+    }
+    predraw() { }
+    draw() {
+        const instances = this.instanceCallback(this.player);
+        const instanceCount = instances.length;
+        if (this.instancedMesh != undefined && this.instancedMesh.count != instanceCount) {
+            this.scene.remove(this.instancedMesh);
+            this.instancedMesh = undefined;
+        }
+        if (this.instancedMesh == undefined) {
+            this.instancedMesh = new THREE.InstancedMesh(this.geometry, this.material, instanceCount);
+            this.instancedMesh.count = instanceCount;
+            this.instancedMesh.frustumCulled = false;
+            this.scene.add(this.instancedMesh);
+        }
+        let m = new THREE.Matrix4();
+        for (let i = 0; i < instanceCount; i++) {
+            const instance = instances[i];
+            m.setPosition(instance.position.x, instance.position.y, 0);
+            this.instancedMesh.setMatrixAt(i, m);
+        }
+        this.instancedMesh.instanceMatrix.needsUpdate = true;
+    }
+    dedraw() {
+        if (this.instancedMesh) {
+            this.scene.remove(this.instancedMesh);
+            this.instancedMesh = undefined;
+        }
+    }
+}
+exports.InstancedPresenter = InstancedPresenter;
+
+
+/***/ }),
+
+/***/ "./src/rtt_threejs_renderer/presenters/lib/instanced_rotateable_presenter.ts":
+/*!***********************************************************************************!*\
+  !*** ./src/rtt_threejs_renderer/presenters/lib/instanced_rotateable_presenter.ts ***!
+  \***********************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const tslib_1 = __webpack_require__(/*! tslib */ "./node_modules/tslib/tslib.es6.js");
+const THREE = tslib_1.__importStar(__webpack_require__(/*! three */ "./node_modules/three/build/three.module.js"));
+class InstancedRotateablePresenter {
+    constructor(player, instanceCallback, geometry, scene) {
+        this.player = player;
+        this.instanceCallback = instanceCallback;
+        this.geometry = geometry;
+        this.scene = scene;
+        this.material = new THREE.MeshBasicMaterial({ color: this.player.color });
+    }
+    predraw() { }
+    draw() {
+        const instances = this.instanceCallback(this.player);
+        const instanceCount = instances.length;
+        if (this.instancedMesh != undefined && this.instancedMesh.count != instanceCount) {
+            this.scene.remove(this.instancedMesh);
+            this.instancedMesh = undefined;
+        }
+        if (this.instancedMesh == undefined) {
+            this.instancedMesh = new THREE.InstancedMesh(this.geometry, this.material, instanceCount);
+            this.instancedMesh.count = instanceCount;
+            this.instancedMesh.frustumCulled = false;
+            this.scene.add(this.instancedMesh);
+        }
+        let m = new THREE.Matrix4();
+        for (let i = 0; i < instanceCount; i++) {
+            const instance = instances[i];
+            m.makeRotationZ(-Math.PI / 2 - instance.direction);
+            m.setPosition(instance.position.x, instance.position.y, 0);
+            this.instancedMesh.setMatrixAt(i, m);
+        }
+        this.instancedMesh.instanceMatrix.needsUpdate = true;
+    }
+    dedraw() {
+        if (this.instancedMesh) {
+            this.scene.remove(this.instancedMesh);
+            this.instancedMesh = undefined;
+        }
+    }
+}
+exports.InstancedRotateablePresenter = InstancedRotateablePresenter;
+
+
+/***/ }),
+
 /***/ "./src/rtt_threejs_renderer/presenters/power_generator_presenter.ts":
 /*!**************************************************************************!*\
   !*** ./src/rtt_threejs_renderer/presenters/power_generator_presenter.ts ***!
@@ -71307,6 +71685,54 @@ exports.QuadtreePresenter = QuadtreePresenter;
 
 /***/ }),
 
+/***/ "./src/rtt_threejs_renderer/presenters/shotgun_tank_presenter.ts":
+/*!***********************************************************************!*\
+  !*** ./src/rtt_threejs_renderer/presenters/shotgun_tank_presenter.ts ***!
+  \***********************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const tslib_1 = __webpack_require__(/*! tslib */ "./node_modules/tslib/tslib.es6.js");
+const THREE = tslib_1.__importStar(__webpack_require__(/*! three */ "./node_modules/three/build/three.module.js"));
+const entities_1 = __webpack_require__(/*! ../../rtt_engine/entities */ "./src/rtt_engine/entities/index.ts");
+const lib_1 = __webpack_require__(/*! ./lib */ "./src/rtt_threejs_renderer/presenters/lib/index.ts");
+function shotgunTankShape() {
+    var shape = new THREE.Shape();
+    shape.moveTo(8, 0);
+    const closeness = 0.8;
+    shape.ellipse(-8, 0, 8, 8, 0, Math.PI * closeness * 2, false, -Math.PI * closeness);
+    shape.lineTo(-0.5, 0);
+    return shape;
+}
+exports.shotgunTankShape = shotgunTankShape;
+class ShotgunTankPresenter extends lib_1.InstancedRotateablePresenter {
+    constructor(player, scene) {
+        super(player, (p) => p.units.vehicles.filter(v => v instanceof entities_1.ShotgunTank), new THREE.ShapeBufferGeometry(shotgunTankShape()), scene);
+    }
+}
+exports.ShotgunTankPresenter = ShotgunTankPresenter;
+function shotgunProjectileShape() {
+    var shape = new THREE.Shape();
+    shape.moveTo(-3, -1);
+    shape.lineTo(-3, 1);
+    shape.lineTo(3, 1.2);
+    shape.lineTo(3, -1.2);
+    return shape;
+}
+exports.shotgunProjectileShape = shotgunProjectileShape;
+class ShotgunProjectilePresenter extends lib_1.InstancedRotateablePresenter {
+    constructor(player, scene) {
+        super(player, (p) => p.turretProjectiles.filter(v => v instanceof entities_1.ShotgunProjectile), new THREE.ShapeBufferGeometry(shotgunProjectileShape()), scene);
+    }
+}
+exports.ShotgunProjectilePresenter = ShotgunProjectilePresenter;
+
+
+/***/ }),
+
 /***/ "./src/rtt_threejs_renderer/presenters/turret_presenter.ts":
 /*!*****************************************************************!*\
   !*** ./src/rtt_threejs_renderer/presenters/turret_presenter.ts ***!
@@ -71383,6 +71809,7 @@ exports.TurretPresenter = TurretPresenter;
 Object.defineProperty(exports, "__esModule", { value: true });
 const tslib_1 = __webpack_require__(/*! tslib */ "./node_modules/tslib/tslib.es6.js");
 const THREE = tslib_1.__importStar(__webpack_require__(/*! three */ "./node_modules/three/build/three.module.js"));
+const turret_1 = __webpack_require__(/*! ../../rtt_engine/entities/turret */ "./src/rtt_engine/entities/turret.ts");
 function turretProjectileShape() {
     var shape = new THREE.Shape();
     shape.moveTo(4, 0);
@@ -71401,7 +71828,8 @@ class TurretProjectilePresenter {
         this.geometry = new THREE.ShapeBufferGeometry(turretProjectileShape());
     }
     draw() {
-        const count = this.player.turretProjectiles.length;
+        const projectiles = this.player.turretProjectiles.filter(v => v instanceof turret_1.TurretProjectile);
+        const count = projectiles.length;
         if (this.instancedMesh != undefined && this.instancedMesh.count != count) {
             this.scene.remove(this.instancedMesh);
             this.instancedMesh = undefined;
@@ -71414,7 +71842,7 @@ class TurretProjectilePresenter {
         }
         let m = new THREE.Matrix4();
         for (let i = 0; i < count; i++) {
-            const turretProjectile = this.player.turretProjectiles[i];
+            const turretProjectile = projectiles[i];
             m.makeRotationZ(Math.PI / 2 - turretProjectile.direction);
             m.setPosition(turretProjectile.position.x, turretProjectile.position.y, 0);
             this.instancedMesh.setMatrixAt(i, m);
