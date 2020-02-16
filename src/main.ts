@@ -6,42 +6,46 @@ import { IAI, ExistingAI, AttackNearestAI } from './ai';
 window.THREE = THREE;
 
 function main() {
+  const size = 1000;
+  const edge = 70;
+  const spacing = 70;
+  const crossSpacing = size / 7;
   const map = {
     name: 'double-cross',
-    worldSize: 600,
+    worldSize: 1000,
     powerSources: [
-      new rtt_engine.Vector(50, 50),
-      new rtt_engine.Vector(120, 50),
-      new rtt_engine.Vector(120, 120),
-      new rtt_engine.Vector(50, 120),
+      new rtt_engine.Vector(edge, edge),
+      new rtt_engine.Vector(edge + spacing, edge),
+      new rtt_engine.Vector(edge + spacing, edge + spacing),
+      new rtt_engine.Vector(edge, edge + spacing),
 
-      new rtt_engine.Vector(550, 50),
-      new rtt_engine.Vector(480, 50),
-      new rtt_engine.Vector(480, 120),
-      new rtt_engine.Vector(550, 120),
+      new rtt_engine.Vector(size - edge, edge),
+      new rtt_engine.Vector(size - edge - spacing, edge),
+      new rtt_engine.Vector(size - edge - spacing, edge + spacing),
+      new rtt_engine.Vector(size - edge, edge + spacing),
 
-      new rtt_engine.Vector(550, 480),
-      new rtt_engine.Vector(480, 480),
-      new rtt_engine.Vector(480, 550),
-      new rtt_engine.Vector(550, 550),
+      new rtt_engine.Vector(size - edge, size - edge - spacing),
+      new rtt_engine.Vector(size - edge - spacing, size - edge - spacing),
+      new rtt_engine.Vector(size - edge - spacing, size - edge),
+      new rtt_engine.Vector(size - edge, size - edge),
 
-      new rtt_engine.Vector(120, 550),
-      new rtt_engine.Vector(50, 550),
-      new rtt_engine.Vector(50, 480),
-      new rtt_engine.Vector(120, 480),
+      new rtt_engine.Vector(edge + spacing, size - edge),
+      new rtt_engine.Vector(edge, size - edge),
+      new rtt_engine.Vector(edge, size - edge - spacing),
+      new rtt_engine.Vector(edge + spacing, size - edge - spacing),
 
-      new rtt_engine.Vector(75, 300),
-      new rtt_engine.Vector(165, 300),
-      new rtt_engine.Vector(255, 300),
-      new rtt_engine.Vector(345, 300),
-      new rtt_engine.Vector(435, 300),
-      new rtt_engine.Vector(525, 300),
-      new rtt_engine.Vector(300, 75),
-      new rtt_engine.Vector(300, 165),
-      new rtt_engine.Vector(300, 255),
-      new rtt_engine.Vector(300, 345),
-      new rtt_engine.Vector(300, 435),
-      new rtt_engine.Vector(300, 525),
+      new rtt_engine.Vector(crossSpacing, size / 2),
+      new rtt_engine.Vector(crossSpacing * 2, size / 2),
+      new rtt_engine.Vector(crossSpacing * 3, size / 2),
+      new rtt_engine.Vector(crossSpacing * 4, size / 2),
+      new rtt_engine.Vector(crossSpacing * 5, size / 2),
+      new rtt_engine.Vector(crossSpacing * 6, size / 2),
+      new rtt_engine.Vector(size / 2, crossSpacing),
+      new rtt_engine.Vector(size / 2, crossSpacing * 2),
+      new rtt_engine.Vector(size / 2, crossSpacing * 3),
+      new rtt_engine.Vector(size / 2, crossSpacing * 4),
+      new rtt_engine.Vector(size / 2, crossSpacing * 5),
+      new rtt_engine.Vector(size / 2, crossSpacing * 6),
     ],
   };
   const config = {
@@ -50,19 +54,19 @@ function main() {
     players: [{
       name: 'green',
       color: new THREE.Color("rgb(0, 255, 0)"),
-      commanderPosition: new rtt_engine.Vector(535, 65),
+      commanderPosition: new rtt_engine.Vector(size - edge - spacing/2, edge + spacing/2),
     }, {
       name: 'red',
       color: new THREE.Color("rgb(255, 0, 0)"),
-      commanderPosition: new rtt_engine.Vector(535, 535),
+      commanderPosition: new rtt_engine.Vector(size - edge - spacing/2, size - edge - spacing/2),
     }, {
       name: 'purple',
       color: new THREE.Color('magenta'),
-      commanderPosition: new rtt_engine.Vector(65, 65),
+      commanderPosition: new rtt_engine.Vector(edge + spacing/2, edge + spacing/2),
     }, {
       name: 'blue',
       color: new THREE.Color('deepskyblue'),
-      commanderPosition: new rtt_engine.Vector(65, 535),
+      commanderPosition: new rtt_engine.Vector(edge + spacing/2, size - edge - spacing/2),
     }]
   };
 
