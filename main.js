@@ -68945,6 +68945,194 @@ module.exports = function(module) {
 
 /***/ }),
 
+/***/ "./src/ai.ts":
+/*!*******************!*\
+  !*** ./src/ai.ts ***!
+  \*******************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const tslib_1 = __webpack_require__(/*! tslib */ "./node_modules/tslib/tslib.es6.js");
+const rtt_engine = tslib_1.__importStar(__webpack_require__(/*! ./rtt_engine */ "./src/rtt_engine/index.ts"));
+class ExistingAI {
+    constructor(game, player, opponents) {
+        this.game = game;
+        this.player = player;
+        this.opponents = opponents;
+    }
+    update() {
+        this.opponents = this.opponents.filter((p) => !p.isDefeated());
+        if (this.opponents.length == 0) {
+            return;
+        }
+        if (this.player.units.commander != null && this.player.units.factories.length == 0) {
+            this.player.units.commander.orders[0] = {
+                kind: 'construct',
+                structureClass: rtt_engine.Factory,
+                position: new rtt_engine.Vector(this.player.units.commander.position.x, this.player.units.commander.position.y),
+            };
+        }
+        for (let factory of this.player.units.factories) {
+            if (factory.orders.length > 0) {
+                continue;
+            }
+            factory.orders[0] = {
+                kind: 'construct',
+                unitClass: Math.random() < 0.6 ? rtt_engine.Bot : (Math.random() < 0.7 ? rtt_engine.ShotgunTank : rtt_engine.ArtilleryTank),
+            };
+        }
+        const opponent = this.opponents[0];
+        const opposingUnits = opponent.units.allKillableCollidableUnits();
+        const opposingUnitCount = opposingUnits.length;
+        if (opposingUnitCount > 0) {
+            for (let j in this.player.units.vehicles) {
+                if (this.player.units.vehicles[j].orders.length > 0) {
+                    continue;
+                }
+                const target = opposingUnits[j % opposingUnitCount];
+                this.player.units.vehicles[j].orders[0] = { kind: 'attack', target: target };
+            }
+        }
+    }
+}
+exports.ExistingAI = ExistingAI;
+class AttackNearestAI {
+    constructor(game, player, opponents) {
+        this.game = game;
+        this.player = player;
+        this.opponents = opponents;
+        this.assignedOrders = {};
+    }
+    update() {
+        this.opponents = this.opponents.filter((p) => !p.isDefeated());
+        if (this.opponents.length == 0) {
+            return;
+        }
+        this.updateFactoryConstruction();
+        this.updateCommanderConstruction();
+        this.updateVehicleAttacks();
+        if (this.player.units.powerGenerators.length > 0) {
+            const upgrading = this.player.units.powerGenerators.filter((p) => p.upgrading).length > 0;
+            if (!upgrading) {
+                const cheapestUpgrade = _.minBy(this.player.units.powerGenerators, (p) => p.fullHealth);
+                cheapestUpgrade.orders[0] = { 'kind': 'upgrade' };
+            }
+        }
+    }
+    updateFactoryConstruction() {
+        // STRATEGY:
+        // 1. If opponents have turrets:
+        //    70% of the time build Shotgun Tanks
+        //    28–30% of the time build Artillery Tanks
+        //    if the player has 6+ vehicles then 2% of the time build a Titan
+        // 2. Otherwise:
+        //    if the player has 0 bots then build a Bot
+        //    if the player has 1+ bots then build a Shotgun Tank
+        const opponentsHaveTurrets = this.opponents.filter((o) => o.units.turrets.length > 0).length > 0;
+        const numberOfArtilleryTanks = this.player.units.vehicles.filter((v) => v instanceof rtt_engine.ArtilleryTank).length;
+        const numberOfTitans = this.player.units.vehicles.filter((v) => v instanceof rtt_engine.Titan).length;
+        const numberOfEnemyTitans = this.opponents.map((o) => o.units.vehicles.filter((v) => v instanceof rtt_engine.Titan)).flat().length;
+        let unitClass;
+        if (opponentsHaveTurrets) {
+            const rand = Math.random();
+            if (this.player.units.vehicles.length >= 6 && rand <= 0.08 || numberOfEnemyTitans > numberOfTitans || (numberOfTitans > 0 && numberOfEnemyTitans == numberOfTitans && rand < 0.2)) {
+                unitClass = rtt_engine.Titan;
+            }
+            else if (rand <= 0.3 && numberOfArtilleryTanks <= this.player.units.vehicles.length / 2) {
+                unitClass = rtt_engine.ArtilleryTank;
+            }
+            else {
+                unitClass = rtt_engine.ShotgunTank;
+            }
+        }
+        else {
+            const numberOfBots = this.player.units.vehicles.filter((v) => v instanceof rtt_engine.Bot).length;
+            unitClass = numberOfBots < 1 ? rtt_engine.Bot : rtt_engine.ShotgunTank;
+        }
+        for (let factory of this.player.units.factories) {
+            if (factory.orders.length > 0) {
+                continue;
+            }
+            factory.orders[0] = { kind: 'construct', unitClass: unitClass };
+        }
+    }
+    updateCommanderConstruction() {
+        // STRATEGY: do the first (if CONDITION, then ACT) in this list where the condition is met.
+        // 1. If the commander is dead, do nothing.
+        //    OR If the commander is already doing something, do nothing.
+        // 2. If the player has no factories, build a new factory on top of the commander.
+        //    OR If the player has 500 stored energy, build a new factory on top of the commander.
+        // 3. If there are unoccupied power sources near the player's factories, build power generators on them.
+        // 4. If the player has no turrets, build one near the player's nearest factory.
+        if (this.player.units.commander == null || this.player.units.commander.orders.length > 0) {
+            return;
+        }
+        if (this.player.units.factories.length == 0 || this.player.storedEnergy > 500) {
+            this.player.units.commander.orders[0] = {
+                kind: 'construct',
+                structureClass: rtt_engine.Factory,
+                position: this.player.units.commander.position,
+            };
+            return;
+        }
+        const powerSourcesNearFactories = this.game.powerSources.filter((powerSource) => {
+            const nearestFactory = _.minBy(this.player.units.factories, (factory) => {
+                return rtt_engine.Vector.distance(factory.position, powerSource.position);
+            });
+            if (nearestFactory == null) {
+                return false;
+            }
+            return rtt_engine.Vector.distance(nearestFactory.position, powerSource.position) < 160;
+        });
+        const desiredPowerSources = powerSourcesNearFactories.filter((powerSource) => powerSource.structure == null);
+        if (desiredPowerSources.length > 0) {
+            const nearestDesiredPowerSource = _.minBy(desiredPowerSources, (powerSource) => {
+                return rtt_engine.Vector.distance(powerSource.position, this.player.units.commander.position);
+            });
+            this.player.units.commander.orders[0] = {
+                kind: 'construct',
+                structureClass: rtt_engine.PowerGenerator,
+                position: nearestDesiredPowerSource.position,
+                extra: [nearestDesiredPowerSource],
+            };
+            return;
+        }
+        if (this.player.units.turrets.length == 0) {
+            const nearestFactory = _.minBy(this.player.units.factories, (factory) => {
+                return rtt_engine.Vector.distance(this.player.units.commander.position, factory.position);
+            });
+            if (rtt_engine.Vector.distance(this.player.units.commander.position, nearestFactory.position) < 50) {
+                this.player.units.commander.orders[0] = {
+                    kind: 'construct',
+                    structureClass: rtt_engine.Turret,
+                    position: this.player.units.commander.position,
+                };
+            }
+            else {
+                this.player.units.commander.orders[0] = { kind: 'manoeuvre', destination: nearestFactory.position };
+            }
+        }
+    }
+    updateVehicleAttacks() {
+        const opposingUnits = this.opponents.map((p) => p.units.allKillableCollidableUnits()).flat();
+        for (let vehicle of this.player.units.vehicles) {
+            if (vehicle.orders.length > 0 && vehicle.orders[0] != this.assignedOrders[vehicle.id]) {
+                continue;
+            }
+            let nearestOpposingUnit = _.minBy(opposingUnits, (u) => rtt_engine.Vector.distance(u.position, vehicle.position));
+            vehicle.orders[0] = { kind: 'attack', target: nearestOpposingUnit };
+            this.assignedOrders[vehicle.id] = vehicle.orders[0];
+        }
+    }
+}
+exports.AttackNearestAI = AttackNearestAI;
+
+
+/***/ }),
+
 /***/ "./src/main.ts":
 /*!*********************!*\
   !*** ./src/main.ts ***!
@@ -68959,40 +69147,45 @@ const tslib_1 = __webpack_require__(/*! tslib */ "./node_modules/tslib/tslib.es6
 const THREE = tslib_1.__importStar(__webpack_require__(/*! three */ "./node_modules/three/build/three.module.js"));
 const rtt_engine = tslib_1.__importStar(__webpack_require__(/*! ./rtt_engine */ "./src/rtt_engine/index.ts"));
 const rtt_threejs_renderer = tslib_1.__importStar(__webpack_require__(/*! ./rtt_threejs_renderer */ "./src/rtt_threejs_renderer/index.ts"));
+const ai_1 = __webpack_require__(/*! ./ai */ "./src/ai.ts");
 window.THREE = THREE;
 function main() {
+    const size = 1000;
+    const edge = 70;
+    const spacing = 70;
+    const crossSpacing = size / 7;
     const map = {
         name: 'double-cross',
-        worldSize: 600,
+        worldSize: 1000,
         powerSources: [
-            new rtt_engine.Vector(50, 50),
-            new rtt_engine.Vector(120, 50),
-            new rtt_engine.Vector(120, 120),
-            new rtt_engine.Vector(50, 120),
-            new rtt_engine.Vector(550, 50),
-            new rtt_engine.Vector(480, 50),
-            new rtt_engine.Vector(480, 120),
-            new rtt_engine.Vector(550, 120),
-            new rtt_engine.Vector(550, 480),
-            new rtt_engine.Vector(480, 480),
-            new rtt_engine.Vector(480, 550),
-            new rtt_engine.Vector(550, 550),
-            new rtt_engine.Vector(120, 550),
-            new rtt_engine.Vector(50, 550),
-            new rtt_engine.Vector(50, 480),
-            new rtt_engine.Vector(120, 480),
-            new rtt_engine.Vector(75, 300),
-            new rtt_engine.Vector(165, 300),
-            new rtt_engine.Vector(255, 300),
-            new rtt_engine.Vector(345, 300),
-            new rtt_engine.Vector(435, 300),
-            new rtt_engine.Vector(525, 300),
-            new rtt_engine.Vector(300, 75),
-            new rtt_engine.Vector(300, 165),
-            new rtt_engine.Vector(300, 255),
-            new rtt_engine.Vector(300, 345),
-            new rtt_engine.Vector(300, 435),
-            new rtt_engine.Vector(300, 525),
+            new rtt_engine.Vector(edge, edge),
+            new rtt_engine.Vector(edge + spacing, edge),
+            new rtt_engine.Vector(edge + spacing, edge + spacing),
+            new rtt_engine.Vector(edge, edge + spacing),
+            new rtt_engine.Vector(size - edge, edge),
+            new rtt_engine.Vector(size - edge - spacing, edge),
+            new rtt_engine.Vector(size - edge - spacing, edge + spacing),
+            new rtt_engine.Vector(size - edge, edge + spacing),
+            new rtt_engine.Vector(size - edge, size - edge - spacing),
+            new rtt_engine.Vector(size - edge - spacing, size - edge - spacing),
+            new rtt_engine.Vector(size - edge - spacing, size - edge),
+            new rtt_engine.Vector(size - edge, size - edge),
+            new rtt_engine.Vector(edge + spacing, size - edge),
+            new rtt_engine.Vector(edge, size - edge),
+            new rtt_engine.Vector(edge, size - edge - spacing),
+            new rtt_engine.Vector(edge + spacing, size - edge - spacing),
+            new rtt_engine.Vector(crossSpacing, size / 2),
+            new rtt_engine.Vector(crossSpacing * 2, size / 2),
+            new rtt_engine.Vector(crossSpacing * 3, size / 2),
+            new rtt_engine.Vector(crossSpacing * 4, size / 2),
+            new rtt_engine.Vector(crossSpacing * 5, size / 2),
+            new rtt_engine.Vector(crossSpacing * 6, size / 2),
+            new rtt_engine.Vector(size / 2, crossSpacing),
+            new rtt_engine.Vector(size / 2, crossSpacing * 2),
+            new rtt_engine.Vector(size / 2, crossSpacing * 3),
+            new rtt_engine.Vector(size / 2, crossSpacing * 4),
+            new rtt_engine.Vector(size / 2, crossSpacing * 5),
+            new rtt_engine.Vector(size / 2, crossSpacing * 6),
         ],
     };
     const config = {
@@ -69001,19 +69194,19 @@ function main() {
         players: [{
                 name: 'green',
                 color: new THREE.Color("rgb(0, 255, 0)"),
-                commanderPosition: new rtt_engine.Vector(535, 65),
+                commanderPosition: new rtt_engine.Vector(size - edge - spacing / 2, edge + spacing / 2),
             }, {
                 name: 'red',
                 color: new THREE.Color("rgb(255, 0, 0)"),
-                commanderPosition: new rtt_engine.Vector(535, 535),
+                commanderPosition: new rtt_engine.Vector(size - edge - spacing / 2, size - edge - spacing / 2),
             }, {
                 name: 'purple',
                 color: new THREE.Color('magenta'),
-                commanderPosition: new rtt_engine.Vector(65, 65),
+                commanderPosition: new rtt_engine.Vector(edge + spacing / 2, edge + spacing / 2),
             }, {
                 name: 'blue',
                 color: new THREE.Color('deepskyblue'),
-                commanderPosition: new rtt_engine.Vector(65, 535),
+                commanderPosition: new rtt_engine.Vector(edge + spacing / 2, size - edge - spacing / 2),
             }]
     };
     let renderer = new rtt_threejs_renderer.Renderer(map.worldSize, window, document);
@@ -69051,11 +69244,6 @@ function main() {
             const commanderPresenter = new rtt_threejs_renderer.CommanderPresenter(player.units.commander, renderer.gameCoordsGroup);
             commanderPresenter.predraw();
             commanderPresenters.push(commanderPresenter);
-            player.units.commander.orders[0] = {
-                kind: 'construct',
-                structureClass: rtt_engine.Factory,
-                position: new rtt_engine.Vector(player.units.commander.position.x + 30, player.units.commander.position.y),
-            };
         }
         const botPresenter = new rtt_threejs_renderer.BotPresenter(player, renderer.gameCoordsGroup);
         botPresenter.predraw();
@@ -69113,7 +69301,7 @@ function main() {
             position: rttPosition,
             player: null,
         });
-        console.log(collisions);
+        //console.log(collisions);
         // Based upon https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button
         if (e.button == 0) {
             if (collisions.length == 1) {
@@ -69135,7 +69323,7 @@ function main() {
         else if (e.button == 2) {
             // FIXME: There needs to be a better way than this to detect movable stuff
             if (selected != null && selected.movementRate != null) {
-                console.log("order");
+                //console.log("order");
                 if (selected instanceof rtt_engine.Commander && (buildChoice == "factory" || buildChoice == "power-generator" || buildChoice == "turret")) {
                     if (buildChoice == "factory") {
                         selected.orders[0] = {
@@ -69192,137 +69380,124 @@ function main() {
         e.stopPropagation();
         buildChoice = "turret";
     }, false);
+    let ais = game.players.map((player) => {
+        const aiClass = Math.random() > 0.7 ? ai_1.AttackNearestAI : ai_1.ExistingAI;
+        console.log("player " + player.name + " using AI " + aiClass.name);
+        return new aiClass(game, player, game.players.filter((p) => p != player));
+    });
     let quadtreePresenter = null;
     setInterval(() => {
-        const start = new Date();
-        let livingPlayers = game.players.filter((p) => !p.isDefeated());
-        for (let i in livingPlayers) {
-            const player = livingPlayers[i];
-            for (let factory of player.units.factories) {
-                if (factory.orders.length > 0) {
+        rtt_threejs_renderer.time("update", () => {
+            for (let ai of ais) {
+                if (ai.player.isDefeated()) {
                     continue;
                 }
-                factory.orders[0] = {
-                    kind: 'construct',
-                    unitClass: Math.random() < 0.6 ? rtt_engine.Bot : (Math.random() < 0.7 ? rtt_engine.ShotgunTank : rtt_engine.ArtilleryTank),
-                };
+                ai.update();
             }
-            const opposingPlayer = livingPlayers[(parseInt(i) + 1) % livingPlayers.length];
-            const opposingUnits = opposingPlayer.units.allKillableCollidableUnits();
-            const opposingUnitCount = opposingUnits.length;
-            if (opposingUnitCount == 0) {
-                continue;
+            let livingPlayers = game.players.filter((p) => !p.isDefeated());
+            let unitsAndProjectiles = livingPlayers.map((p) => p.units.allKillableCollidableUnits()).flat();
+            unitsAndProjectiles.push(...game.players.map((p) => p.turretProjectiles).flat());
+            for (let unitOrProjectile of unitsAndProjectiles) {
+                if (!bounds.contains(unitOrProjectile, () => 0)) {
+                    //console.log("bounds " + JSON.stringify(bounds) + " killed " + unitOrProjectile.position.x + " " + unitOrProjectile.position.y);
+                    unitOrProjectile.kill();
+                }
             }
-            for (let j in player.units.vehicles) {
-                if (player.units.vehicles[j].orders.length > 0) {
+            const quadtree = rtt_engine.IQuadrant.fromEntityCollisions(bounds, unitsAndProjectiles);
+            if (quadtreePresenter == null) {
+                quadtreePresenter = new rtt_threejs_renderer.QuadtreePresenter(quadtree, renderer.gameCoordsGroup);
+            }
+            else if (Math.random() > 0.9) {
+                quadtreePresenter.quadtree = quadtree;
+            }
+            //quadtreePresenter.draw();
+            //console.log(quadtree.entities.length);
+            let unitOriginalHealths = {};
+            for (let unit of unitsAndProjectiles) {
+                if (unit.damage != null) {
+                    unitOriginalHealths[unit.id] = unit.health;
+                }
+            }
+            let collisions = quadtree.getCollisions(unitsAndProjectiles);
+            for (let unitId in collisions) {
+                const unit = unitsAndProjectiles.filter((u) => u.id == unitId)[0];
+                let unitCollisions = collisions[unitId];
+                if (unit instanceof rtt_engine.Projectile) {
+                    unitCollisions = unitCollisions.filter((u) => !(u instanceof rtt_engine.Projectile));
+                }
+                const numberOfCollidingUnits = unitCollisions.length;
+                if (numberOfCollidingUnits == 0) {
                     continue;
                 }
-                const target = opposingUnits[j % opposingUnitCount];
-                player.units.vehicles[j].orders[0] = { kind: 'attack', target: target };
-            }
-        }
-        let unitsAndProjectiles = livingPlayers.map((p) => p.units.allKillableCollidableUnits()).flat();
-        unitsAndProjectiles.push(...game.players.map((p) => p.turretProjectiles).flat());
-        for (let unitOrProjectile of unitsAndProjectiles) {
-            if (!bounds.contains(unitOrProjectile, () => 0)) {
-                console.log("bounds " + JSON.stringify(bounds) + " killed " + unitOrProjectile.position.x + " " + unitOrProjectile.position.y);
-                unitOrProjectile.kill();
-            }
-        }
-        const quadtree = rtt_engine.IQuadrant.fromEntityCollisions(bounds, unitsAndProjectiles);
-        if (quadtreePresenter == null) {
-            quadtreePresenter = new rtt_threejs_renderer.QuadtreePresenter(quadtree, renderer.gameCoordsGroup);
-        }
-        else if (Math.random() > 0.9) {
-            quadtreePresenter.quadtree = quadtree;
-        }
-        //quadtreePresenter.draw();
-        //console.log(quadtree.entities.length);
-        let unitOriginalHealths = {};
-        for (let unit of unitsAndProjectiles) {
-            if (unit.damage != null) {
-                unitOriginalHealths[unit.id] = unit.health;
-            }
-        }
-        let collisions = quadtree.getCollisions(unitsAndProjectiles);
-        for (let unitId in collisions) {
-            const unit = unitsAndProjectiles.filter((u) => u.id == unitId)[0];
-            let unitCollisions = collisions[unitId];
-            if (unit instanceof rtt_engine.Projectile) {
-                unitCollisions = unitCollisions.filter((u) => !(u instanceof rtt_engine.Projectile));
-            }
-            const numberOfCollidingUnits = unitCollisions.length;
-            if (numberOfCollidingUnits == 0) {
-                continue;
-            }
-            // FIXME: We need to only apply damage if it fulfils IKillable…
-            const damagePerCollidingUnit = unitOriginalHealths[unitId] / numberOfCollidingUnits;
-            for (let collidingUnit of unitCollisions) {
-                if (collidingUnit.damage != null) {
-                    collidingUnit.damage(damagePerCollidingUnit);
+                // FIXME: We need to only apply damage if it fulfils IKillable…
+                const damagePerCollidingUnit = unitOriginalHealths[unitId] / numberOfCollidingUnits;
+                for (let collidingUnit of unitCollisions) {
+                    if (collidingUnit.damage != null) {
+                        collidingUnit.damage(damagePerCollidingUnit);
+                    }
                 }
             }
-        }
-        game.update();
-        //console.log("game update time: " + ((new Date()) - start));
-        const start2 = new Date();
-        game.draw();
-        mapPresenter.draw();
-        powerSourcePresenter.draw();
-        for (let commanderPresenter of commanderPresenters) {
-            commanderPresenter.draw();
-        }
-        for (let botPresenter of botPresenters) {
-            botPresenter.draw();
-        }
-        for (let shotgunTankPresenter of shotgunTankPresenters) {
-            shotgunTankPresenter.draw();
-        }
-        for (let shotgunProjectilePresenter of shotgunProjectilePresenters) {
-            shotgunProjectilePresenter.draw();
-        }
-        for (let artilleryTankPresenter of artilleryTankPresenters) {
-            artilleryTankPresenter.draw();
-        }
-        for (let artilleryProjectilePresenter of artilleryProjectilePresenters) {
-            artilleryProjectilePresenter.draw();
-        }
-        for (let titanPresenter of titanPresenters) {
-            titanPresenter.draw();
-        }
-        for (let titanProjectilePresenter of titanProjectilePresenters) {
-            titanProjectilePresenter.draw();
-        }
-        for (let factoryPresenter of factoryPresenters) {
-            factoryPresenter.draw();
-        }
-        for (let healthinessPresenter of healthinessPresenters) {
-            healthinessPresenter.draw();
-        }
-        for (let powerGeneratorPresenter of powerGeneratorPresenters) {
-            powerGeneratorPresenter.draw();
-        }
-        for (let turretPresenter of turretPresenters) {
-            turretPresenter.draw();
-        }
-        for (let turretProjectilePresenter of turretProjectilePresenters) {
-            turretProjectilePresenter.draw();
-        }
-        if (selected != null) {
-            if (selectedBox == null) {
-                const geo = new THREE.RingBufferGeometry(selected.collisionRadius * 1.5, selected.collisionRadius * 1.5 + 4);
-                let material = new THREE.MeshBasicMaterial({ color: selected.player.color, opacity: 0.5 });
-                material.blending = THREE.AdditiveBlending;
-                selectedBox = new THREE.Mesh(geo, material);
-                renderer.gameCoordsGroup.add(selectedBox);
+            game.update();
+        });
+        rtt_threejs_renderer.time("update rendering", () => {
+            game.draw();
+            mapPresenter.draw();
+            powerSourcePresenter.draw();
+            for (let commanderPresenter of commanderPresenters) {
+                commanderPresenter.draw();
             }
-            selectedBox.position.x = selected.position.x;
-            selectedBox.position.y = selected.position.y;
-        }
-        else if (selectedBox != null) {
-            renderer.gameCoordsGroup.remove(selectedBox);
-            selectedBox = undefined;
-        }
+            for (let botPresenter of botPresenters) {
+                botPresenter.draw();
+            }
+            for (let shotgunTankPresenter of shotgunTankPresenters) {
+                shotgunTankPresenter.draw();
+            }
+            for (let shotgunProjectilePresenter of shotgunProjectilePresenters) {
+                shotgunProjectilePresenter.draw();
+            }
+            for (let artilleryTankPresenter of artilleryTankPresenters) {
+                artilleryTankPresenter.draw();
+            }
+            for (let artilleryProjectilePresenter of artilleryProjectilePresenters) {
+                artilleryProjectilePresenter.draw();
+            }
+            for (let titanPresenter of titanPresenters) {
+                titanPresenter.draw();
+            }
+            for (let titanProjectilePresenter of titanProjectilePresenters) {
+                titanProjectilePresenter.draw();
+            }
+            for (let factoryPresenter of factoryPresenters) {
+                factoryPresenter.draw();
+            }
+            for (let healthinessPresenter of healthinessPresenters) {
+                healthinessPresenter.draw();
+            }
+            for (let powerGeneratorPresenter of powerGeneratorPresenters) {
+                powerGeneratorPresenter.draw();
+            }
+            for (let turretPresenter of turretPresenters) {
+                turretPresenter.draw();
+            }
+            for (let turretProjectilePresenter of turretProjectilePresenters) {
+                turretProjectilePresenter.draw();
+            }
+            if (selected != null) {
+                if (selectedBox == null) {
+                    const geo = new THREE.RingBufferGeometry(selected.collisionRadius * 1.5, selected.collisionRadius * 1.5 + 4);
+                    let material = new THREE.MeshBasicMaterial({ color: selected.player.color, opacity: 0.5 });
+                    material.blending = THREE.AdditiveBlending;
+                    selectedBox = new THREE.Mesh(geo, material);
+                    renderer.gameCoordsGroup.add(selectedBox);
+                }
+                selectedBox.position.x = selected.position.x;
+                selectedBox.position.y = selected.position.y;
+            }
+            else if (selectedBox != null) {
+                renderer.gameCoordsGroup.remove(selectedBox);
+                selectedBox = undefined;
+            }
+        });
         //console.log("game draw time: " + ((new Date()) - start2));
     }, 1000 / 30);
 }
@@ -70367,17 +70542,52 @@ class PowerGenerator extends lib_1.Structure {
             collisionRadius: 8,
             player,
             built,
-            buildCost: 100,
+            buildCost: 300,
             fullHealth: 60,
             health: built ? 60 : 0,
         });
         this.powerSource = powerSource;
         this.powerSource.structure = this;
         this.energyOutput = energyOutput;
+        this.upgrading = false;
+        this.energyProvided = 0;
+        this.orderExecutionCallbacks = {
+            'upgrade': (upgradeOrder) => this.upgrade(upgradeOrder),
+        };
     }
     kill() {
         super.kill();
         this.powerSource.structure = null;
+    }
+    energyConsumption() {
+        return this.upgrading ? 10 : 0;
+    }
+    update() {
+        if (this.dead) {
+            return;
+        }
+        this.updateOrders();
+    }
+    upgrade(upgradeOrder) {
+        if (this.upgrading == true) {
+            if (this.health == this.fullHealth) {
+                this.upgrading = false;
+                this.energyOutput *= 2;
+                return false;
+            }
+            else {
+                this.repair(this.energyProvided / this.buildCostPerHealth());
+            }
+        }
+        else {
+            if (this.energyOutput >= 16) {
+                return false;
+            }
+            this.upgrading = true;
+            this.fullHealth *= 2;
+            this.buildCost *= 4;
+        }
+        return true;
     }
 }
 exports.PowerGenerator = PowerGenerator;
@@ -70782,16 +70992,14 @@ class Player {
     }
     updateEnergy() {
         this.storedEnergy += this.units.energyOutput();
-        let desiredEnergy = lodash_1.default.sum(this.units.factories.map((f) => f.energyConsumption()));
+        const drainingUnits = this.units.factories.concat(this.units.powerGenerators);
         if (this.units.commander != null) {
-            desiredEnergy += this.units.commander.energyConsumption();
+            drainingUnits.push(this.units.commander);
         }
+        const desiredEnergy = lodash_1.default.sum(drainingUnits.map((u) => u.energyConsumption()));
         const proportionOfEnergyProvided = Math.min(this.storedEnergy / desiredEnergy, 1);
-        for (let factory of this.units.factories) {
-            factory.energyProvided = factory.energyConsumption() * proportionOfEnergyProvided;
-        }
-        if (this.units.commander != null) {
-            this.units.commander.energyProvided = this.units.commander.energyConsumption() * proportionOfEnergyProvided;
+        for (let drainingUnit of drainingUnits) {
+            drainingUnit.energyProvided = drainingUnit.energyConsumption() * proportionOfEnergyProvided;
         }
         this.storedEnergy -= desiredEnergy * proportionOfEnergyProvided;
     }
@@ -70856,6 +71064,9 @@ class PlayerUnits {
         this.removeDeadUnits();
         if (this.commander != null) {
             this.commander.update();
+        }
+        for (let powerGenerator of this.powerGenerators) {
+            powerGenerator.update();
         }
         for (let vehicle of this.vehicles) {
             switch (vehicle.constructor) {
@@ -71106,6 +71317,9 @@ class Vector {
     }
     static angleBetween(v1, v2) {
         return v2.angle() - v1.angle();
+    }
+    static distance(v1, v2) {
+        return this.subtract(v1, v2).magnitude();
     }
     clone() {
         return new Vector(this.x, this.y);
@@ -72105,6 +72319,13 @@ const tslib_1 = __webpack_require__(/*! tslib */ "./node_modules/tslib/tslib.es6
 const THREE = tslib_1.__importStar(__webpack_require__(/*! three */ "./node_modules/three/build/three.module.js"));
 const camera_controls_1 = tslib_1.__importDefault(__webpack_require__(/*! camera-controls */ "./node_modules/camera-controls/dist/camera-controls.module.js"));
 camera_controls_1.default.install({ THREE: THREE });
+function time(name, callback) {
+    let clock = new THREE.Clock();
+    clock.start();
+    callback();
+    console.log("time of '" + name + "': " + clock.getElapsedTime());
+}
+exports.time = time;
 class Renderer {
     constructor(worldSize, window, document) {
         this.clock = new THREE.Clock();
@@ -72140,69 +72361,15 @@ class Renderer {
         this.controls.setLookAt(0, 0, worldSize, 0, 0, 0, false);
     }
     animate(force = false) {
-        const delta = this.clock.getDelta();
-        const hasControlsUpdated = this.controls.update(delta);
+        this.controls.update(this.clock.getDelta());
         requestAnimationFrame(() => this.animate());
-        //if (force || hasControlsUpdated) {
-        //console.log("draw calls: " + this.renderer.info.render.calls);
-        const start = new Date();
-        this.renderer.render(this.scene, this.camera);
-        //console.log("render time: " + ((new Date()) - start));
-        //}
+        time("animate", () => {
+            this.renderer.render(this.scene, this.camera);
+            console.log("draw calls: " + this.renderer.info.render.calls);
+        });
     }
 }
 exports.Renderer = Renderer;
-//   rotation = new rtt_engine.Vector(0.1, 0);
-//   geometry = new THREE.BoxGeometry(0.05, 0.05, 0.05);
-//   material = new THREE.MeshNormalMaterial();
-//   mesh = new THREE.Mesh(geometry, material);
-//   scene.add(mesh);
-//   f = 0;
-//   mesh2s = [];
-//   const rotation2 = new rtt_engine.Vector(3, 0);
-//   for (let i = 0; i < 200; i++) {
-//     const geometry2 = new THREE.BoxGeometry(0.2, 0.2, 0.2);
-//     const material2 = new THREE.MeshNormalMaterial();
-//     const mesh2 = new THREE.Mesh(geometry2, material);
-//     mesh2.position.z = -i / 3;
-//     mesh2.position.x = rotation2.x; // -i / 10;
-//     mesh2.position.y = rotation2.y; // -i / 10;
-//     scene.add(mesh2);
-//     mesh2s.push(mesh2);
-//     rotation2.rotate(Math.PI / 30);
-//     rotation2.x *= 0.99;
-//     rotation2.y *= 0.99;
-//   }
-//   renderer = new THREE.WebGLRenderer({ antialias: true });
-//   renderer.setSize(window.innerWidth, window.innerHeight);
-//   document.body.appendChild(renderer.domElement);
-// }
-// function threeDemoAnimate() {
-//   requestAnimationFrame(threeDemoAnimate);
-//   console.log('frame ' + f);
-//   f++;
-//   rotation.rotate(Math.PI / 180);
-//   mesh.position.x = rotation.x;
-//   mesh.position.y = rotation.y;
-//   mesh.rotation.y += 0.01;
-//   mesh.rotation.y += 0.02;
-//   const rotation2 = new rtt_engine.Vector(3, 0);
-//   rotation2.rotate(Math.PI / 360 * f);
-//   for (const mesh2 of mesh2s) {
-//     mesh2.position.x = rotation2.x; // -i / 10;
-//     mesh2.position.y = rotation2.y; // -i / 10;
-//     rotation2.rotate(Math.PI / 30);
-//     rotation2.x *= 0.99;
-//     rotation2.y *= 0.99;
-//   }
-//   //scene.remove( mesh );
-//   //mesh.position.x += 0.1;
-//   //material = new THREE.MeshNormalMaterial();
-//   //mesh = new THREE.Mesh( geometry, material );
-//   //scene.add( mesh );
-//   renderer.render(scene, camera);
-// }
-// main();
 
 
 /***/ }),
