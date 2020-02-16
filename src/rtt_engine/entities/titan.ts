@@ -39,7 +39,7 @@ export class Titan extends Vehicle {
       if (angleToFireProjectile == null) {
         return;
       }
-      for (let projectileOffsetAngle = -6; projectileOffsetAngle <= 6; projectileOffsetAngle += 3) {
+      for (let projectileOffsetAngle = -1.5; projectileOffsetAngle <= 1.5; projectileOffsetAngle += 1.5) {
         const projectile = new TitanProjectile(this.position, this.player!, angleToFireProjectile + projectileOffsetAngle*Math.PI/180);
         this.player!.turretProjectiles.push(projectile);
       }
