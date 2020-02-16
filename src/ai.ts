@@ -101,15 +101,18 @@ export class AttackNearestAI implements IAI {
     //    if the player has 1+ bots then build a Shotgun Tank
 
     const opponentsHaveTurrets = this.opponents.filter((o) => o.units.turrets.length > 0).length > 0;
+    const numberOfArtilleryTanks = this.player.units.vehicles.filter((v) => v instanceof rtt_engine.ArtilleryTank).length;
+    const numberOfTitans = this.player.units.vehicles.filter((v) => v instanceof rtt_engine.Titan).length;
+    const numberOfEnemyTitans = this.opponents.map((o) => o.units.vehicles.filter((v) => v instanceof rtt_engine.Titan)).flat().length;
     let unitClass;
     if (opponentsHaveTurrets) {
       const rand = Math.random();
-      if (rand < 0.7) {
-        unitClass = rtt_engine.ShotgunTank;
-      } else if (rand < 0.98 || this.player.units.vehicles.length < 6) {
+      if (this.player.units.vehicles.length >= 6 && rand <= 0.08 || numberOfEnemyTitans > numberOfTitans || (numberOfTitans > 0 && numberOfEnemyTitans == numberOfTitans && rand < 0.2)) {
+        unitClass = rtt_engine.Titan;
+      } else if (rand <= 0.3 && numberOfArtilleryTanks <= this.player.units.vehicles.length / 2) {
         unitClass = rtt_engine.ArtilleryTank;
       } else {
-        unitClass = rtt_engine.Titan;
+        unitClass = rtt_engine.ShotgunTank;
       }
     } else {
       const numberOfBots = this.player.units.vehicles.filter((v) => v instanceof rtt_engine.Bot).length;
