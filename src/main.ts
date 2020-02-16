@@ -254,120 +254,120 @@ function main() {
 
   let quadtreePresenter: rtt_threejs_renderer.QuadtreePresenter | null = null;
   setInterval(() => {
-    const start = new Date();
-
-    for (let ai of ais) {
-      if (ai.player.isDefeated()) {
-        continue;
+    rtt_threejs_renderer.time("update", () => {
+      for (let ai of ais) {
+        if (ai.player.isDefeated()) {
+          continue;
+        }
+        ai.update();
       }
-      ai.update();
-    }
 
-    let livingPlayers = game.players.filter((p) => !p.isDefeated());
-    let unitsAndProjectiles = livingPlayers.map((p) => p.units.allKillableCollidableUnits()).flat();
-    unitsAndProjectiles.push(...game.players.map((p) => p.turretProjectiles).flat());
+      let livingPlayers = game.players.filter((p) => !p.isDefeated());
+      let unitsAndProjectiles = livingPlayers.map((p) => p.units.allKillableCollidableUnits()).flat();
+      unitsAndProjectiles.push(...game.players.map((p) => p.turretProjectiles).flat());
 
-    for (let unitOrProjectile of unitsAndProjectiles) {
-      if (!bounds.contains(unitOrProjectile, () => 0)) {
-        //console.log("bounds " + JSON.stringify(bounds) + " killed " + unitOrProjectile.position.x + " " + unitOrProjectile.position.y);
-        unitOrProjectile.kill();
-      }
-    }
-
-    const quadtree = rtt_engine.IQuadrant.fromEntityCollisions(bounds, unitsAndProjectiles);
-    if (quadtreePresenter == null) {
-      quadtreePresenter = new rtt_threejs_renderer.QuadtreePresenter(quadtree, renderer.gameCoordsGroup);
-    } else if (Math.random() > 0.9) {
-      quadtreePresenter.quadtree = quadtree;
-    }
-    //quadtreePresenter.draw();
-    //console.log(quadtree.entities.length);
-    let unitOriginalHealths: {[id: string]: number} = {};
-    for (let unit of unitsAndProjectiles) {
-      if (unit.damage != null) {
-        unitOriginalHealths[unit.id] = unit.health;
-      }
-    }
-
-    let collisions = quadtree.getCollisions(unitsAndProjectiles);
-    for (let unitId in collisions) {
-      const unit: rtt_engine.IKillable = unitsAndProjectiles.filter((u: rtt_engine.IKillable) => u.id == unitId)[0];
-      let unitCollisions = collisions[unitId];
-      if (unit instanceof rtt_engine.Projectile) {
-        unitCollisions = unitCollisions.filter((u) => !(u instanceof rtt_engine.Projectile));
-      }
-      const numberOfCollidingUnits = unitCollisions.length;
-      if (numberOfCollidingUnits == 0) {
-        continue;
-      }
-      // FIXME: We need to only apply damage if it fulfils IKillable…
-      const damagePerCollidingUnit = unitOriginalHealths[unitId] / numberOfCollidingUnits;
-      for (let collidingUnit of unitCollisions) {
-        if (collidingUnit.damage != null) {
-          collidingUnit.damage(damagePerCollidingUnit);
+      for (let unitOrProjectile of unitsAndProjectiles) {
+        if (!bounds.contains(unitOrProjectile, () => 0)) {
+          //console.log("bounds " + JSON.stringify(bounds) + " killed " + unitOrProjectile.position.x + " " + unitOrProjectile.position.y);
+          unitOrProjectile.kill();
         }
       }
-    }
-    game.update();
-    //console.log("game update time: " + ((new Date()) - start));
 
-    const start2 = new Date();
-    game.draw();
-    mapPresenter.draw();
-    powerSourcePresenter.draw();
-    for (let commanderPresenter of commanderPresenters) {
-      commanderPresenter.draw();
-    }
-    for (let botPresenter of botPresenters) {
-      botPresenter.draw();
-    }
-    for (let shotgunTankPresenter of shotgunTankPresenters) {
-      shotgunTankPresenter.draw();
-    }
-    for (let shotgunProjectilePresenter of shotgunProjectilePresenters) {
-      shotgunProjectilePresenter.draw();
-    }
-    for (let artilleryTankPresenter of artilleryTankPresenters) {
-      artilleryTankPresenter.draw();
-    }
-    for (let artilleryProjectilePresenter of artilleryProjectilePresenters) {
-      artilleryProjectilePresenter.draw();
-    }
-    for (let titanPresenter of titanPresenters) {
-      titanPresenter.draw();
-    }
-    for (let titanProjectilePresenter of titanProjectilePresenters) {
-      titanProjectilePresenter.draw();
-    }
-    for (let factoryPresenter of factoryPresenters) {
-      factoryPresenter.draw();
-    }
-    for (let healthinessPresenter of healthinessPresenters) {
-      healthinessPresenter.draw();
-    }
-    for (let powerGeneratorPresenter of powerGeneratorPresenters) {
-      powerGeneratorPresenter.draw();
-    }
-    for (let turretPresenter of turretPresenters) {
-      turretPresenter.draw();
-    }
-    for (let turretProjectilePresenter of turretProjectilePresenters) {
-      turretProjectilePresenter.draw();
-    }
-    if (selected != null) {
-      if (selectedBox == null) {
-        const geo = new THREE.RingBufferGeometry(selected.collisionRadius * 1.5, selected.collisionRadius * 1.5 + 4);
-        let material = new THREE.MeshBasicMaterial({ color: selected.player.color, opacity: 0.5 });
-        material.blending = THREE.AdditiveBlending;
-        selectedBox = new THREE.Mesh(geo, material);
-        renderer.gameCoordsGroup.add(selectedBox);
+      const quadtree = rtt_engine.IQuadrant.fromEntityCollisions(bounds, unitsAndProjectiles);
+      if (quadtreePresenter == null) {
+        quadtreePresenter = new rtt_threejs_renderer.QuadtreePresenter(quadtree, renderer.gameCoordsGroup);
+      } else if (Math.random() > 0.9) {
+        quadtreePresenter.quadtree = quadtree;
       }
-      selectedBox.position.x = selected.position.x;
-      selectedBox.position.y = selected.position.y;
-    } else if (selectedBox != null) {
-      renderer.gameCoordsGroup.remove(selectedBox);
-      selectedBox = undefined;
-    }
+      //quadtreePresenter.draw();
+      //console.log(quadtree.entities.length);
+      let unitOriginalHealths: {[id: string]: number} = {};
+      for (let unit of unitsAndProjectiles) {
+        if (unit.damage != null) {
+          unitOriginalHealths[unit.id] = unit.health;
+        }
+      }
+
+      let collisions = quadtree.getCollisions(unitsAndProjectiles);
+      for (let unitId in collisions) {
+        const unit: rtt_engine.IKillable = unitsAndProjectiles.filter((u: rtt_engine.IKillable) => u.id == unitId)[0];
+        let unitCollisions = collisions[unitId];
+        if (unit instanceof rtt_engine.Projectile) {
+          unitCollisions = unitCollisions.filter((u) => !(u instanceof rtt_engine.Projectile));
+        }
+        const numberOfCollidingUnits = unitCollisions.length;
+        if (numberOfCollidingUnits == 0) {
+          continue;
+        }
+        // FIXME: We need to only apply damage if it fulfils IKillable…
+        const damagePerCollidingUnit = unitOriginalHealths[unitId] / numberOfCollidingUnits;
+        for (let collidingUnit of unitCollisions) {
+          if (collidingUnit.damage != null) {
+            collidingUnit.damage(damagePerCollidingUnit);
+          }
+        }
+      }
+      game.update();
+    });
+
+    rtt_threejs_renderer.time("update rendering", () => {
+      game.draw();
+      mapPresenter.draw();
+      powerSourcePresenter.draw();
+      for (let commanderPresenter of commanderPresenters) {
+        commanderPresenter.draw();
+      }
+      for (let botPresenter of botPresenters) {
+        botPresenter.draw();
+      }
+      for (let shotgunTankPresenter of shotgunTankPresenters) {
+        shotgunTankPresenter.draw();
+      }
+      for (let shotgunProjectilePresenter of shotgunProjectilePresenters) {
+        shotgunProjectilePresenter.draw();
+      }
+      for (let artilleryTankPresenter of artilleryTankPresenters) {
+        artilleryTankPresenter.draw();
+      }
+      for (let artilleryProjectilePresenter of artilleryProjectilePresenters) {
+        artilleryProjectilePresenter.draw();
+      }
+      for (let titanPresenter of titanPresenters) {
+        titanPresenter.draw();
+      }
+      for (let titanProjectilePresenter of titanProjectilePresenters) {
+        titanProjectilePresenter.draw();
+      }
+      for (let factoryPresenter of factoryPresenters) {
+        factoryPresenter.draw();
+      }
+      for (let healthinessPresenter of healthinessPresenters) {
+        healthinessPresenter.draw();
+      }
+      for (let powerGeneratorPresenter of powerGeneratorPresenters) {
+        powerGeneratorPresenter.draw();
+      }
+      for (let turretPresenter of turretPresenters) {
+        turretPresenter.draw();
+      }
+      for (let turretProjectilePresenter of turretProjectilePresenters) {
+        turretProjectilePresenter.draw();
+      }
+      if (selected != null) {
+        if (selectedBox == null) {
+          const geo = new THREE.RingBufferGeometry(selected.collisionRadius * 1.5, selected.collisionRadius * 1.5 + 4);
+          let material = new THREE.MeshBasicMaterial({ color: selected.player.color, opacity: 0.5 });
+          material.blending = THREE.AdditiveBlending;
+          selectedBox = new THREE.Mesh(geo, material);
+          renderer.gameCoordsGroup.add(selectedBox);
+        }
+        selectedBox.position.x = selected.position.x;
+        selectedBox.position.y = selected.position.y;
+      } else if (selectedBox != null) {
+        renderer.gameCoordsGroup.remove(selectedBox);
+        selectedBox = undefined;
+      }
+    });
     //console.log("game draw time: " + ((new Date()) - start2));
   }, 1000 / 30);
 }

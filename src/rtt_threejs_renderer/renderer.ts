@@ -3,6 +3,13 @@ import CameraControls from 'camera-controls';
 
 CameraControls.install({ THREE: THREE });
 
+export function time(name: string, callback: () => void): void {
+  let clock = new THREE.Clock();
+  clock.start();
+  callback();
+  console.log("time of '" + name + "': " + clock.getElapsedTime());
+}
+
 export class Renderer {
   clock: THREE.Clock;
   camera: THREE.PerspectiveCamera;
@@ -46,16 +53,13 @@ export class Renderer {
   }
 
   animate(force = false) {
-    const delta = this.clock.getDelta();
-    const hasControlsUpdated = this.controls.update(delta);
+    this.controls.update(this.clock.getDelta());
     requestAnimationFrame(() => this.animate());
 
-    //if (force || hasControlsUpdated) {
-      //console.log("draw calls: " + this.renderer.info.render.calls);
-      const start = new Date();
+    time("animate", () => {
       this.renderer.render(this.scene, this.camera);
-      //console.log("render time: " + ((new Date()) - start));
-    //}
+      console.log("draw calls: " + this.renderer.info.render.calls);
+    });
   }
 }
 
