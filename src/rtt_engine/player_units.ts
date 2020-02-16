@@ -73,6 +73,9 @@ export class PlayerUnits {
     if (this.commander != null) {
       this.commander.update();
     }
+    for (let powerGenerator of this.powerGenerators) {
+      powerGenerator.update();
+    }
     for (let vehicle of this.vehicles) {
       switch (vehicle.constructor) {
         case Bot:
