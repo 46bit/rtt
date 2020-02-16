@@ -65,11 +65,13 @@ export class AttackNearestAI implements IAI {
   game: rtt_engine.Game;
   player: rtt_engine.Player;
   opponents: rtt_engine.Player[];
+  assignedOrders: {[id: string]: rtt_engine.IOrder};
 
   constructor(game: rtt_engine.Game, player: rtt_engine.Player, opponents: rtt_engine.Player[]) {
     this.game = game;
     this.player = player;
     this.opponents = opponents;
+    this.assignedOrders = {};
   }
 
   update() {
@@ -190,11 +192,12 @@ export class AttackNearestAI implements IAI {
   updateVehicleAttacks() {
     const opposingUnits = this.opponents.map((p) => p.units.allKillableCollidableUnits()).flat();
     for (let vehicle of this.player.units.vehicles) {
-      if (vehicle.orders.length > 0 && vehicle.orders[0].kind == 'construct') {
+      if (vehicle.orders.length > 0 && vehicle.orders[0] != this.assignedOrders[vehicle.id]) {
         continue;
       }
       let nearestOpposingUnit = _.minBy(opposingUnits, (u) => rtt_engine.Vector.distance(u.position, vehicle.position));
       vehicle.orders[0] = { kind: 'attack', target: nearestOpposingUnit };
+      this.assignedOrders[vehicle.id] = vehicle.orders[0];
     }
   }
 }
