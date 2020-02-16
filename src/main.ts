@@ -247,7 +247,7 @@ function main() {
   }, false);
 
   let ais: IAI[] = game.players.map((player) => {
-    const aiClass = Math.random() > 0.7 ? AttackNearestAI : ExistingAI;
+    const aiClass = Math.random() >= 0.5 ? AttackNearestAI : ExistingAI;
     console.log("player " + player.name + " using AI " + aiClass.name);
     return new aiClass(game, player, game.players.filter((p) => p != player));
   });
