@@ -69381,7 +69381,7 @@ function main() {
         buildChoice = "turret";
     }, false);
     let ais = game.players.map((player) => {
-        const aiClass = Math.random() > 0.7 ? ai_1.AttackNearestAI : ai_1.ExistingAI;
+        const aiClass = Math.random() >= 0.5 ? ai_1.AttackNearestAI : ai_1.ExistingAI;
         console.log("player " + player.name + " using AI " + aiClass.name);
         return new aiClass(game, player, game.players.filter((p) => p != player));
     });
@@ -70754,7 +70754,7 @@ class Titan extends lib_1.Vehicle {
             if (angleToFireProjectile == null) {
                 return;
             }
-            for (let projectileOffsetAngle = -6; projectileOffsetAngle <= 6; projectileOffsetAngle += 3) {
+            for (let projectileOffsetAngle = -1.5; projectileOffsetAngle <= 1.5; projectileOffsetAngle += 1.5) {
                 const projectile = new TitanProjectile(this.position, this.player, angleToFireProjectile + projectileOffsetAngle * Math.PI / 180);
                 this.player.turretProjectiles.push(projectile);
             }
@@ -71686,8 +71686,7 @@ class HealthinessPresenter {
         const units = this.player.units.allKillableCollidableUnits().filter((u) => u.isDamaged());
         const numberOfUnits = units.length;
         if (this.instancedMesh != undefined && this.instancedMesh.count != numberOfUnits) {
-            this.scene.remove(this.instancedMesh);
-            this.instancedMesh = undefined;
+            this.dedraw();
         }
         if (this.instancedMesh == undefined) {
             this.predraw(numberOfUnits);
@@ -71707,6 +71706,8 @@ class HealthinessPresenter {
     dedraw() {
         if (this.instancedMesh) {
             this.scene.remove(this.instancedMesh);
+            this.instancedMesh.geometry.dispose();
+            this.instancedMesh.material.dispose();
             this.instancedMesh = undefined;
         }
     }
@@ -72072,6 +72073,7 @@ class QuadtreePresenter {
     dedraw() {
         if (this.childScene != null) {
             this.scene.remove(this.childScene);
+            // FIXME: stop leaking the geometry and mesh and scene
             this.childScene = undefined;
         }
     }
