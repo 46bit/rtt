@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { Player } from '../../rtt_engine/player';
 import { PowerSource } from '../../rtt_engine/entities/power_source';
 import { Vector } from '../../rtt_engine/vector';
+import { InstancedPresenter } from './lib';
 
 export function turretShape(): THREE.Shape {
   let shape = new THREE.Shape();
@@ -13,48 +14,13 @@ export function turretShape(): THREE.Shape {
   return shape;
 }
 
-export class TurretPresenter {
-  player: Player;
-  scene: THREE.Group;
-  meshMaterial?: THREE.Material;
-  geometry?: THREE.BufferGeometry;
-  instancedMesh?: THREE.InstancedMesh;
-
+export class TurretPresenter extends InstancedPresenter {
   constructor(player: Player, scene: THREE.Group) {
-    this.player = player;
-    this.scene = scene;
-  }
-
-  predraw() {
-    this.meshMaterial = new THREE.MeshBasicMaterial({ color: this.player.color });
-    this.geometry = new THREE.ShapeBufferGeometry(turretShape());
-  }
-
-  draw() {
-    const count = this.player.units.turrets.length;
-    if (this.instancedMesh != undefined && this.instancedMesh.count != count) {
-      this.scene.remove(this.instancedMesh);
-      this.instancedMesh = undefined;
-    }
-    if (this.instancedMesh == undefined) {
-      this.instancedMesh = new THREE.InstancedMesh(this.geometry!, this.meshMaterial!, count);
-      this.instancedMesh.count = count;
-      this.instancedMesh.frustumCulled = false;
-      this.scene.add(this.instancedMesh);
-    }
-    let m = new THREE.Matrix4();
-    for (let i = 0; i < count; i++) {
-      const turret = this.player.units.turrets[i];
-      m.setPosition(turret.position.x, turret.position.y, 0);
-      this.instancedMesh.setMatrixAt(i, m);
-    }
-    this.instancedMesh.instanceMatrix.needsUpdate = true;
-  }
-
-  dedraw() {
-    if (this.instancedMesh) {
-      this.scene.remove(this.instancedMesh);
-      this.instancedMesh = undefined;
-    }
+    super(
+      player,
+      (p) => p.units.turrets,
+      new THREE.ShapeBufferGeometry(turretShape()),
+      scene,
+    );
   }
 }

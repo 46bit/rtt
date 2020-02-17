@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { Player } from '../../rtt_engine/player';
 import { PowerSource } from '../../rtt_engine/entities/power_source';
 import { Vector } from '../../rtt_engine/vector';
+import { InstancedPresenter } from './lib';
 
 export function powerGeneratorShape(): THREE.Shape {
   let shape = new THREE.Shape();
@@ -13,48 +14,13 @@ export function powerGeneratorShape(): THREE.Shape {
   return shape;
 }
 
-export class PowerGeneratorPresenter {
-  player: Player;
-  scene: THREE.Group;
-  meshMaterial?: THREE.Material;
-  powerGeneratorGeometry?: THREE.BufferGeometry;
-  instancedMesh?: THREE.InstancedMesh;
-
+export class PowerGeneratorPresenter extends InstancedPresenter {
   constructor(player: Player, scene: THREE.Group) {
-    this.player = player;
-    this.scene = scene;
-  }
-
-  predraw() {
-    this.meshMaterial = new THREE.MeshBasicMaterial({ color: this.player.color });
-    this.powerGeneratorGeometry = new THREE.ShapeBufferGeometry(powerGeneratorShape());
-  }
-
-  draw() {
-    const numberOfPowerGenerators = this.player.units.powerGenerators.length;
-    if (this.instancedMesh != undefined && this.instancedMesh.count != numberOfPowerGenerators) {
-      this.scene.remove(this.instancedMesh);
-      this.instancedMesh = undefined;
-    }
-    if (this.instancedMesh == undefined) {
-      this.instancedMesh = new THREE.InstancedMesh(this.powerGeneratorGeometry!, this.meshMaterial!, numberOfPowerGenerators);
-      this.instancedMesh.count = numberOfPowerGenerators;
-      this.instancedMesh.frustumCulled = false;
-      this.scene.add(this.instancedMesh);
-    }
-    let m = new THREE.Matrix4();
-    for (let i = 0; i < numberOfPowerGenerators; i++) {
-      const powerGenerator = this.player.units.powerGenerators[i];
-      m.setPosition(powerGenerator.position.x, powerGenerator.position.y, 0);
-      this.instancedMesh.setMatrixAt(i, m);
-    }
-    this.instancedMesh.instanceMatrix.needsUpdate = true;
-  }
-
-  dedraw() {
-    if (this.instancedMesh) {
-      this.scene.remove(this.instancedMesh);
-      this.instancedMesh = undefined;
-    }
+    super(
+      player,
+      (p) => p.units.powerGenerators,
+      new THREE.ShapeBufferGeometry(powerGeneratorShape()),
+      scene,
+    );
   }
 }
