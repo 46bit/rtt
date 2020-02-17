@@ -48,6 +48,7 @@ export class QuadtreePresenter {
   dedraw() {
     if (this.childScene != null) {
       this.scene.remove(this.childScene);
+      // FIXME: stop leaking the geometry and mesh and scene
       this.childScene = undefined;
     }
   }

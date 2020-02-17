@@ -68,8 +68,7 @@ export class HealthinessPresenter {
     const units = this.player.units.allKillableCollidableUnits().filter((u) => u.isDamaged());
     const numberOfUnits = units.length;
     if (this.instancedMesh != undefined && this.instancedMesh.count != numberOfUnits) {
-      this.scene.remove(this.instancedMesh);
-      this.instancedMesh = undefined;
+      this.dedraw();
     }
     if (this.instancedMesh == undefined) {
       this.predraw(numberOfUnits);
@@ -91,6 +90,8 @@ export class HealthinessPresenter {
   dedraw() {
     if (this.instancedMesh) {
       this.scene.remove(this.instancedMesh);
+      this.instancedMesh.geometry.dispose();
+      this.instancedMesh.material.dispose();
       this.instancedMesh = undefined;
     }
   }
