@@ -71557,6 +71557,7 @@ exports.CommanderPresenter = CommanderPresenter;
 Object.defineProperty(exports, "__esModule", { value: true });
 const tslib_1 = __webpack_require__(/*! tslib */ "./node_modules/tslib/tslib.es6.js");
 const THREE = tslib_1.__importStar(__webpack_require__(/*! three */ "./node_modules/three/build/three.module.js"));
+const lib_1 = __webpack_require__(/*! ./lib */ "./src/rtt_threejs_renderer/presenters/lib/index.ts");
 function factoryShape() {
     var shape = new THREE.Shape();
     shape.moveTo(15, -15);
@@ -71578,40 +71579,9 @@ function factoryShape() {
     return shape;
 }
 exports.factoryShape = factoryShape;
-class FactoryPresenter {
+class FactoryPresenter extends lib_1.InstancedPresenter {
     constructor(player, scene) {
-        this.player = player;
-        this.scene = scene;
-    }
-    predraw() {
-        this.meshMaterial = new THREE.MeshBasicMaterial({ color: this.player.color });
-        this.factoryGeometry = new THREE.ShapeBufferGeometry(factoryShape());
-    }
-    draw() {
-        const numberOfFactories = this.player.units.factories.length;
-        if (this.instancedMesh != undefined && this.instancedMesh.count != numberOfFactories) {
-            this.scene.remove(this.instancedMesh);
-            this.instancedMesh = undefined;
-        }
-        if (this.instancedMesh == undefined) {
-            this.instancedMesh = new THREE.InstancedMesh(this.factoryGeometry, this.meshMaterial, numberOfFactories);
-            this.instancedMesh.count = numberOfFactories;
-            this.instancedMesh.frustumCulled = false;
-            this.scene.add(this.instancedMesh);
-        }
-        let m = new THREE.Matrix4();
-        for (let i = 0; i < numberOfFactories; i++) {
-            const factory = this.player.units.factories[i];
-            m.setPosition(factory.position.x, factory.position.y, 0);
-            this.instancedMesh.setMatrixAt(i, m);
-        }
-        this.instancedMesh.instanceMatrix.needsUpdate = true;
-    }
-    dedraw() {
-        if (this.instancedMesh) {
-            this.scene.remove(this.instancedMesh);
-            this.instancedMesh = undefined;
-        }
+        super(player, (p) => p.units.factories, new THREE.ShapeBufferGeometry(factoryShape()), scene);
     }
 }
 exports.FactoryPresenter = FactoryPresenter;
@@ -71908,6 +71878,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const tslib_1 = __webpack_require__(/*! tslib */ "./node_modules/tslib/tslib.es6.js");
 const THREE = tslib_1.__importStar(__webpack_require__(/*! three */ "./node_modules/three/build/three.module.js"));
 const vector_1 = __webpack_require__(/*! ../../rtt_engine/vector */ "./src/rtt_engine/vector.ts");
+const lib_1 = __webpack_require__(/*! ./lib */ "./src/rtt_threejs_renderer/presenters/lib/index.ts");
 function powerGeneratorShape() {
     let shape = new THREE.Shape();
     shape.moveTo(0, 8);
@@ -71918,40 +71889,9 @@ function powerGeneratorShape() {
     return shape;
 }
 exports.powerGeneratorShape = powerGeneratorShape;
-class PowerGeneratorPresenter {
+class PowerGeneratorPresenter extends lib_1.InstancedPresenter {
     constructor(player, scene) {
-        this.player = player;
-        this.scene = scene;
-    }
-    predraw() {
-        this.meshMaterial = new THREE.MeshBasicMaterial({ color: this.player.color });
-        this.powerGeneratorGeometry = new THREE.ShapeBufferGeometry(powerGeneratorShape());
-    }
-    draw() {
-        const numberOfPowerGenerators = this.player.units.powerGenerators.length;
-        if (this.instancedMesh != undefined && this.instancedMesh.count != numberOfPowerGenerators) {
-            this.scene.remove(this.instancedMesh);
-            this.instancedMesh = undefined;
-        }
-        if (this.instancedMesh == undefined) {
-            this.instancedMesh = new THREE.InstancedMesh(this.powerGeneratorGeometry, this.meshMaterial, numberOfPowerGenerators);
-            this.instancedMesh.count = numberOfPowerGenerators;
-            this.instancedMesh.frustumCulled = false;
-            this.scene.add(this.instancedMesh);
-        }
-        let m = new THREE.Matrix4();
-        for (let i = 0; i < numberOfPowerGenerators; i++) {
-            const powerGenerator = this.player.units.powerGenerators[i];
-            m.setPosition(powerGenerator.position.x, powerGenerator.position.y, 0);
-            this.instancedMesh.setMatrixAt(i, m);
-        }
-        this.instancedMesh.instanceMatrix.needsUpdate = true;
-    }
-    dedraw() {
-        if (this.instancedMesh) {
-            this.scene.remove(this.instancedMesh);
-            this.instancedMesh = undefined;
-        }
+        super(player, (p) => p.units.powerGenerators, new THREE.ShapeBufferGeometry(powerGeneratorShape()), scene);
     }
 }
 exports.PowerGeneratorPresenter = PowerGeneratorPresenter;
@@ -72192,6 +72132,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const tslib_1 = __webpack_require__(/*! tslib */ "./node_modules/tslib/tslib.es6.js");
 const THREE = tslib_1.__importStar(__webpack_require__(/*! three */ "./node_modules/three/build/three.module.js"));
 const vector_1 = __webpack_require__(/*! ../../rtt_engine/vector */ "./src/rtt_engine/vector.ts");
+const lib_1 = __webpack_require__(/*! ./lib */ "./src/rtt_threejs_renderer/presenters/lib/index.ts");
 function turretShape() {
     let shape = new THREE.Shape();
     shape.moveTo(0, 8);
@@ -72202,40 +72143,9 @@ function turretShape() {
     return shape;
 }
 exports.turretShape = turretShape;
-class TurretPresenter {
+class TurretPresenter extends lib_1.InstancedPresenter {
     constructor(player, scene) {
-        this.player = player;
-        this.scene = scene;
-    }
-    predraw() {
-        this.meshMaterial = new THREE.MeshBasicMaterial({ color: this.player.color });
-        this.geometry = new THREE.ShapeBufferGeometry(turretShape());
-    }
-    draw() {
-        const count = this.player.units.turrets.length;
-        if (this.instancedMesh != undefined && this.instancedMesh.count != count) {
-            this.scene.remove(this.instancedMesh);
-            this.instancedMesh = undefined;
-        }
-        if (this.instancedMesh == undefined) {
-            this.instancedMesh = new THREE.InstancedMesh(this.geometry, this.meshMaterial, count);
-            this.instancedMesh.count = count;
-            this.instancedMesh.frustumCulled = false;
-            this.scene.add(this.instancedMesh);
-        }
-        let m = new THREE.Matrix4();
-        for (let i = 0; i < count; i++) {
-            const turret = this.player.units.turrets[i];
-            m.setPosition(turret.position.x, turret.position.y, 0);
-            this.instancedMesh.setMatrixAt(i, m);
-        }
-        this.instancedMesh.instanceMatrix.needsUpdate = true;
-    }
-    dedraw() {
-        if (this.instancedMesh) {
-            this.scene.remove(this.instancedMesh);
-            this.instancedMesh = undefined;
-        }
+        super(player, (p) => p.units.turrets, new THREE.ShapeBufferGeometry(turretShape()), scene);
     }
 }
 exports.TurretPresenter = TurretPresenter;
@@ -72256,50 +72166,18 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const tslib_1 = __webpack_require__(/*! tslib */ "./node_modules/tslib/tslib.es6.js");
 const THREE = tslib_1.__importStar(__webpack_require__(/*! three */ "./node_modules/three/build/three.module.js"));
 const turret_1 = __webpack_require__(/*! ../../rtt_engine/entities/turret */ "./src/rtt_engine/entities/turret.ts");
+const lib_1 = __webpack_require__(/*! ./lib */ "./src/rtt_threejs_renderer/presenters/lib/index.ts");
 function turretProjectileShape() {
     var shape = new THREE.Shape();
-    shape.moveTo(4, 0);
-    shape.quadraticCurveTo(4, 4, -4, 0);
-    shape.quadraticCurveTo(4, -4, 4, 0);
+    shape.moveTo(-4, 0);
+    shape.quadraticCurveTo(-4, 4, 4, 0);
+    shape.quadraticCurveTo(-4, -4, -4, 0);
     return shape;
 }
 exports.turretProjectileShape = turretProjectileShape;
-class TurretProjectilePresenter {
+class TurretProjectilePresenter extends lib_1.InstancedRotateablePresenter {
     constructor(player, scene) {
-        this.player = player;
-        this.scene = scene;
-    }
-    predraw() {
-        this.meshMaterial = new THREE.MeshBasicMaterial({ color: this.player.color });
-        this.geometry = new THREE.ShapeBufferGeometry(turretProjectileShape());
-    }
-    draw() {
-        const projectiles = this.player.turretProjectiles.filter(v => v instanceof turret_1.TurretProjectile);
-        const count = projectiles.length;
-        if (this.instancedMesh != undefined && this.instancedMesh.count != count) {
-            this.scene.remove(this.instancedMesh);
-            this.instancedMesh = undefined;
-        }
-        if (this.instancedMesh == undefined) {
-            this.instancedMesh = new THREE.InstancedMesh(this.geometry, this.meshMaterial, count);
-            this.instancedMesh.count = count;
-            this.instancedMesh.frustumCulled = false;
-            this.scene.add(this.instancedMesh);
-        }
-        let m = new THREE.Matrix4();
-        for (let i = 0; i < count; i++) {
-            const turretProjectile = projectiles[i];
-            m.makeRotationZ(Math.PI / 2 - turretProjectile.direction);
-            m.setPosition(turretProjectile.position.x, turretProjectile.position.y, 0);
-            this.instancedMesh.setMatrixAt(i, m);
-        }
-        this.instancedMesh.instanceMatrix.needsUpdate = true;
-    }
-    dedraw() {
-        if (this.instancedMesh) {
-            this.scene.remove(this.instancedMesh);
-            this.instancedMesh = undefined;
-        }
+        super(player, (p) => p.turretProjectiles.filter(v => v instanceof turret_1.TurretProjectile), new THREE.ShapeBufferGeometry(turretProjectileShape()), scene);
     }
 }
 exports.TurretProjectilePresenter = TurretProjectilePresenter;
