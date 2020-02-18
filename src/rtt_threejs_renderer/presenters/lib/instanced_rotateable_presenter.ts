@@ -37,7 +37,11 @@ export class InstancedRotateablePresenter {
     let m = new THREE.Matrix4();
     for (let i = 0; i < instanceCount; i++) {
       const instance = instances[i];
-      m.makeRotationZ(-Math.PI/2 - instance.direction);
+      if (instance.turret == null) {
+        m.makeRotationZ(-Math.PI/2 - instance.direction);
+      } else {
+        m.makeRotationZ(-Math.PI/2 - instance.turret.rotation);
+      }
       m.setPosition(instance.position.x, instance.position.y, 0);
       this.instancedMesh.setMatrixAt(i, m);
     }

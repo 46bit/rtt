@@ -7,8 +7,8 @@ export function shotgunTankShape(): THREE.Shape {
   var shape = new THREE.Shape();
   shape.moveTo(8, 0);
   const closeness = 0.8;
-  shape.ellipse(-8, 0, 8, 8, 0, Math.PI * closeness * 2, false, -Math.PI * closeness);
-  shape.lineTo(-0.5, 0);
+  shape.absarc(0, 0, 8, closeness * Math.PI, -closeness * Math.PI, true);
+  shape.absarc(0, 0, 4.5, -closeness * Math.PI, closeness * Math.PI, true);
   return shape;
 }
 

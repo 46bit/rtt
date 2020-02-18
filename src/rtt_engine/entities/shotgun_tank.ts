@@ -1,6 +1,6 @@
 import { Player } from '../player';
 import { Vector } from '../vector';
-import { Vehicle, IEntity, Projectile } from './lib';
+import { Vehicle, IEntity, Projectile, VehicleTurret } from './lib';
 import { IKillable } from './abilities';
 import lodash from 'lodash';
 
@@ -9,6 +9,7 @@ export const SHOTGUN_RANGE = 80;
 export class ShotgunTank extends Vehicle {
   firingRate: number;
   updateCounter: number;
+  turret: VehicleTurret;
 
   constructor(position: Vector, direction: number, player: Player, built: boolean) {
     super({
@@ -25,6 +26,8 @@ export class ShotgunTank extends Vehicle {
     } as any);
     this.firingRate = 40;
     this.updateCounter = 0;
+    this.turret = new VehicleTurret(0.08, 1, 0.8);
+    this.turret.rotation = this.direction;
   }
 
   update(enemies: IEntity[]) {
@@ -34,29 +37,32 @@ export class ShotgunTank extends Vehicle {
     super.update();
     this.updateCounter++;
 
-    if (this.updateCounter >= this.firingRate) {
-      const angleToFireProjectile = this.angleToNearestEnemy(enemies);
-      if (angleToFireProjectile == null) {
-        return;
-      }
+    const angleToFireProjectile = this.angleToNearestEnemy(enemies);
+    if (angleToFireProjectile == null) {
+      this.turret.update(this.direction);
+      return;
+    }
+    this.turret.updateTowards(0, angleToFireProjectile[0]);
+
+    if (this.updateCounter >= this.firingRate && angleToFireProjectile[1] <= SHOTGUN_RANGE * 1.2) {
       for (let projectileOffsetAngle = -4.8; projectileOffsetAngle <= 4.8; projectileOffsetAngle += 2.4) {
-        const projectile = new ShotgunProjectile(this.position, this.player!, angleToFireProjectile + projectileOffsetAngle*Math.PI/180);
+        const projectile = new ShotgunProjectile(this.position, this.player!, this.turret.rotation + projectileOffsetAngle*Math.PI/180);
         this.player!.turretProjectiles.push(projectile);
       }
       this.updateCounter = 0;
     }
   }
 
-  protected angleToNearestEnemy(enemies: IEntity[]): number | null {
+  protected angleToNearestEnemy(enemies: IEntity[]): [number, number] | null {
     const nearestEnemy = lodash.minBy(enemies, (e) => Vector.subtract(this.position, e.position).magnitude());
     if (nearestEnemy == null) {
       return null;
     }
     const offset = Vector.subtract(nearestEnemy.position, this.position);
-    if (offset.magnitude() > SHOTGUN_RANGE * 1.2) {
+    if (offset.magnitude() > SHOTGUN_RANGE * 2) {
       return null;
     }
-    return offset.angle();
+    return [offset.angle(), offset.magnitude()];
   }
 
   protected attack(attackOrder: { target: IEntity & IKillable }): boolean {
