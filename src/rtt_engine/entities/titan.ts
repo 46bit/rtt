@@ -7,9 +7,8 @@ import lodash from 'lodash';
 export const TITAN_RANGE = 150;
 
 export class Titan extends Vehicle {
-  firingRate: number;
-  updateCounter: number;
-  turret: VehicleTurret;
+  turret2: VehicleTurret;
+  laserStopAfter?: number;
 
   constructor(position: Vector, direction: number, player: Player, built: boolean) {
     super({
@@ -17,17 +16,16 @@ export class Titan extends Vehicle {
       direction,
       collisionRadius: 16,
       built,
-      buildCost: 4000,
+      buildCost: 7000,
       player,
       fullHealth: 700,
       health: built ? 700 : 0,
-      movementRate: 0.05,
-      turnRate: 1.5 / 3.0,
+      movementRate: 0.03,
+      turnRate: 1 / 3,
     } as any);
-    this.firingRate = 7;
-    this.updateCounter = 0;
-    this.turret = new VehicleTurret(0.03, 1, 0.8);
-    this.turret.rotation = this.direction;
+    this.turret2 = new VehicleTurret(0.05, 1, 0.8, 0);
+    this.turret2.rotation = this.direction;
+    this.laserStopAfter = undefined;
   }
 
   update(enemies: IEntity[]) {
@@ -35,21 +33,29 @@ export class Titan extends Vehicle {
       return;
     }
     super.update();
-    this.updateCounter++;
 
+    this.laserStopAfter = undefined;
     const angleToFireProjectile = this.angleToNearestEnemy(enemies);
     if (angleToFireProjectile == null) {
-      this.turret.update(this.direction);
+      this.turret2.update(this.direction);
       return;
     }
-    this.turret.updateTowards(0, angleToFireProjectile[0]);
+    this.turret2.updateTowards(0, angleToFireProjectile[0]);
 
-    if (this.updateCounter >= this.firingRate && angleToFireProjectile[1] <= TITAN_RANGE * 1.2) {
-      for (let projectileOffsetAngle = -1.5; projectileOffsetAngle <= 1.5; projectileOffsetAngle += 1.5) {
-        const projectile = new TitanProjectile(this.position, this.player!, this.turret.rotation + projectileOffsetAngle*Math.PI/180);
-        this.player!.turretProjectiles.push(projectile);
+    if (angleToFireProjectile[1] < TITAN_RANGE) {
+      let p = this.position.clone();
+      let u = Vector.from_magnitude_and_direction(1, this.turret2.rotation);
+      for (let d = 0; d < TITAN_RANGE; d++) {
+        p.add(u);
+        let hitEnemies = enemies.filter((e) => !e.dead && Vector.distance(e.position, p) < e.collisionRadius);
+        if (hitEnemies.length > 0) {
+          for (let hitEnemy of hitEnemies) {
+            hitEnemy.damage(3 / hitEnemies.length);
+          }
+          this.laserStopAfter = d;
+          break;
+        }
       }
-      this.updateCounter = 0;
     }
   }
 

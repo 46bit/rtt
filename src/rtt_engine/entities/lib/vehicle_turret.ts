@@ -6,13 +6,15 @@ export class VehicleTurret {
   public friction: number;
   public rotation: number;
   public rotationalVelocity: number;
+  public tolerance: number;
 
-  constructor(turnRate: number, force: number, friction: number) {
+  constructor(turnRate: number, force: number, friction: number, tolerance = 0.06) {
     this.turnRate = turnRate;
     this.force = force;
     this.friction = friction;
     this.rotation = 0;
     this.rotationalVelocity = 0;
+    this.tolerance = tolerance;
   }
 
   public update(defaultDirection: number) {
@@ -45,11 +47,11 @@ export class VehicleTurret {
   }
 
   protected shouldTurnLeftToReach(angle: number) {
-    return Math.sin(angle) < -0.06;
+    return Math.sin(angle) < -this.tolerance;
   }
 
   protected shouldTurnRightToReach(angle: number) {
-    return Math.sin(angle) > 0.06;
+    return Math.sin(angle) > this.tolerance;
   }
 
   protected updateRotation() {
