@@ -70258,6 +70258,7 @@ tslib_1.__exportStar(__webpack_require__(/*! ./solid_entity */ "./src/rtt_engine
 tslib_1.__exportStar(__webpack_require__(/*! ./structure */ "./src/rtt_engine/entities/lib/structure.ts"), exports);
 tslib_1.__exportStar(__webpack_require__(/*! ./unit */ "./src/rtt_engine/entities/lib/unit.ts"), exports);
 tslib_1.__exportStar(__webpack_require__(/*! ./vehicle */ "./src/rtt_engine/entities/lib/vehicle.ts"), exports);
+tslib_1.__exportStar(__webpack_require__(/*! ./vehicle_turret */ "./src/rtt_engine/entities/lib/vehicle_turret.ts"), exports);
 
 
 /***/ }),
@@ -70521,6 +70522,72 @@ exports.Vehicle = Vehicle;
 
 /***/ }),
 
+/***/ "./src/rtt_engine/entities/lib/vehicle_turret.ts":
+/*!*******************************************************!*\
+  !*** ./src/rtt_engine/entities/lib/vehicle_turret.ts ***!
+  \*******************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+class VehicleTurret {
+    constructor(turnRate, force, friction) {
+        this.turnRate = turnRate;
+        this.force = force;
+        this.friction = friction;
+        this.rotation = 0;
+        this.rotationalVelocity = 0;
+    }
+    update(defaultDirection) {
+        this.applyDragForces();
+        // FIXME: terrible hack
+        this.force /= 3;
+        this.updateRotationalVelocity(0, defaultDirection);
+        this.force *= 3;
+        this.updateRotation();
+    }
+    updateTowards(baseDirection, targetDirection) {
+        this.applyDragForces();
+        this.updateRotationalVelocity(baseDirection, targetDirection);
+        this.updateRotation();
+    }
+    applyDragForces() {
+        this.rotationalVelocity *= (1 - this.friction);
+    }
+    updateRotationalVelocity(baseDirection, targetDirection) {
+        const diff = targetDirection - baseDirection - this.rotation;
+        if (this.shouldTurnLeftToReach(diff)) {
+            this.rotationalVelocity -= this.force;
+        }
+        else if (this.shouldTurnRightToReach(diff)) {
+            this.rotationalVelocity += this.force;
+        }
+        // FIXME: Don't update rotationalVelocity if the rotation is going to overshoot
+    }
+    shouldTurnLeftToReach(angle) {
+        return Math.sin(angle) < -0.06;
+    }
+    shouldTurnRightToReach(angle) {
+        return Math.sin(angle) > 0.06;
+    }
+    updateRotation() {
+        this.rotation += this.rotationalVelocity * this.turnRate;
+        // Normalise @direction to keep within [-PI, PI]
+        if (this.rotation < -Math.PI) {
+            this.rotation += Math.PI * 2;
+        }
+        if (this.rotation > Math.PI) {
+            this.rotation -= Math.PI * 2;
+        }
+    }
+}
+exports.VehicleTurret = VehicleTurret;
+
+
+/***/ }),
+
 /***/ "./src/rtt_engine/entities/power_generator.ts":
 /*!****************************************************!*\
   !*** ./src/rtt_engine/entities/power_generator.ts ***!
@@ -70650,6 +70717,8 @@ class ShotgunTank extends lib_1.Vehicle {
         });
         this.firingRate = 40;
         this.updateCounter = 0;
+        this.turret = new lib_1.VehicleTurret(0.08, 1, 0.8);
+        this.turret.rotation = this.direction;
     }
     update(enemies) {
         if (this.dead) {
@@ -70657,13 +70726,15 @@ class ShotgunTank extends lib_1.Vehicle {
         }
         super.update();
         this.updateCounter++;
-        if (this.updateCounter >= this.firingRate) {
-            const angleToFireProjectile = this.angleToNearestEnemy(enemies);
-            if (angleToFireProjectile == null) {
-                return;
-            }
+        const angleToFireProjectile = this.angleToNearestEnemy(enemies);
+        if (angleToFireProjectile == null) {
+            this.turret.update(this.direction);
+            return;
+        }
+        this.turret.updateTowards(0, angleToFireProjectile[0]);
+        if (this.updateCounter >= this.firingRate && angleToFireProjectile[1] <= exports.SHOTGUN_RANGE * 1.2) {
             for (let projectileOffsetAngle = -4.8; projectileOffsetAngle <= 4.8; projectileOffsetAngle += 2.4) {
-                const projectile = new ShotgunProjectile(this.position, this.player, angleToFireProjectile + projectileOffsetAngle * Math.PI / 180);
+                const projectile = new ShotgunProjectile(this.position, this.player, this.turret.rotation + projectileOffsetAngle * Math.PI / 180);
                 this.player.turretProjectiles.push(projectile);
             }
             this.updateCounter = 0;
@@ -70675,10 +70746,10 @@ class ShotgunTank extends lib_1.Vehicle {
             return null;
         }
         const offset = vector_1.Vector.subtract(nearestEnemy.position, this.position);
-        if (offset.magnitude() > exports.SHOTGUN_RANGE * 1.2) {
+        if (offset.magnitude() > exports.SHOTGUN_RANGE * 2) {
             return null;
         }
-        return offset.angle();
+        return [offset.angle(), offset.magnitude()];
     }
     attack(attackOrder) {
         if (attackOrder.target.dead) {
@@ -70738,10 +70809,12 @@ class Titan extends lib_1.Vehicle {
             fullHealth: 700,
             health: built ? 700 : 0,
             movementRate: 0.05,
-            turnRate: 3.0 / 3.0,
+            turnRate: 1.5 / 3.0,
         });
         this.firingRate = 7;
         this.updateCounter = 0;
+        this.turret = new lib_1.VehicleTurret(0.03, 1, 0.8);
+        this.turret.rotation = this.direction;
     }
     update(enemies) {
         if (this.dead) {
@@ -70749,13 +70822,15 @@ class Titan extends lib_1.Vehicle {
         }
         super.update();
         this.updateCounter++;
-        if (this.updateCounter >= this.firingRate) {
-            const angleToFireProjectile = this.angleToNearestEnemy(enemies);
-            if (angleToFireProjectile == null) {
-                return;
-            }
+        const angleToFireProjectile = this.angleToNearestEnemy(enemies);
+        if (angleToFireProjectile == null) {
+            this.turret.update(this.direction);
+            return;
+        }
+        this.turret.updateTowards(0, angleToFireProjectile[0]);
+        if (this.updateCounter >= this.firingRate && angleToFireProjectile[1] <= exports.TITAN_RANGE * 1.2) {
             for (let projectileOffsetAngle = -1.5; projectileOffsetAngle <= 1.5; projectileOffsetAngle += 1.5) {
-                const projectile = new TitanProjectile(this.position, this.player, angleToFireProjectile + projectileOffsetAngle * Math.PI / 180);
+                const projectile = new TitanProjectile(this.position, this.player, this.turret.rotation + projectileOffsetAngle * Math.PI / 180);
                 this.player.turretProjectiles.push(projectile);
             }
             this.updateCounter = 0;
@@ -70767,10 +70842,10 @@ class Titan extends lib_1.Vehicle {
             return null;
         }
         const offset = vector_1.Vector.subtract(nearestEnemy.position, this.position);
-        if (offset.magnitude() > exports.TITAN_RANGE * 1.2) {
+        if (offset.magnitude() > exports.TITAN_RANGE * 2) {
             return null;
         }
-        return offset.angle();
+        return [offset.angle(), offset.magnitude()];
     }
     attack(attackOrder) {
         if (attackOrder.target.dead) {
@@ -71795,7 +71870,12 @@ class InstancedRotateablePresenter {
         let m = new THREE.Matrix4();
         for (let i = 0; i < instanceCount; i++) {
             const instance = instances[i];
-            m.makeRotationZ(-Math.PI / 2 - instance.direction);
+            if (instance.turret == null) {
+                m.makeRotationZ(-Math.PI / 2 - instance.direction);
+            }
+            else {
+                m.makeRotationZ(-Math.PI / 2 - instance.turret.rotation);
+            }
             m.setPosition(instance.position.x, instance.position.y, 0);
             this.instancedMesh.setMatrixAt(i, m);
         }
@@ -72041,8 +72121,8 @@ function shotgunTankShape() {
     var shape = new THREE.Shape();
     shape.moveTo(8, 0);
     const closeness = 0.8;
-    shape.ellipse(-8, 0, 8, 8, 0, Math.PI * closeness * 2, false, -Math.PI * closeness);
-    shape.lineTo(-0.5, 0);
+    shape.absarc(0, 0, 8, closeness * Math.PI, -closeness * Math.PI, true);
+    shape.absarc(0, 0, 4.5, -closeness * Math.PI, closeness * Math.PI, true);
     return shape;
 }
 exports.shotgunTankShape = shotgunTankShape;
