@@ -70533,12 +70533,13 @@ exports.Vehicle = Vehicle;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 class VehicleTurret {
-    constructor(turnRate, force, friction) {
+    constructor(turnRate, force, friction, tolerance = 0.06) {
         this.turnRate = turnRate;
         this.force = force;
         this.friction = friction;
         this.rotation = 0;
         this.rotationalVelocity = 0;
+        this.tolerance = tolerance;
     }
     update(defaultDirection) {
         this.applyDragForces();
@@ -70567,10 +70568,10 @@ class VehicleTurret {
         // FIXME: Don't update rotationalVelocity if the rotation is going to overshoot
     }
     shouldTurnLeftToReach(angle) {
-        return Math.sin(angle) < -0.06;
+        return Math.sin(angle) < -this.tolerance;
     }
     shouldTurnRightToReach(angle) {
-        return Math.sin(angle) > 0.06;
+        return Math.sin(angle) > this.tolerance;
     }
     updateRotation() {
         this.rotation += this.rotationalVelocity * this.turnRate;
@@ -70804,36 +70805,43 @@ class Titan extends lib_1.Vehicle {
             direction,
             collisionRadius: 16,
             built,
-            buildCost: 4000,
+            buildCost: 7000,
             player,
             fullHealth: 700,
             health: built ? 700 : 0,
-            movementRate: 0.05,
-            turnRate: 1.5 / 3.0,
+            movementRate: 0.03,
+            turnRate: 1 / 3,
         });
-        this.firingRate = 7;
-        this.updateCounter = 0;
-        this.turret = new lib_1.VehicleTurret(0.03, 1, 0.8);
-        this.turret.rotation = this.direction;
+        this.turret2 = new lib_1.VehicleTurret(0.05, 1, 0.8, 0);
+        this.turret2.rotation = this.direction;
+        this.laserStopAfter = undefined;
     }
     update(enemies) {
         if (this.dead) {
             return;
         }
         super.update();
-        this.updateCounter++;
+        this.laserStopAfter = undefined;
         const angleToFireProjectile = this.angleToNearestEnemy(enemies);
         if (angleToFireProjectile == null) {
-            this.turret.update(this.direction);
+            this.turret2.update(this.direction);
             return;
         }
-        this.turret.updateTowards(0, angleToFireProjectile[0]);
-        if (this.updateCounter >= this.firingRate && angleToFireProjectile[1] <= exports.TITAN_RANGE * 1.2) {
-            for (let projectileOffsetAngle = -1.5; projectileOffsetAngle <= 1.5; projectileOffsetAngle += 1.5) {
-                const projectile = new TitanProjectile(this.position, this.player, this.turret.rotation + projectileOffsetAngle * Math.PI / 180);
-                this.player.turretProjectiles.push(projectile);
+        this.turret2.updateTowards(0, angleToFireProjectile[0]);
+        if (angleToFireProjectile[1] < exports.TITAN_RANGE) {
+            let p = this.position.clone();
+            let u = vector_1.Vector.from_magnitude_and_direction(1, this.turret2.rotation);
+            for (let d = 0; d < exports.TITAN_RANGE; d++) {
+                p.add(u);
+                let hitEnemies = enemies.filter((e) => !e.dead && vector_1.Vector.distance(e.position, p) < e.collisionRadius);
+                if (hitEnemies.length > 0) {
+                    for (let hitEnemy of hitEnemies) {
+                        hitEnemy.damage(3 / hitEnemies.length);
+                    }
+                    this.laserStopAfter = d;
+                    break;
+                }
             }
-            this.updateCounter = 0;
         }
     }
     angleToNearestEnemy(enemies) {
@@ -72167,31 +72175,116 @@ const entities_1 = __webpack_require__(/*! ../../rtt_engine/entities */ "./src/r
 const lib_1 = __webpack_require__(/*! ./lib */ "./src/rtt_threejs_renderer/presenters/lib/index.ts");
 function titanShape() {
     var shape = new THREE.Shape();
-    shape.moveTo(16, 0);
-    const closeness = 0.8;
-    shape.ellipse(-16, 0, 16, 16, 0, Math.PI * closeness * 2, false, -Math.PI * closeness);
-    shape.lineTo(-0.5, 0);
+    shape.moveTo(-14, 0);
+    shape.lineTo(-10, 6);
+    shape.lineTo(-8, 6);
+    shape.lineTo(-4, 12);
+    shape.lineTo(7, 12);
+    shape.lineTo(12, 6);
+    shape.lineTo(12, -6);
+    shape.lineTo(7, -12);
+    shape.lineTo(-4, -12);
+    shape.lineTo(-8, -6);
+    shape.lineTo(-10, -6);
     return shape;
 }
 exports.titanShape = titanShape;
+function titanTurretShape() {
+    var shape = new THREE.Shape();
+    shape.moveTo(-18, 0);
+    shape.lineTo(-16, -2);
+    shape.lineTo(0, -2);
+    shape.lineTo(0, 2);
+    shape.lineTo(-16, 2);
+    return shape;
+}
+exports.titanTurretShape = titanTurretShape;
 class TitanPresenter extends lib_1.InstancedRotateablePresenter {
     constructor(player, scene) {
         super(player, (p) => p.units.vehicles.filter(v => v instanceof entities_1.Titan), new THREE.ShapeBufferGeometry(titanShape()), scene);
+        this.titanTurretPresenter = new TitanTurretPresenter(player, scene);
+    }
+    predraw() {
+        super.predraw();
+        this.titanTurretPresenter.predraw();
+    }
+    draw() {
+        super.draw();
+        this.titanTurretPresenter.draw();
+    }
+    dedraw() {
+        super.dedraw();
+        this.titanTurretPresenter.dedraw();
     }
 }
 exports.TitanPresenter = TitanPresenter;
+class TitanTurretPresenter extends lib_1.InstancedRotateablePresenter {
+    constructor(player, scene) {
+        super(player, (p) => p.units.vehicles.filter(v => v instanceof entities_1.Titan), new THREE.ShapeBufferGeometry(titanTurretShape()), scene);
+    }
+    draw() {
+        const instances = this.instanceCallback(this.player);
+        const instanceCount = instances.length;
+        if (this.instancedMesh != undefined && this.instancedMesh.count != instanceCount) {
+            this.scene.remove(this.instancedMesh);
+            this.instancedMesh = undefined;
+        }
+        if (this.instancedMesh == undefined) {
+            this.instancedMesh = new THREE.InstancedMesh(this.geometry, this.material, instanceCount);
+            this.instancedMesh.count = instanceCount;
+            this.instancedMesh.frustumCulled = false;
+            this.scene.add(this.instancedMesh);
+        }
+        let m = new THREE.Matrix4();
+        for (let i = 0; i < instanceCount; i++) {
+            const instance = instances[i];
+            m.makeRotationZ(-Math.PI / 2 - instance.turret2.rotation);
+            m.setPosition(instance.position.x, instance.position.y, 0);
+            this.instancedMesh.setMatrixAt(i, m);
+        }
+        this.instancedMesh.instanceMatrix.needsUpdate = true;
+    }
+}
+exports.TitanTurretPresenter = TitanTurretPresenter;
 function titanProjectileShape() {
     var shape = new THREE.Shape();
-    shape.moveTo(-3, -1);
-    shape.lineTo(-3, 1);
-    shape.lineTo(3, 1.2);
-    shape.lineTo(3, -1.2);
+    shape.moveTo(-1, -0.8);
+    shape.lineTo(-1, 0.8);
+    shape.lineTo(0, 1);
+    shape.lineTo(0, -1);
     return shape;
 }
 exports.titanProjectileShape = titanProjectileShape;
 class TitanProjectilePresenter extends lib_1.InstancedRotateablePresenter {
     constructor(player, scene) {
-        super(player, (p) => p.turretProjectiles.filter(v => v instanceof entities_1.TitanProjectile), new THREE.ShapeBufferGeometry(titanProjectileShape()), scene);
+        super(player, (p) => p.units.vehicles.filter(v => v instanceof entities_1.Titan), new THREE.ShapeBufferGeometry(titanProjectileShape()), scene);
+        this.material.transparent = true;
+        this.material.opacity = 0.5;
+    }
+    draw() {
+        const instances = this.instanceCallback(this.player).filter((i) => i.laserStopAfter != null);
+        const instanceCount = instances.length;
+        if (this.instancedMesh != undefined && this.instancedMesh.count != instanceCount) {
+            this.scene.remove(this.instancedMesh);
+            this.instancedMesh = undefined;
+        }
+        if (this.instancedMesh == undefined) {
+            this.instancedMesh = new THREE.InstancedMesh(this.geometry, this.material, instanceCount);
+            this.instancedMesh.count = instanceCount;
+            this.instancedMesh.frustumCulled = false;
+            this.scene.add(this.instancedMesh);
+        }
+        let m = new THREE.Matrix4();
+        let s = new THREE.Vector3(0, 1, 1);
+        for (let i = 0; i < instanceCount; i++) {
+            const instance = instances[i];
+            m.makeRotationZ(-Math.PI / 2 - instance.turret2.rotation);
+            s.x = instance.laserStopAfter;
+            m.scale(s);
+            m.setPosition(instance.position.x, instance.position.y, 0);
+            this.instancedMesh.setMatrixAt(i, m);
+        }
+        this.instancedMesh.instanceMatrix.needsUpdate = true;
     }
 }
 exports.TitanProjectilePresenter = TitanProjectilePresenter;
