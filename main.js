@@ -70547,23 +70547,35 @@ class VehicleTurret {
         this.force /= 3;
         this.updateRotationalVelocity(0, defaultDirection);
         this.force *= 3;
-        this.updateRotation();
     }
     updateTowards(baseDirection, targetDirection) {
         this.applyDragForces();
         this.updateRotationalVelocity(baseDirection, targetDirection);
-        this.updateRotation();
     }
     applyDragForces() {
         this.rotationalVelocity *= (1 - this.friction);
     }
     updateRotationalVelocity(baseDirection, targetDirection) {
-        const diff = targetDirection - baseDirection - this.rotation;
-        if (this.shouldTurnLeftToReach(diff)) {
+        const diff = targetDirection - baseDirection;
+        if (this.shouldTurnLeftToReach(diff - this.rotation)) {
             this.rotationalVelocity -= this.force;
+            this.updateRotation();
+            if (this.shouldTurnRightToReach(diff - this.rotation)) {
+                this.rotation = targetDirection;
+                this.rotationalVelocity = 0;
+            }
         }
-        else if (this.shouldTurnRightToReach(diff)) {
+        else if (this.shouldTurnRightToReach(diff - this.rotation)) {
             this.rotationalVelocity += this.force;
+            this.updateRotation();
+            if (this.shouldTurnLeftToReach(diff - this.rotation)) {
+                this.rotation = targetDirection;
+                this.rotationalVelocity = 0;
+            }
+        }
+        else {
+            this.updateRotation();
+            return;
         }
         // FIXME: Don't update rotationalVelocity if the rotation is going to overshoot
     }
