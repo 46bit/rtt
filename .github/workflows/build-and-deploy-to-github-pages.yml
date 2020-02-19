@@ -21,9 +21,11 @@ jobs:
     - name: Prepare for deploy
       run: |
         mkdir -p release
-        cp dist/main.js release/main.js
+        rm -f release/main-*.js
+        js_hash=$(cat dist/main.js | sha1sum | awk '{ print $1 }')
+        cp dist/main.js "release/main-${js_hash}.js"
         cp index.html release/index.html
-        sed -i 's/src=\"dist\//src=\"/g' release/index.html
+        sed -i "s/src=\"dist\/main\.js/src=\"main-${js_hash}\.js/g" release/index.html
         ls -la release
 
     - name: Install SSH Client
