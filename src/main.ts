@@ -12,7 +12,8 @@ function main() {
   const crossSpacing = size / 7;
   const map = {
     name: 'double-cross',
-    worldSize: 1000,
+    worldSize: size,
+    obstructions: [],
     powerSources: [
       new rtt_engine.Vector(edge, edge),
       new rtt_engine.Vector(edge + spacing, edge),
@@ -83,14 +84,17 @@ function main() {
   // renderer.scene.add(grid);
 
   let game = rtt_engine.gameFromConfig(config);
+  const obstructionQuadtree = rtt_engine.IQuadrant.fromEntityCollisions(bounds, game.obstructions);
   window.game = game;
   window.renderer = renderer;
   window.rtt_engine = rtt_engine;
   window.rtt_threejs_renderer = rtt_threejs_renderer;
 
-  let commanderPresenters: rtt_threejs_renderer.CommanderPresenter[] = [];
   let powerSourcePresenter = new rtt_threejs_renderer.PowerSourcePresenter(game, renderer.gameCoordsGroup);
   powerSourcePresenter.predraw();
+  let obstructionPresenter = new rtt_threejs_renderer.ObstructionPresenter(game, renderer.gameCoordsGroup);
+  obstructionPresenter.predraw();
+  let commanderPresenters: rtt_threejs_renderer.CommanderPresenter[] = [];
   let botPresenters: rtt_threejs_renderer.BotPresenter[] = [];
   let shotgunTankPresenters: rtt_threejs_renderer.ShotgunTankPresenter[] = [];
   let shotgunProjectilePresenters: rtt_threejs_renderer.ShotgunProjectilePresenter[] = [];
@@ -150,6 +154,7 @@ function main() {
   let selected = undefined;
   let selectedBox = undefined;
   let buildChoice = undefined;
+  let quadtree: any;
   document.addEventListener('mousedown', function (e) {
     let x = (e.clientX / window.innerWidth) * 2 - 1;
     let y = -(e.clientY / window.innerHeight) * 2 + 1;
@@ -168,7 +173,7 @@ function main() {
       0,
     ));
     let rttPosition = new rtt_engine.Vector(rtsPosition.x, rtsPosition.y);
-    let collisions = quadtreePresenter!.quadtree.getCollisionsFor({
+    let collisions = quadtree.getCollisionsFor({
       collisionRadius: 1,
       position: rttPosition,
       player: null,
@@ -252,7 +257,6 @@ function main() {
     return new aiClass(game, player, game.players.filter((p) => p != player));
   });
 
-  let quadtreePresenter: rtt_threejs_renderer.QuadtreePresenter | null = null;
   setInterval(() => {
     rtt_threejs_renderer.time("update", () => {
       for (let ai of ais) {
@@ -273,14 +277,7 @@ function main() {
         }
       }
 
-      const quadtree = rtt_engine.IQuadrant.fromEntityCollisions(bounds, unitsAndProjectiles);
-      if (quadtreePresenter == null) {
-        quadtreePresenter = new rtt_threejs_renderer.QuadtreePresenter(quadtree, renderer.gameCoordsGroup);
-      } else if (Math.random() > 0.9) {
-        quadtreePresenter.quadtree = quadtree;
-      }
-      //quadtreePresenter.draw();
-      //console.log(quadtree.entities.length);
+      quadtree = rtt_engine.IQuadrant.fromEntityCollisions(bounds, unitsAndProjectiles);
       let unitOriginalHealths: {[id: string]: number} = {};
       for (let unit of unitsAndProjectiles) {
         if (unit.damage != null) {
@@ -307,12 +304,26 @@ function main() {
           }
         }
       }
+
       game.update();
+
+      const units = livingPlayers.map((p) => p.units.allKillableCollidableUnits()).flat();
+      const obstructionCollisions = obstructionQuadtree.getCollisions(units);
+      for (let unitId in obstructionCollisions) {
+        const unitOrProjectile = units.filter((u: rtt_engine.IKillable) => u.id == unitId)[0];
+        if (unitOrProjectile.dead) {
+          continue;
+        }
+        for (let obstruction of obstructionCollisions[unitId]) {
+          obstruction.collide(unitOrProjectile);
+        }
+      }
     });
 
     rtt_threejs_renderer.time("update rendering", () => {
       game.draw();
       mapPresenter.draw();
+      obstructionPresenter.draw();
       powerSourcePresenter.draw();
       for (let commanderPresenter of commanderPresenters) {
         commanderPresenter.draw();

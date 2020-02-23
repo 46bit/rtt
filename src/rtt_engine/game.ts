@@ -1,4 +1,4 @@
-import { PowerSource } from './entities';
+import { PowerSource, Obstruction } from './entities';
 import { Player } from './player';
 
 export class Game {
@@ -8,14 +8,16 @@ export class Game {
   public updateCounter: number;
   public winner: string | null;
   public winTime: Date | null;
+  public obstructions: Obstruction[];
 
-  constructor(powerSources: readonly PowerSource[], players: readonly Player[], sandbox = false) {
+  constructor(powerSources: readonly PowerSource[], players: readonly Player[], obstructions: Obstruction[], sandbox = false) {
     this.powerSources = powerSources;
     this.players = players;
     this.sandbox = sandbox;
     this.updateCounter = 0;
     this.winner = null;
     this.winTime = null;
+    this.obstructions = obstructions;
   }
 
   public update() {
