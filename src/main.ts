@@ -13,7 +13,19 @@ function main() {
   const map = {
     name: 'double-cross',
     worldSize: size,
-    obstructions: [],
+    obstructions: [
+      new rtt_engine.Obstruction(0, edge + spacing * 0.5, edge + spacing * 2, edge + spacing * 2.5),
+      new rtt_engine.Obstruction(edge + spacing * 2, edge + spacing * 2.5, 0, edge + spacing * 0.5),
+
+      new rtt_engine.Obstruction(size - edge - spacing * 0.5, size, edge + spacing * 2, edge + spacing * 2.5),
+      new rtt_engine.Obstruction(size - edge - spacing * 2.5, size - edge - spacing * 2, 0, edge + spacing * 0.5),
+
+      new rtt_engine.Obstruction(size - edge - spacing * 0.5, size, size - edge - spacing * 2.5, size - edge - spacing * 2),
+      new rtt_engine.Obstruction(size - edge - spacing * 2.5, size - edge - spacing * 2, size - edge - spacing * 0.5, size),
+
+      new rtt_engine.Obstruction(0, edge + spacing * 0.5, size - edge - spacing * 2.5, size - edge - spacing * 2),
+      new rtt_engine.Obstruction(edge + spacing * 2, edge + spacing * 2.5, size - edge - spacing * 0.5, size),
+    ],
     powerSources: [
       new rtt_engine.Vector(edge, edge),
       new rtt_engine.Vector(edge + spacing, edge),
