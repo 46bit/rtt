@@ -22,7 +22,7 @@ export class Obstruction extends Collidable(Entity) {
     this.bottom = bottom;
   }
 
-  contains(unit: ICollidable): boolean {
+  contains(unit: { position: Vector, collisionRadius: number }): boolean {
     // FIXME: One X and Y edge has to be made inclusive, or it's possible for a unit
     // to slide between two touching obstructions.
     const contained = (
@@ -37,7 +37,7 @@ export class Obstruction extends Collidable(Entity) {
     return contained;
   }
 
-  collide(unit: ICollidable): void {
+  collide(unit: { position: Vector, collisionRadius: number }): void {
     if (!this.contains(unit)) {
       return;
     }

@@ -83,25 +83,23 @@ function main() {
     }]
   };
 
-  let renderer = new rtt_threejs_renderer.Renderer(map.worldSize, window, document);
-  renderer.animate(true);
-
-  let mapPresenter = new rtt_threejs_renderer.MapPresenter(map, renderer.gameCoordsGroup);
-  mapPresenter.predraw();
   const bounds = new rtt_engine.Bounds(0, map.worldSize, 0, map.worldSize);
-
-  // const grid = new THREE.GridHelper(map.worldSize, map.worldSize / 25);
-  // grid.position.z = -0.1;
-  // grid.rotation.x = Math.PI / 2;
-  // renderer.scene.add(grid);
 
   let game = rtt_engine.gameFromConfig(config);
   const obstructionQuadtree = rtt_engine.IQuadrant.fromEntityCollisions(bounds, game.obstructions);
   window.game = game;
-  window.renderer = renderer;
   window.rtt_engine = rtt_engine;
   window.rtt_threejs_renderer = rtt_threejs_renderer;
 
+  // FIXME: Remove after debugging
+  //return;
+
+  let renderer = new rtt_threejs_renderer.Renderer(map.worldSize, window, document);
+  renderer.animate(true);
+  window.renderer = renderer;
+
+  let mapPresenter = new rtt_threejs_renderer.MapPresenter(map, renderer.gameCoordsGroup);
+  mapPresenter.predraw();
   let powerSourcePresenter = new rtt_threejs_renderer.PowerSourcePresenter(game, renderer.gameCoordsGroup);
   powerSourcePresenter.predraw();
   let obstructionPresenter = new rtt_threejs_renderer.ObstructionPresenter(game, renderer.gameCoordsGroup);
