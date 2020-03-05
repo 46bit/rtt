@@ -13,3 +13,4 @@ export * from './presenters/turret_presenter';
 export * from './presenters/turret_projectile_presenter';
 export * from './presenters/map_presenter';
 export * from './presenters/obstruction_presenter';
+export * from './presenters/triangulated_map_presenter';

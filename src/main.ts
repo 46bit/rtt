@@ -98,6 +98,10 @@ function main() {
   renderer.animate(true);
   window.renderer = renderer;
 
+  let triangulatedMap = rtt_engine.triangulate(map.worldSize, map.obstructions);
+  let triangulatedMapPresenter = new rtt_threejs_renderer.TriangulatedMapPresenter(triangulatedMap, renderer.gameCoordsGroup);
+  triangulatedMapPresenter.predraw();
+
   let mapPresenter = new rtt_threejs_renderer.MapPresenter(map, renderer.gameCoordsGroup);
   mapPresenter.predraw();
   let powerSourcePresenter = new rtt_threejs_renderer.PowerSourcePresenter(game, renderer.gameCoordsGroup);
@@ -267,6 +271,7 @@ function main() {
     return new aiClass(game, player, game.players.filter((p) => p != player));
   });
 
+  let path: any;
   setInterval(() => {
     rtt_threejs_renderer.time("update", () => {
       for (let ai of ais) {
@@ -326,6 +331,37 @@ function main() {
         }
         for (let obstruction of obstructionCollisions[unitId]) {
           obstruction.collide(unitOrProjectile);
+        }
+      }
+
+      if (game.updateCounter % 100 == 0) {
+        if (path != undefined) {
+          renderer.gameCoordsGroup.remove(path);
+          path.material.dispose();
+          path.geometry.dispose();
+          path = undefined;
+        }
+        let material = new THREE.LineBasicMaterial({ color: 0xffffff });
+        let from = new rtt_engine.Vector(
+          Math.random() * map.worldSize,
+          Math.random() * map.worldSize
+        );
+        let to = new rtt_engine.Vector(
+          Math.random() * map.worldSize,
+          Math.random() * map.worldSize
+        );
+        let route = rtt_engine.findPathWithAStar({
+          collisionRadius: 10,
+          position: from,
+        }, to, triangulatedMap);
+        if (route == undefined) {
+          console.log(`route not found from ${from.stringify()} to ${to.stringify()}`);
+        } else {
+          console.log(`route found from ${from.stringify()} to ${to.stringify()}: ${route.map((p) => p.stringify())}`);
+          let points = route.map((p) => new THREE.Vector3(p.x, p.y, 6));
+          let geometry = new THREE.BufferGeometry().setFromPoints(points);
+          path = new THREE.LineSegments(geometry, material);
+          renderer.gameCoordsGroup.add(path);
         }
       }
     });
