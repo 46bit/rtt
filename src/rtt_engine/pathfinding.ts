@@ -1,6 +1,7 @@
 import { Vector } from './vector';
 import { Obstruction } from './entities';
 import TinyQueue from 'tinyqueue';
+import Delaunator from 'delaunator';
 
 export interface IClearance {
   worldSize: number;
@@ -93,22 +94,92 @@ function vec2cell(v: Vector): [number, number] {
   return [v.x, v.y];
 }
 
-export function findPathWithAStar(unit: { position: Vector, collisionRadius: number }, destination: Vector, clearance: IClearance): Vector[] | undefined {
-  if (unit.position.x < 0 || unit.position.y < 0 || unit.position.x >= clearance.worldSize || unit.position.y >= clearance.worldSize) {
+export interface ITriangulatedMap {
+  worldSize: number;
+  points: [number, number][];
+  pointObstruction: (number | undefined)[];
+  triangles: Uint32Array;
+  neighboursWithCost: [number, number][][];
+}
+
+export function triangulate(worldSize: number, obstructions: Obstruction[]): ITriangulatedMap {
+  const points: [number, number][] = [];
+  points.push([0, 0]);
+  points.push([0, worldSize]);
+  points.push([worldSize, worldSize]);
+  points.push([worldSize, 0]);
+  const pointObstruction = [undefined, undefined, undefined, undefined];
+  let i = 0;
+  for (let obstruction of obstructions) {
+    points.push([obstruction.left, obstruction.top]);
+    points.push([obstruction.right, obstruction.top]);
+    points.push([obstruction.right, obstruction.bottom]);
+    points.push([obstruction.left, obstruction.bottom]);
+    pointObstruction.push(i, i, i, i);
+    i++;
+  }
+  const delauneyed = Delaunator.from(points);
+  const neighboursWithCost: [number, number][][] = points.map((p) => []);
+  for (let i = 0; i < delauneyed.triangles.length; i += 3) {
+    const p1N = delauneyed.triangles[i];
+    const p2N = delauneyed.triangles[i + 1];
+    const p3N = delauneyed.triangles[i + 2];
+    const p1 = points[p1N];
+    const p2 = points[p2N];
+    const p3 = points[p3N];
+    const p1ToP2 = Math.hypot(p2[0] - p1[0], p2[1] - p1[1]);
+    neighboursWithCost[p1N].push([p2N, p1ToP2]);
+    neighboursWithCost[p2N].push([p1N, p1ToP2]);
+    const p1ToP3 = Math.hypot(p3[0] - p1[0], p3[1] - p1[1]);
+    neighboursWithCost[p1N].push([p3N, p1ToP3]);
+    neighboursWithCost[p3N].push([p1N, p1ToP3]);
+    const p2ToP3 = Math.hypot(p3[0] - p2[0], p3[1] - p2[1]);
+    neighboursWithCost[p2N].push([p3N, p2ToP3]);
+    neighboursWithCost[p3N].push([p2N, p2ToP3]);
+  }
+  return {
+    worldSize: worldSize,
+    points,
+    pointObstruction,
+    triangles: delauneyed.triangles,
+    neighboursWithCost,
+  };
+}
+
+// export interface INavMesh {
+//   worldSize: number;
+//   navMesh: number[][];
+// }
+
+// export function navmesh(clearance: IClearance): INavMesh {
+
+// }
+
+export function findPathWithAStar(unit: { position: Vector, collisionRadius: number }, destination: Vector, triangulatedMap: ITriangulatedMap): Vector[] | undefined {
+  if (unit.position.x < 0 || unit.position.y < 0 || unit.position.x >= triangulatedMap.worldSize || unit.position.y >= triangulatedMap.worldSize) {
     return undefined;
   }
 
   let unitCell: [number, number] = vec2cell(unit.position);
   unitCell[0] = Math.round(unitCell[0]);
   unitCell[1] = Math.round(unitCell[1]);
-  let unitCellN = unitCell[0] + unitCell[1] * clearance.worldSize;
 
-  let openSet: TinyQueue<[[number, number], number]> = new TinyQueue([[unitCell, 0]], (a, b) => a[1] - b[1]);
-  let cameFrom = new Map<number, [number, number]>();
+  triangulatedMap.points.push(unitCell);
+  triangulatedMap.points.push(vec2cell(destination));
+
+  const pointsByCloseness = _.sortBy(triangulatedMap.points, (p) => Math.hypot(unitCell[0] - p[0], unitCell[1] - p[1]));
+  const nearestPoints_.take(nearestPoints, 3)
+  const nearestPointN = triangulatedMap.points.indexOf(nearestPoint!);
+
+  const nearestPointToDestination = _.sortBy(triangulatedMap.points, (p) => Math.hypot(destination.x - p[0], destination.y - p[1]));
+  const nearestPointNToDestination = triangulatedMap.points.indexOf(nearestPointToDestination!);
+
+  let openSet: TinyQueue<[number, number]> = new TinyQueue([[nearestPointN, 0]], (a, b) => a[1] - b[1]);
+  let cameFrom = new Map<number, number>();
   let gScore = new Map<number, number>();
-  gScore.set(unitCellN, 0);
+  gScore.set(nearestPointN, 0);
   let fScore = new Map<number, number>();
-  fScore.set(unitCellN, heuristic(unitCell, destination));
+  fScore.set(nearestPointN, heuristic(nearestPoint!, destination));
   let closed = new Set<number>();
 
   while (true) {
@@ -117,49 +188,58 @@ export function findPathWithAStar(unit: { position: Vector, collisionRadius: num
     if (currentItem === undefined) {
       break;
     }
-    let current = currentItem[0];
-    let currentN = current[0] + current[1] * clearance.worldSize;
+    let currentN = currentItem[0];
     if (closed.has(currentN)) {
       continue;
     }
-    if (current[0] == destination.x && current[1] == destination.y) {
-      return reconstructPath(cameFrom, current, clearance.worldSize);
+    let current = triangulatedMap.points[currentN];
+    if (currentN == nearestPointNToDestination) {
+      const path = reconstructPath(cameFrom, currentN, triangulatedMap);
+      if (path.length > 0) {
+        if (path[0] != unit.position) {
+          path.unshift(unit.position);
+        }
+        path.push(destination);
+      }
+      return path;
     }
-    //openSet = openSet.filter((v) => !v.equals(current!));
     closed.add(currentN);
-    for (let neighbourWithCost of cellNeighboursAndCosts(...current)) {
-      let neighbour: [number, number] = [neighbourWithCost[0], neighbourWithCost[1]];
-      let cost = neighbourWithCost[2];
-      if (neighbour[0] < 0 || neighbour[1] < 0 || neighbour[0] >= clearance.worldSize || neighbour[1] >= clearance.worldSize || closed.has(cell2str(neighbour))) {
+    for (let neighbourNWithCost of triangulatedMap.neighboursWithCost[currentN]) {
+      const neighbourN = neighbourNWithCost[0];
+      const neighbourCost = neighbourNWithCost[1];
+      const neighbour: [number, number] = triangulatedMap.points[neighbourN];
+      if (neighbour[0] < 0
+        || neighbour[1] < 0
+        || neighbour[0] >= triangulatedMap.worldSize
+        || neighbour[1] >= triangulatedMap.worldSize
+        || closed.has(neighbourN)) {
         continue;
       }
-      let neighbourClearance = clearance.cells[neighbour[1]][neighbour[0]];
-      if (neighbourClearance < unit.collisionRadius) {
-        continue;
-      }
-      let neighbourN = neighbour[0] + neighbour[1] * clearance.worldSize;
-      let tentativeGScore = gScore.get(currentN)! + cost;
+      // let neighbourClearance = triangulatedMap.cells[neighbour[1]][neighbour[0]];
+      // if (neighbourClearance < unit.collisionRadius) {
+      //   continue;
+      // }
+      let tentativeGScore = gScore.get(currentN)! + neighbourCost;
       let knownGScore = gScore.get(neighbourN);
       if (knownGScore == undefined || tentativeGScore < knownGScore) {
         const virtualUnit = { position: neighbour, collisionRadius: unit.collisionRadius };
-        cameFrom.set(neighbourN, current);
+        cameFrom.set(neighbourN, currentN);
         gScore.set(neighbourN, tentativeGScore);
         const neighbourFScore = tentativeGScore + heuristic(neighbour, destination);
         fScore.set(neighbourN, neighbourFScore);
-        openSet.push([neighbour, neighbourFScore]);
+        openSet.push([neighbourN, neighbourFScore]);
       }
     }
-    //openSet = _.sortBy(openSet, (v) => fScore.get(vec2str(v)));
   }
   return undefined;
 }
 
-function reconstructPath(cameFrom: Map<number, [number, number]>, current: [number, number], worldSize: number): Vector[] {
+function reconstructPath(cameFrom: Map<number, number>, currentN: number | undefined, triangulatedMap: ITriangulatedMap): Vector[] {
   let path = [];
-  while (current != undefined) {
+  while (currentN != undefined) {
+    const current = triangulatedMap.points[currentN];
     path.unshift(new Vector(current[0], current[1]));
-    let currentN = current[0] + current[1] * worldSize;
-    current = cameFrom.get(currentN);
+    currentN = cameFrom.get(currentN);
   }
   return path;
 }
