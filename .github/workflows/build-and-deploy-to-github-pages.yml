@@ -25,6 +25,7 @@ jobs:
         js_hash=$(cat dist/main.js | sha1sum | awk '{ print $1 }')
         cp dist/main.js "release/main-${js_hash}.js"
         cp index.html release/index.html
+        cp -R assets release/assets
         sed -i "s/src=\"dist\/main\.js/src=\"main-${js_hash}\.js/g" release/index.html
         ls -la release
 

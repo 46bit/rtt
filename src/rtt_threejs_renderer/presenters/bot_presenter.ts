@@ -3,22 +3,25 @@ import { Player } from '../../rtt_engine/player';
 import { Bot } from '../../rtt_engine/entities';
 import { InstancedRotateablePresenter } from './lib';
 
-export function botShape(): THREE.Shape {
-  var shape = new THREE.Shape();
-  shape.moveTo(5, 0);
-  const closeness = 0.8;
-  shape.ellipse(-5, 0, 5, 5, 0, Math.PI * closeness * 2, false, -Math.PI * closeness);
-  shape.lineTo(-0.5, 0);
-  return shape;
-}
-
 export class BotPresenter extends InstancedRotateablePresenter {
   constructor(player: Player, scene: THREE.Group) {
     super(
       player,
       (p) => p.units.vehicles.filter(v => v instanceof Bot),
-      new THREE.ShapeBufferGeometry(botShape())
+      new THREE.PlaneBufferGeometry(10, 10),
       scene,
     );
+
+    const texture = new THREE.TextureLoader().load('assets/coronavirus-128.png');
+    // texture.wrapS = THREE.RepeatWrapping;
+    // texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.x = 1;
+    texture.repeat.y = 1;
+    texture.offset.x = 0;
+    texture.offset.y = 0;
+    //texture.repeat.set(0.5, 1);
+    this.material = new THREE.MeshBasicMaterial({ map: texture, transparent: true });
+    //this.material.skinning = true;
+    //this.material.transparent = true;
   }
 }
