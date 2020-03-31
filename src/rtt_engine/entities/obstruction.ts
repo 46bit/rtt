@@ -67,50 +67,5 @@ export class Obstruction extends Collidable(Entity) {
         unit.position.x = rightX;
       }
     }
-
-    // let dx = Infinity;
-    // const leftX = this.left - (unit.position.x + unit.collisionRadius);
-    // if (leftX < 0) {
-    //   // unit.position.x += leftX;
-    //   dx = leftX;
-    // } else {
-    //   const rightX = this.right - (unit.position.x - unit.collisionRadius);
-    //   if (rightX > 0) {
-    //     dx = rightX;
-    //     // unit.position.x += rightX;
-    //   } else {
-    //     // ???
-    //   }
-    // }
-
-    // let dy = Infinity;
-    // const topX = this.top - (unit.position.y + unit.collisionRadius);
-    // if (topX < 0) {
-    //   // unit.position.y += topX;
-    //   dy = topX;
-    // } else {
-    //   const bottomY = this.bottom - (unit.position.y - unit.collisionRadius);
-    //   if (bottomY > 0) {
-    //     // unit.position.y += bottomY;
-    //     dy = bottomY;
-    //   } else {
-    //     // ???
-    //   }
-    // }
-
-    // dx = Math.min(
-    //   this.left - (unit.position.x + unit.collisionRadius),
-    //   this.right - (unit.position.x - unit.collisionRadius)
-    // );
-    // dy = Math.min(
-    //   this.top - (unit.position.y + unit.collisionRadius),
-    //   this.bottom - (unit.position.y - unit.collisionRadius)
-    // );
-    // // Move to the closest edge, but only in x OR y. Not ideal at all.
-    // if (Math.abs(dx) < Math.abs(dy)) {
-    //   unit.position.x += dx;
-    // } else {
-    //   unit.position.y += dy;
-    // }
   }
 }

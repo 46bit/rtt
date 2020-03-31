@@ -1,8 +1,7 @@
-import { PowerSource, Obstruction } from './entities';
+import { Obstruction } from './entities';
 import { Player } from './player';
 
 export class Game {
-  public powerSources: readonly PowerSource[];
   public players: readonly Player[];
   public sandbox: boolean;
   public updateCounter: number;
@@ -10,8 +9,7 @@ export class Game {
   public winTime: Date | null;
   public obstructions: Obstruction[];
 
-  constructor(powerSources: readonly PowerSource[], players: readonly Player[], obstructions: Obstruction[], sandbox = false) {
-    this.powerSources = powerSources;
+  constructor(players: readonly Player[], obstructions: Obstruction[], sandbox = false) {
     this.players = players;
     this.sandbox = sandbox;
     this.updateCounter = 0;
@@ -32,7 +30,7 @@ export class Game {
 
   public updatePlayers() {
     this.players.forEach((player) => {
-      player.update(this.powerSources, this.players.filter((p) => p != player));
+      player.update(this.players.filter((p) => p != player));
     });
   }
 
