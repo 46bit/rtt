@@ -14,26 +14,16 @@ export class TriangulatedMapPresenter {
 
   predraw() {
     this.childScene = new THREE.Group();
-    for (let i = 0; i < this.triangulatedMap.triangles.length; i += 3) {
-      let pointNumbers = [
-        this.triangulatedMap.triangles[i],
-        this.triangulatedMap.triangles[i + 1],
-        this.triangulatedMap.triangles[i + 2],
-      ];
-      let pointObstructions = _.uniq(pointNumbers.map((n) => this.triangulatedMap.pointObstruction[n]));
-      let obstructed = pointObstructions.length == 1 && pointObstructions[0] != undefined;
-      let coords = pointNumbers.map((n) => this.triangulatedMap.points[n]);
-      this.drawTriangle(coords, obstructed);
+    for (let passableTriangle of this.triangulatedMap.passableTriangles) {
+      let coords = passableTriangle.map((i) => this.triangulatedMap.points[i]);
+      this.drawTriangle(coords);
     }
     this.scene.add(this.childScene);
   }
 
   draw() { }
 
-  protected drawTriangle(points: [number, number][], obstructed: boolean) {
-    if (obstructed) {
-      return;
-    }
+  protected drawTriangle(points: [number, number][]) {
     let geometry = new THREE.Geometry();
     let vertices = points.map((p) => new THREE.Vector3(p[0], p[1], -2));
     console.log(vertices);
@@ -43,7 +33,7 @@ export class TriangulatedMapPresenter {
     geometry.faces.push(new THREE.Face3(2, 0, 1));
     geometry.computeFaceNormals();
     let material = new THREE.MeshBasicMaterial({
-      color: new THREE.Color(obstructed ? 0xff0000 : Math.random() * 0xffffff),
+      color: new THREE.Color(Math.random() * 0xffffff),
       opacity: 0.5,
     });
     material.transparent = true;
