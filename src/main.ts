@@ -100,7 +100,16 @@ function main() {
 
   let triangulatedMap = rtt_engine.triangulate(map.worldSize, map.obstructions);
   let triangulatedMapPresenter = new rtt_threejs_renderer.TriangulatedMapPresenter(triangulatedMap, renderer.gameCoordsGroup);
-  triangulatedMapPresenter.predraw();
+  //triangulatedMapPresenter.predraw();
+  let navmesh = rtt_engine.triangulatedMapToNavMesh(triangulatedMap);
+  window.navmesh = navmesh;
+  window.routeBetween = function(from, to) {
+    let navmeshRoute = navmesh.findPath([from.x, from.y], [to.x, to.y]);
+    if (!navmeshRoute || navmeshRoute.length == 0) {
+      return null;
+    }
+    return navmeshRoute.map((p) => new rtt_engine.Vector(p.x, p.y));
+  };
 
   let mapPresenter = new rtt_threejs_renderer.MapPresenter(map, renderer.gameCoordsGroup);
   mapPresenter.predraw();
@@ -272,6 +281,8 @@ function main() {
   });
 
   let path: any;
+  let pathStart: any;
+  let pathEnd: any;
   setInterval(() => {
     rtt_threejs_renderer.time("update", () => {
       for (let ai of ais) {
@@ -334,36 +345,69 @@ function main() {
         }
       }
 
-      if (game.updateCounter % 100 == 0) {
-        if (path != undefined) {
-          renderer.gameCoordsGroup.remove(path);
-          path.material.dispose();
-          path.geometry.dispose();
-          path = undefined;
-        }
-        let material = new THREE.LineBasicMaterial({ color: 0xffffff });
-        let from = new rtt_engine.Vector(
-          Math.random() * map.worldSize,
-          Math.random() * map.worldSize
-        );
-        let to = new rtt_engine.Vector(
-          Math.random() * map.worldSize,
-          Math.random() * map.worldSize
-        );
-        let route = rtt_engine.findPathWithAStar({
-          collisionRadius: 10,
-          position: from,
-        }, to, triangulatedMap);
-        if (route == undefined) {
-          console.log(`route not found from ${from.stringify()} to ${to.stringify()}`);
-        } else {
-          console.log(`route found from ${from.stringify()} to ${to.stringify()}: ${route.map((p) => p.stringify())}`);
-          let points = route.map((p) => new THREE.Vector3(p.x, p.y, 6));
-          let geometry = new THREE.BufferGeometry().setFromPoints(points);
-          path = new THREE.LineSegments(geometry, material);
-          renderer.gameCoordsGroup.add(path);
-        }
-      }
+      // if (game.updateCounter % 100 == 0) {
+      //   if (path != undefined) {
+      //     renderer.gameCoordsGroup.remove(path);
+      //     path.material.dispose();
+      //     path.geometry.dispose();
+      //     path = undefined;
+      //   }
+      //   if (pathStart != undefined) {
+      //     renderer.gameCoordsGroup.remove(pathStart);
+      //     pathStart.material.dispose();
+      //     pathStart.geometry.dispose();
+      //     pathStart = undefined;
+      //   }
+      //   if (pathEnd != undefined) {
+      //     renderer.gameCoordsGroup.remove(pathEnd);
+      //     pathEnd.material.dispose();
+      //     pathEnd.geometry.dispose();
+      //     pathEnd = undefined;
+      //   }
+      //   let material = new THREE.LineBasicMaterial({ color: 0xffffff });
+      //   let from = new rtt_engine.Vector(
+      //     Math.random() * map.worldSize,
+      //     Math.random() * map.worldSize
+      //   );
+      //   let to = new rtt_engine.Vector(
+      //     Math.random() * map.worldSize,
+      //     Math.random() * map.worldSize
+      //   );
+
+      //   // from.x = 321.94381764911583;
+      //   // from.y = 311.00705914346884;
+      //   // to.x = 145.50164006384801;
+      //   // to.y = 335.0348767805669;
+      //   if (to.y < from.y || to.x < from.x) {
+      //     const temp = to;
+      //     to = from;
+      //     from = temp;
+      //   }
+
+      //   pathStart = new THREE.Mesh(new THREE.CircleBufferGeometry(5), new THREE.MeshBasicMaterial({color: 0x00ff00}));
+      //   pathStart.position.x = from.x;
+      //   pathStart.position.y = from.y;
+      //   //renderer.gameCoordsGroup.add(pathStart);
+      //   pathEnd = new THREE.Mesh(new THREE.CircleBufferGeometry(5), new THREE.MeshBasicMaterial({color: 0xff0000}));
+      //   pathEnd.position.x = to.x;
+      //   pathEnd.position.y = to.y;
+      //   //renderer.gameCoordsGroup.add(pathEnd);
+
+      //   let route = navmesh.findPath([from.x, from.y], [to.x, to.y]);
+      //   // let route = rtt_engine.findPathWithAStar({
+      //   //   collisionRadius: 10,
+      //   //   position: from,
+      //   // }, to, triangulatedMap);
+      //   if (route == undefined) {
+      //     console.log(`route not found from ${from.stringify()} to ${to.stringify()}`);
+      //   } else {
+      //     console.log(`route found from ${from.stringify()} to ${to.stringify()}: ${route.map((p) => [p.x, p.y])}`);
+      //     let points = route.map((p) => new THREE.Vector3(p.x, p.y, 0));
+      //     let geometry = new THREE.BufferGeometry().setFromPoints(points);
+      //     path = new THREE.LineSegments(geometry, material);
+      //     //renderer.gameCoordsGroup.add(path);
+      //   }
+      // }
     });
 
     rtt_threejs_renderer.time("update rendering", () => {

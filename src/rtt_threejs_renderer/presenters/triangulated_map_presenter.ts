@@ -31,8 +31,11 @@ export class TriangulatedMapPresenter {
   draw() { }
 
   protected drawTriangle(points: [number, number][], obstructed: boolean) {
+    if (obstructed) {
+      return;
+    }
     let geometry = new THREE.Geometry();
-    let vertices = points.map((p) => new THREE.Vector3(p[0], p[1], 2));
+    let vertices = points.map((p) => new THREE.Vector3(p[0], p[1], -2));
     console.log(vertices);
     geometry.vertices.push(...vertices);
     geometry.faces.push(new THREE.Face3(0, 1, 2));
@@ -40,8 +43,10 @@ export class TriangulatedMapPresenter {
     geometry.faces.push(new THREE.Face3(2, 0, 1));
     geometry.computeFaceNormals();
     let material = new THREE.MeshBasicMaterial({
-      color: new THREE.Color(obstructed ? 0xff0000 : Math.random() * 0x00ffff),
+      color: new THREE.Color(obstructed ? 0xff0000 : Math.random() * 0xffffff),
+      opacity: 0.5,
     });
+    material.transparent = true;
     let mesh = new THREE.Mesh(geometry, material);
     this.childScene!.add(mesh);
   }
