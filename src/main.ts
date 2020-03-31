@@ -98,7 +98,7 @@ function main() {
   renderer.animate(true);
   window.renderer = renderer;
 
-  let triangulatedMap = rtt_engine.triangulate(map.worldSize, map.obstructions);
+  let triangulatedMap = rtt_engine.triangulate(map.worldSize, map.obstructions, 5);
   let triangulatedMapPresenter = new rtt_threejs_renderer.TriangulatedMapPresenter(triangulatedMap, renderer.gameCoordsGroup);
   //triangulatedMapPresenter.predraw();
   let navmesh = rtt_engine.triangulatedMapToNavMesh(triangulatedMap);
