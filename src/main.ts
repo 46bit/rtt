@@ -14,17 +14,12 @@ function main() {
     name: 'double-cross',
     worldSize: size,
     obstructions: [
-      new rtt_engine.Obstruction(0, edge + spacing * 0.5, edge + spacing * 2, edge + spacing * 2.5),
-      new rtt_engine.Obstruction(edge + spacing * 2, edge + spacing * 2.5, 0, edge + spacing * 0.5),
-
-      new rtt_engine.Obstruction(size - edge - spacing * 0.5, size, edge + spacing * 2, edge + spacing * 2.5),
-      new rtt_engine.Obstruction(size - edge - spacing * 2.5, size - edge - spacing * 2, 0, edge + spacing * 0.5),
-
-      new rtt_engine.Obstruction(size - edge - spacing * 0.5, size, size - edge - spacing * 2.5, size - edge - spacing * 2),
-      new rtt_engine.Obstruction(size - edge - spacing * 2.5, size - edge - spacing * 2, size - edge - spacing * 0.5, size),
-
-      new rtt_engine.Obstruction(0, edge + spacing * 0.5, size - edge - spacing * 2.5, size - edge - spacing * 2),
-      new rtt_engine.Obstruction(edge + spacing * 2, edge + spacing * 2.5, size - edge - spacing * 0.5, size),
+      new rtt_engine.Obstruction(size / 11,      size,      10 * size / 11, 11 * size / 11),
+      new rtt_engine.Obstruction(0,         10 * size / 11,  8 * size / 11,  9 * size / 11),
+      new rtt_engine.Obstruction(size / 11, size,            6 * size / 11,  7 * size / 11),
+      new rtt_engine.Obstruction(0,         10 * size / 11,  4 * size / 11,  5 * size / 11),
+      new rtt_engine.Obstruction(size / 11, size,            2 * size / 11,  3 * size / 11),
+      new rtt_engine.Obstruction(0,         10 * size / 11,  0,              1 * size / 11),
     ],
     powerSources: [
       new rtt_engine.Vector(edge, edge),
