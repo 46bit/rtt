@@ -14,7 +14,7 @@ function main() {
     name: 'double-cross',
     worldSize: size,
     obstructions: [
-      new rtt_engine.Obstruction(size / 11,      size,      10 * size / 11, 11 * size / 11),
+      new rtt_engine.Obstruction(size / 11, size,           10 * size / 11, 11 * size / 11),
       new rtt_engine.Obstruction(0,         10 * size / 11,  8 * size / 11,  9 * size / 11),
       new rtt_engine.Obstruction(size / 11, size,            6 * size / 11,  7 * size / 11),
       new rtt_engine.Obstruction(0,         10 * size / 11,  4 * size / 11,  5 * size / 11),
@@ -86,14 +86,29 @@ function main() {
   window.rtt_engine = rtt_engine;
   window.rtt_threejs_renderer = rtt_threejs_renderer;
 
-  // FIXME: Remove after debugging
-  //return;
-
   let renderer = new rtt_threejs_renderer.Renderer(map.worldSize, window, document);
   renderer.animate(true);
   window.renderer = renderer;
 
   let triangulatedMap = rtt_engine.triangulate(map.worldSize, map.obstructions, 16);
+
+  // Manual step for the coronavirus tower defence: add entry and exit triangles that go off the
+  // edge of the world
+  let startIndex = triangulatedMap.points.length;
+  triangulatedMap.points.push([16, map.worldSize + 50]);
+  triangulatedMap.points.push([map.worldSize / 11 - 16, map.worldSize + 50]);
+  triangulatedMap.points.push([map.worldSize / 11 - 16, map.worldSize - 16]);
+  triangulatedMap.points.push([16, map.worldSize - 16]);
+  triangulatedMap.passableTriangles.push([startIndex, startIndex + 1, startIndex + 2]);
+  triangulatedMap.passableTriangles.push([startIndex + 2, startIndex + 3, startIndex]);
+  startIndex = triangulatedMap.points.length;
+  triangulatedMap.points.push([10 * map.worldSize / 11 + 16, -50]);
+  triangulatedMap.points.push([map.worldSize - 16, -50]);
+  triangulatedMap.points.push([map.worldSize - 16, 16]);
+  triangulatedMap.points.push([10 * map.worldSize / 11 + 16, 16]);
+  triangulatedMap.passableTriangles.push([startIndex, startIndex + 1, startIndex + 2]);
+  triangulatedMap.passableTriangles.push([startIndex + 2, startIndex + 3, startIndex]);
+
   let triangulatedMapPresenter = new rtt_threejs_renderer.TriangulatedMapPresenter(triangulatedMap, renderer.gameCoordsGroup);
   //triangulatedMapPresenter.predraw();
   let navmesh = rtt_engine.triangulatedMapToNavMesh(triangulatedMap);
