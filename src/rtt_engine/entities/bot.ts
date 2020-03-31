@@ -9,7 +9,7 @@ export class Bot extends Engineerable(Vehicle) {
     super({
       position,
       direction,
-      collisionRadius: 5,
+      collisionRadius: 16,
       built,
       buildCost: 70,
       player,
