@@ -62,7 +62,7 @@
     "delaunator": "^4.0.1",
     "moment": "^2.24.0",
     "nanoid": "^2.1.8",
-    "nav2d": "^1.1.0",
+    "nav2d": "^1.2.0",
     "pino": "^5.16.0",
     "source-map-support": "^0.5.16",
     "three": "0.112.1",
