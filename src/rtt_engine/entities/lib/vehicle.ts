@@ -66,7 +66,7 @@ export class Vehicle extends Manoeuvrable(Unit) {
       return false;
     }
 
-    if (!this.routeTo || !this.route || this.route.length == 0 || !this.routeTo.equals(manoeuvreOrder.destination)) {
+    if (!this.routeTo || !this.route || this.route.length == 0 || !this.routeTo.equals(manoeuvreOrder.destination) || Math.random() < 0.1) {
       // Find route
       this.routeTo = manoeuvreOrder.destination;
       this.route = window.routeBetween(this.position, this.routeTo);
