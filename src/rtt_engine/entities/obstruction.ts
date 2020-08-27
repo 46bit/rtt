@@ -10,6 +10,12 @@ export class Obstruction extends Collidable(Entity) {
   bottom: number;
 
   constructor(left: number, right: number, top: number, bottom: number) {
+    if (left >= right) {
+      throw "left bigger than right;"
+    }
+    if (top >= bottom) {
+      throw "top bigger than bottom;"
+    }
     const position = new Vector(
       (left + right) / 2,
       (top + bottom) / 2,
