@@ -44,33 +44,32 @@ export class Obstruction extends Collidable(Entity) {
   }
 
   collide(unit: { position: Vector, collisionRadius: number }): void {
-    if (!this.contains(unit)) {
-      return;
-    }
+    console.log("collided", unit);
+    while (this.contains(unit)) {
+      const aboveY = this.top - unit.collisionRadius;
+      const belowY = this.bottom + unit.collisionRadius;
+      const leftX = this.left - unit.collisionRadius;
+      const rightX = this.right + unit.collisionRadius;
 
-    const aboveY = this.top - unit.collisionRadius;
-    const belowY = this.bottom + unit.collisionRadius;
-    const leftX = this.left - unit.collisionRadius;
-    const rightX = this.right + unit.collisionRadius;
+      const distanceToBeAbove = Math.abs(unit.position.y - aboveY);
+      const distanceToBeBelow = Math.abs(unit.position.y - belowY);
+      const distanceToBeLeft = Math.abs(unit.position.x - leftX);
+      const distanceToBeRight = Math.abs(unit.position.x - rightX);
 
-    const distanceToBeAbove = Math.abs(unit.position.y - aboveY);
-    const distanceToBeBelow = Math.abs(unit.position.y - belowY);
-    const distanceToBeLeft = Math.abs(unit.position.x - leftX);
-    const distanceToBeRight = Math.abs(unit.position.x - rightX);
-
-    const minY = Math.min(distanceToBeAbove, distanceToBeBelow);
-    const minX = Math.min(distanceToBeLeft, distanceToBeRight);
-    if (minY < minX) {
-      if (distanceToBeAbove < distanceToBeBelow) {
-        unit.position.y = aboveY;
+      const minY = Math.min(distanceToBeAbove, distanceToBeBelow);
+      const minX = Math.min(distanceToBeLeft, distanceToBeRight);
+      if (minY < minX) {
+        if (distanceToBeAbove < distanceToBeBelow) {
+          unit.position.y = aboveY - 1;
+        } else {
+          unit.position.y = belowY + 1;
+        }
       } else {
-        unit.position.y = belowY;
-      }
-    } else {
-      if (distanceToBeLeft < distanceToBeRight) {
-        unit.position.x = leftX;
-      } else {
-        unit.position.x = rightX;
+        if (distanceToBeLeft < distanceToBeRight) {
+          unit.position.x = leftX - 1;
+        } else {
+          unit.position.x = rightX + 1;
+        }
       }
     }
 
