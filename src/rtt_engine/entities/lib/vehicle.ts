@@ -22,6 +22,8 @@ export interface IVehicleConfig extends IUnitConfig, IManoeuverableConfig {
 export class Vehicle extends Manoeuvrable(Unit) {
   public movementRate: number;
   public turnRate: number;
+  public route: Vector[] | null;
+  public routeTo: Vector | null;
 
   constructor(cfg: IVehicleConfig) {
     cfg.constructableByMobileUnits = false;
@@ -42,6 +44,8 @@ export class Vehicle extends Manoeuvrable(Unit) {
     super(cfg);
     this.movementRate = cfg.movementRate;
     this.turnRate = cfg.turnRate;
+    this.route = null;
+    this.routeTo = null;
   }
 
   public update() {
@@ -58,10 +62,38 @@ export class Vehicle extends Manoeuvrable(Unit) {
   protected manoeuvre(manoeuvreOrder: { destination: Vector }): boolean {
     const distanceToDestination = Vector.subtract(this.position, manoeuvreOrder.destination).magnitude();
     if (distanceToDestination < 10) {
+      this.routeTo = null;
       return false;
-    } else if (this.shouldTurnLeftToReach(manoeuvreOrder.destination) && Math.random() > 0.2) {
+    }
+
+    if (!this.routeTo || !this.route || this.route.length == 0 || !this.routeTo.equals(manoeuvreOrder.destination) || Math.random() < 0.1) {
+      // Find route
+      this.routeTo = manoeuvreOrder.destination;
+      this.route = window.routeBetween(this.position, this.routeTo);
+      console.log(this.route);
+      //this.route?.shift();
+    }
+
+    if (!this.route || this.route.length == 0) {
+      this.routeTo = null;
+      return false;
+    }
+
+    let nextRouteDestination = this.route[0];
+    let distanceToNextRouteDestination = Vector.subtract(this.position, nextRouteDestination).magnitude();
+    while (distanceToNextRouteDestination < 5) {
+      this.route.shift();
+      if (this.route.length == 0) {
+        this.routeTo = null;
+        return false;
+      }
+      nextRouteDestination = this.route[0];
+      distanceToNextRouteDestination = Vector.subtract(this.position, nextRouteDestination).magnitude();
+    }
+
+    if (this.shouldTurnLeftToReach(nextRouteDestination) && Math.random() > 0.2) {
       this.updateVelocity(-this.physics.turningAngle());
-    } else if (this.shouldTurnRightToReach(manoeuvreOrder.destination) && Math.random() > 0.2) {
+    } else if (this.shouldTurnRightToReach(nextRouteDestination) && Math.random() > 0.2) {
       this.updateVelocity(this.physics.turningAngle());
     } else {
       this.updateVelocity(0);

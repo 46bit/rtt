@@ -12,20 +12,27 @@ function main() {
   const crossSpacing = size / 7;
   const map = {
     name: 'double-cross',
-    worldSize: 1000,
+    worldSize: size,
+    obstructions: [
+      new rtt_engine.Obstruction(edge + spacing * 2, size - edge - spacing * 2, size / 2 - spacing, size / 2 + spacing),
+      new rtt_engine.Obstruction(size / 2 - spacing, size / 2 + spacing, edge + spacing * 2, size - edge - spacing * 2),
+    ],
     powerSources: [
       new rtt_engine.Vector(edge, edge),
       new rtt_engine.Vector(edge + spacing, edge),
       new rtt_engine.Vector(edge + spacing, edge + spacing),
+      new rtt_engine.Vector(edge + spacing * 1.5, edge + spacing * 1.5),
       new rtt_engine.Vector(edge, edge + spacing),
 
       new rtt_engine.Vector(size - edge, edge),
       new rtt_engine.Vector(size - edge - spacing, edge),
       new rtt_engine.Vector(size - edge - spacing, edge + spacing),
+      new rtt_engine.Vector(size - edge - spacing * 1.5, edge + spacing * 1.5),
       new rtt_engine.Vector(size - edge, edge + spacing),
 
       new rtt_engine.Vector(size - edge, size - edge - spacing),
       new rtt_engine.Vector(size - edge - spacing, size - edge - spacing),
+      new rtt_engine.Vector(size - edge - spacing * 1.5, size - edge - spacing * 1.5),
       new rtt_engine.Vector(size - edge - spacing, size - edge),
       new rtt_engine.Vector(size - edge, size - edge),
 
@@ -33,19 +40,7 @@ function main() {
       new rtt_engine.Vector(edge, size - edge),
       new rtt_engine.Vector(edge, size - edge - spacing),
       new rtt_engine.Vector(edge + spacing, size - edge - spacing),
-
-      new rtt_engine.Vector(crossSpacing, size / 2),
-      new rtt_engine.Vector(crossSpacing * 2, size / 2),
-      new rtt_engine.Vector(crossSpacing * 3, size / 2),
-      new rtt_engine.Vector(crossSpacing * 4, size / 2),
-      new rtt_engine.Vector(crossSpacing * 5, size / 2),
-      new rtt_engine.Vector(crossSpacing * 6, size / 2),
-      new rtt_engine.Vector(size / 2, crossSpacing),
-      new rtt_engine.Vector(size / 2, crossSpacing * 2),
-      new rtt_engine.Vector(size / 2, crossSpacing * 3),
-      new rtt_engine.Vector(size / 2, crossSpacing * 4),
-      new rtt_engine.Vector(size / 2, crossSpacing * 5),
-      new rtt_engine.Vector(size / 2, crossSpacing * 6),
+      new rtt_engine.Vector(edge + spacing * 1.5, size - edge - spacing * 1.5),
     ],
   };
   const config = {
@@ -70,27 +65,56 @@ function main() {
     }]
   };
 
-  let renderer = new rtt_threejs_renderer.Renderer(map.worldSize, window, document);
-  renderer.animate(true);
-
-  let mapPresenter = new rtt_threejs_renderer.MapPresenter(map, renderer.gameCoordsGroup);
-  mapPresenter.predraw();
   const bounds = new rtt_engine.Bounds(0, map.worldSize, 0, map.worldSize);
 
-  // const grid = new THREE.GridHelper(map.worldSize, map.worldSize / 25);
-  // grid.position.z = -0.1;
-  // grid.rotation.x = Math.PI / 2;
-  // renderer.scene.add(grid);
-
   let game = rtt_engine.gameFromConfig(config);
+  const obstructionQuadtree = rtt_engine.IQuadrant.fromEntityCollisions(bounds, game.obstructions);
   window.game = game;
-  window.renderer = renderer;
   window.rtt_engine = rtt_engine;
   window.rtt_threejs_renderer = rtt_threejs_renderer;
 
-  let commanderPresenters: rtt_threejs_renderer.CommanderPresenter[] = [];
+  // FIXME: Remove after debugging
+  //return;
+
+  let renderer = new rtt_threejs_renderer.Renderer(map.worldSize, window, document);
+  renderer.animate(true);
+  window.renderer = renderer;
+
+  // The final parameter here is how closely the triangles should go to unpassable obstacles.
+  // Small values will make pathfinding collide a lot; large values will create slightly
+  // suboptimal paths.
+  let triangulatedMap = rtt_engine.triangulate(map.worldSize, map.obstructions, 10);
+  let triangulatedMapPresenter = new rtt_threejs_renderer.TriangulatedMapPresenter(triangulatedMap, renderer.gameCoordsGroup);
+  //triangulatedMapPresenter.predraw();
+  let navmesh = rtt_engine.triangulatedMapToNavMesh(triangulatedMap);
+  window.navmesh = navmesh;
+  // To prevent units close to obstacles from suddenly not being able to path because they are
+  // off the navmesh, this navmesh is a backup which goes all the way up to the boundaries rather
+  // than having a border around obstacles. It's only used when pathfinding with the other navmesh
+  // fails (e.g., when a unit collided with an obstacle, was pushed out, but is now closer to
+  // the obstacle than the normal navmesh goes.)
+  let obstacleBorderLessTriangulatedMap = rtt_engine.triangulate(map.worldSize, map.obstructions, 0);
+  let obstacleBorderLessNavmesh = rtt_engine.triangulatedMapToNavMesh(obstacleBorderLessTriangulatedMap);
+  window.obstacleBorderLessNavmesh = obstacleBorderLessNavmesh;
+
+  window.routeBetween = function(from, to) {
+    let navmeshRoute = navmesh.findPath([from.x, from.y], [to.x, to.y]);
+    if (!navmeshRoute || navmeshRoute.length == 0) {
+      navmeshRoute = obstacleBorderLessNavmesh.findPath([from.x, from.y], [to.x, to.y]);
+    }
+    if (!navmeshRoute || navmeshRoute.length == 0) {
+      return null;
+    }
+    return navmeshRoute.map((p) => new rtt_engine.Vector(p.x, p.y));
+  };
+
+  let mapPresenter = new rtt_threejs_renderer.MapPresenter(map, renderer.gameCoordsGroup);
+  mapPresenter.predraw();
   let powerSourcePresenter = new rtt_threejs_renderer.PowerSourcePresenter(game, renderer.gameCoordsGroup);
   powerSourcePresenter.predraw();
+  let obstructionPresenter = new rtt_threejs_renderer.ObstructionPresenter(game, renderer.gameCoordsGroup);
+  obstructionPresenter.predraw();
+  let commanderPresenters: rtt_threejs_renderer.CommanderPresenter[] = [];
   let botPresenters: rtt_threejs_renderer.BotPresenter[] = [];
   let shotgunTankPresenters: rtt_threejs_renderer.ShotgunTankPresenter[] = [];
   let shotgunProjectilePresenters: rtt_threejs_renderer.ShotgunProjectilePresenter[] = [];
@@ -150,6 +174,7 @@ function main() {
   let selected = undefined;
   let selectedBox = undefined;
   let buildChoice = undefined;
+  let quadtree: any;
   document.addEventListener('mousedown', function (e) {
     let x = (e.clientX / window.innerWidth) * 2 - 1;
     let y = -(e.clientY / window.innerHeight) * 2 + 1;
@@ -168,7 +193,7 @@ function main() {
       0,
     ));
     let rttPosition = new rtt_engine.Vector(rtsPosition.x, rtsPosition.y);
-    let collisions = quadtreePresenter!.quadtree.getCollisionsFor({
+    let collisions = quadtree.getCollisionsFor({
       collisionRadius: 1,
       position: rttPosition,
       player: null,
@@ -252,7 +277,9 @@ function main() {
     return new aiClass(game, player, game.players.filter((p) => p != player));
   });
 
-  let quadtreePresenter: rtt_threejs_renderer.QuadtreePresenter | null = null;
+  let path: any;
+  let pathStart: any;
+  let pathEnd: any;
   setInterval(() => {
     rtt_threejs_renderer.time("update", () => {
       for (let ai of ais) {
@@ -273,14 +300,7 @@ function main() {
         }
       }
 
-      const quadtree = rtt_engine.IQuadrant.fromEntityCollisions(bounds, unitsAndProjectiles);
-      if (quadtreePresenter == null) {
-        quadtreePresenter = new rtt_threejs_renderer.QuadtreePresenter(quadtree, renderer.gameCoordsGroup);
-      } else if (Math.random() > 0.9) {
-        quadtreePresenter.quadtree = quadtree;
-      }
-      //quadtreePresenter.draw();
-      //console.log(quadtree.entities.length);
+      quadtree = rtt_engine.IQuadrant.fromEntityCollisions(bounds, unitsAndProjectiles);
       let unitOriginalHealths: {[id: string]: number} = {};
       for (let unit of unitsAndProjectiles) {
         if (unit.damage != null) {
@@ -307,12 +327,90 @@ function main() {
           }
         }
       }
+
       game.update();
+
+      const units = livingPlayers.map((p) => p.units.allKillableCollidableUnits()).flat();
+      const obstructionCollisions = obstructionQuadtree.getCollisions(units);
+      for (let unitId in obstructionCollisions) {
+        const unitOrProjectile = units.filter((u: rtt_engine.IKillable) => u.id == unitId)[0];
+        if (unitOrProjectile.dead) {
+          continue;
+        }
+        for (let obstruction of obstructionCollisions[unitId]) {
+          obstruction.collide(unitOrProjectile);
+        }
+      }
+
+      // if (game.updateCounter % 100 == 0) {
+      //   if (path != undefined) {
+      //     renderer.gameCoordsGroup.remove(path);
+      //     path.material.dispose();
+      //     path.geometry.dispose();
+      //     path = undefined;
+      //   }
+      //   if (pathStart != undefined) {
+      //     renderer.gameCoordsGroup.remove(pathStart);
+      //     pathStart.material.dispose();
+      //     pathStart.geometry.dispose();
+      //     pathStart = undefined;
+      //   }
+      //   if (pathEnd != undefined) {
+      //     renderer.gameCoordsGroup.remove(pathEnd);
+      //     pathEnd.material.dispose();
+      //     pathEnd.geometry.dispose();
+      //     pathEnd = undefined;
+      //   }
+      //   let material = new THREE.LineBasicMaterial({ color: 0xffffff });
+      //   let from = new rtt_engine.Vector(
+      //     Math.random() * map.worldSize,
+      //     Math.random() * map.worldSize
+      //   );
+      //   let to = new rtt_engine.Vector(
+      //     Math.random() * map.worldSize,
+      //     Math.random() * map.worldSize
+      //   );
+
+      //   // from.x = 321.94381764911583;
+      //   // from.y = 311.00705914346884;
+      //   // to.x = 145.50164006384801;
+      //   // to.y = 335.0348767805669;
+      //   if (to.y < from.y || to.x < from.x) {
+      //     const temp = to;
+      //     to = from;
+      //     from = temp;
+      //   }
+
+      //   pathStart = new THREE.Mesh(new THREE.CircleBufferGeometry(5), new THREE.MeshBasicMaterial({color: 0x00ff00}));
+      //   pathStart.position.x = from.x;
+      //   pathStart.position.y = from.y;
+      //   //renderer.gameCoordsGroup.add(pathStart);
+      //   pathEnd = new THREE.Mesh(new THREE.CircleBufferGeometry(5), new THREE.MeshBasicMaterial({color: 0xff0000}));
+      //   pathEnd.position.x = to.x;
+      //   pathEnd.position.y = to.y;
+      //   //renderer.gameCoordsGroup.add(pathEnd);
+
+      //   let route = navmesh.findPath([from.x, from.y], [to.x, to.y]);
+      //   // let route = rtt_engine.findPathWithAStar({
+      //   //   collisionRadius: 10,
+      //   //   position: from,
+      //   // }, to, triangulatedMap);
+      //   if (route == undefined) {
+      //     console.log(`route not found from ${from.stringify()} to ${to.stringify()}`);
+      //   } else {
+      //     console.log(`route found from ${from.stringify()} to ${to.stringify()}: ${route.map((p) => [p.x, p.y])}`);
+      //     let points = route.map((p) => new THREE.Vector3(p.x, p.y, 0));
+      //     let geometry = new THREE.BufferGeometry().setFromPoints(points);
+      //     path = new THREE.LineSegments(geometry, material);
+      //     //renderer.gameCoordsGroup.add(path);
+      //   }
+      // }
     });
 
     rtt_threejs_renderer.time("update rendering", () => {
       game.draw();
       mapPresenter.draw();
+      obstructionPresenter.draw();
       powerSourcePresenter.draw();
       for (let commanderPresenter of commanderPresenters) {
         commanderPresenter.draw();

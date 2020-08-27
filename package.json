@@ -54,14 +54,20 @@
     "webpack-node-externals": "^1.7.2"
   },
   "dependencies": {
+    "@types/delaunator": "^3.0.0",
     "camera-controls": "1.18.2",
     "lodash": "^4.17.19",
+    "cdt2d": "^1.0.0",
+    "clean-pslg": "^1.1.2",
+    "delaunator": "^4.0.1",
     "moment": "^2.24.0",
     "nanoid": "^2.1.8",
+    "nav2d": "^1.2.0",
     "pino": "^5.16.0",
     "source-map-support": "^0.5.16",
     "three": "0.112.1",
     "three.meshline": "v1.2.0",
+    "tinyqueue": "^2.0.3",
     "tslib": "^1.10.0",
     "uuid": "^3.3.3"
   },

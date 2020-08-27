@@ -17,7 +17,7 @@ export class BotPresenter extends InstancedRotateablePresenter {
     super(
       player,
       (p) => p.units.vehicles.filter(v => v instanceof Bot),
-      new THREE.ShapeBufferGeometry(botShape())
+      new THREE.ShapeBufferGeometry(botShape()),
       scene,
     );
   }

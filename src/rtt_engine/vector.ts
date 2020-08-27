@@ -74,4 +74,12 @@ export class Vector {
       this.y /= magnitude;
     }
   }
+
+  public equals(v2: Vector): boolean {
+    return this.x == v2.x && this.y == v2.y;
+  }
+
+  public stringify(): string {
+    return `Vector[${this.x}, ${this.y}]`;
+  }
 }
