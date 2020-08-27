@@ -2,7 +2,7 @@ name: Build and Deploy to Github Pages
 on:
   push:
     branches:
-      - master
+      - main
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
