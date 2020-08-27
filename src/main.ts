@@ -21,15 +21,18 @@ function main() {
       new rtt_engine.Vector(edge, edge),
       new rtt_engine.Vector(edge + spacing, edge),
       new rtt_engine.Vector(edge + spacing, edge + spacing),
+      new rtt_engine.Vector(edge + spacing * 1.5, edge + spacing * 1.5),
       new rtt_engine.Vector(edge, edge + spacing),
 
       new rtt_engine.Vector(size - edge, edge),
       new rtt_engine.Vector(size - edge - spacing, edge),
       new rtt_engine.Vector(size - edge - spacing, edge + spacing),
+      new rtt_engine.Vector(size - edge - spacing * 1.5, edge + spacing * 1.5),
       new rtt_engine.Vector(size - edge, edge + spacing),
 
       new rtt_engine.Vector(size - edge, size - edge - spacing),
       new rtt_engine.Vector(size - edge - spacing, size - edge - spacing),
+      new rtt_engine.Vector(size - edge - spacing * 1.5, size - edge - spacing * 1.5),
       new rtt_engine.Vector(size - edge - spacing, size - edge),
       new rtt_engine.Vector(size - edge, size - edge),
 
@@ -37,6 +40,7 @@ function main() {
       new rtt_engine.Vector(edge, size - edge),
       new rtt_engine.Vector(edge, size - edge - spacing),
       new rtt_engine.Vector(edge + spacing, size - edge - spacing),
+      new rtt_engine.Vector(edge + spacing * 1.5, size - edge - spacing * 1.5),
     ],
   };
   const config = {
