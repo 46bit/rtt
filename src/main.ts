@@ -76,13 +76,28 @@ function main() {
   renderer.animate(true);
   window.renderer = renderer;
 
-  let triangulatedMap = rtt_engine.triangulate(map.worldSize, map.obstructions, 5);
+  // The final parameter here is how closely the triangles should go to unpassable obstacles.
+  // Small values will make pathfinding collide a lot; large values will create slightly
+  // suboptimal paths.
+  let triangulatedMap = rtt_engine.triangulate(map.worldSize, map.obstructions, 10);
   let triangulatedMapPresenter = new rtt_threejs_renderer.TriangulatedMapPresenter(triangulatedMap, renderer.gameCoordsGroup);
   //triangulatedMapPresenter.predraw();
   let navmesh = rtt_engine.triangulatedMapToNavMesh(triangulatedMap);
   window.navmesh = navmesh;
+  // To prevent units close to obstacles from suddenly not being able to path because they are
+  // off the navmesh, this navmesh is a backup which goes all the way up to the boundaries rather
+  // than having a border around obstacles. It's only used when pathfinding with the other navmesh
+  // fails (e.g., when a unit collided with an obstacle, was pushed out, but is now closer to
+  // the obstacle than the normal navmesh goes.)
+  let obstacleBorderLessTriangulatedMap = rtt_engine.triangulate(map.worldSize, map.obstructions, 0);
+  let obstacleBorderLessNavmesh = rtt_engine.triangulatedMapToNavMesh(obstacleBorderLessTriangulatedMap);
+  window.obstacleBorderLessNavmesh = obstacleBorderLessNavmesh;
+
   window.routeBetween = function(from, to) {
     let navmeshRoute = navmesh.findPath([from.x, from.y], [to.x, to.y]);
+    if (!navmeshRoute || navmeshRoute.length == 0) {
+      navmeshRoute = obstacleBorderLessNavmesh.findPath([from.x, from.y], [to.x, to.y]);
+    }
     if (!navmeshRoute || navmeshRoute.length == 0) {
       return null;
     }
