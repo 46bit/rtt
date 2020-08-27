@@ -14,17 +14,8 @@ function main() {
     name: 'double-cross',
     worldSize: size,
     obstructions: [
-      new rtt_engine.Obstruction(0, edge + spacing * 0.5, edge + spacing * 2, edge + spacing * 2.5),
-      new rtt_engine.Obstruction(edge + spacing * 2, edge + spacing * 2.5, 0, edge + spacing * 0.5),
-
-      new rtt_engine.Obstruction(size - edge - spacing * 0.5, size, edge + spacing * 2, edge + spacing * 2.5),
-      new rtt_engine.Obstruction(size - edge - spacing * 2.5, size - edge - spacing * 2, 0, edge + spacing * 0.5),
-
-      new rtt_engine.Obstruction(size - edge - spacing * 0.5, size, size - edge - spacing * 2.5, size - edge - spacing * 2),
-      new rtt_engine.Obstruction(size - edge - spacing * 2.5, size - edge - spacing * 2, size - edge - spacing * 0.5, size),
-
-      new rtt_engine.Obstruction(0, edge + spacing * 0.5, size - edge - spacing * 2.5, size - edge - spacing * 2),
-      new rtt_engine.Obstruction(edge + spacing * 2, edge + spacing * 2.5, size - edge - spacing * 0.5, size),
+      new rtt_engine.Obstruction(edge + spacing * 2, size - edge - spacing * 2, size / 2 - spacing, size / 2 + spacing),
+      new rtt_engine.Obstruction(size / 2 - spacing, size / 2 + spacing, edge + spacing * 2, size - edge - spacing * 2),
     ],
     powerSources: [
       new rtt_engine.Vector(edge, edge),
@@ -46,19 +37,6 @@ function main() {
       new rtt_engine.Vector(edge, size - edge),
       new rtt_engine.Vector(edge, size - edge - spacing),
       new rtt_engine.Vector(edge + spacing, size - edge - spacing),
-
-      new rtt_engine.Vector(crossSpacing, size / 2),
-      new rtt_engine.Vector(crossSpacing * 2, size / 2),
-      new rtt_engine.Vector(crossSpacing * 3, size / 2),
-      new rtt_engine.Vector(crossSpacing * 4, size / 2),
-      new rtt_engine.Vector(crossSpacing * 5, size / 2),
-      new rtt_engine.Vector(crossSpacing * 6, size / 2),
-      new rtt_engine.Vector(size / 2, crossSpacing),
-      new rtt_engine.Vector(size / 2, crossSpacing * 2),
-      new rtt_engine.Vector(size / 2, crossSpacing * 3),
-      new rtt_engine.Vector(size / 2, crossSpacing * 4),
-      new rtt_engine.Vector(size / 2, crossSpacing * 5),
-      new rtt_engine.Vector(size / 2, crossSpacing * 6),
     ],
   };
   const config = {
