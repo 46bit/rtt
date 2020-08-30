@@ -1,7 +1,10 @@
 import * as THREE from 'three';
 import { Player } from '../../rtt_engine/player';
 import { ShotgunTank, ShotgunProjectile } from '../../rtt_engine/entities';
-import { InstancedRotateablePresenter } from './lib';
+import { InstancedGeometryPresenter } from './lib';
+
+import vehicle_vert from '../shaders/vehicle_vert.glsl.js';
+import vehicle_frag from '../shaders/vehicle_frag.glsl.js';
 
 export function shotgunTankShape(): THREE.Shape {
   var shape = new THREE.Shape();
@@ -12,14 +15,22 @@ export function shotgunTankShape(): THREE.Shape {
   return shape;
 }
 
-export class ShotgunTankPresenter extends InstancedRotateablePresenter {
+export class ShotgunTankPresenter extends InstancedGeometryPresenter {
+  player: Player;
+
   constructor(player: Player, scene: THREE.Group) {
-    super(
-      player,
-      (p) => p.units.vehicles.filter(v => v instanceof ShotgunTank),
-      new THREE.ShapeBufferGeometry(shotgunTankShape()),
-      scene,
-    );
+    const geometry = new THREE.ShapeBufferGeometry(shotgunTankShape());
+    const material = new THREE.ShaderMaterial({
+      vertexShader: vehicle_vert,
+      fragmentShader: vehicle_frag,
+      blending: THREE.NoBlending,
+    });
+    super(geometry, material, scene);
+    this.player = player;
+  }
+
+  getInstances(): {position: Vector, direction: number, player: Player}[] {
+    return this.player.units.vehicles.filter(v => v instanceof ShotgunTank);
   }
 }
 
@@ -32,13 +43,21 @@ export function shotgunProjectileShape(): THREE.Shape {
   return shape;
 }
 
-export class ShotgunProjectilePresenter extends InstancedRotateablePresenter {
+export class ShotgunProjectilePresenter extends InstancedGeometryPresenter {
+  player: Player;
+
   constructor(player: Player, scene: THREE.Group) {
-    super(
-      player,
-      (p) => p.turretProjectiles.filter(v => v instanceof ShotgunProjectile),
-      new THREE.ShapeBufferGeometry(shotgunProjectileShape()),
-      scene,
-    );
+    const geometry = new THREE.ShapeBufferGeometry(shotgunProjectileShape());
+    const material = new THREE.ShaderMaterial({
+      vertexShader: vehicle_vert,
+      fragmentShader: vehicle_frag,
+      blending: THREE.NoBlending,
+    });
+    super(geometry, material, scene);
+    this.player = player;
+  }
+
+  getInstances(): {position: Vector, direction: number, player: Player}[] {
+    return this.player.turretProjectiles.filter(v => v instanceof ShotgunProjectile);
   }
 }

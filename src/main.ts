@@ -137,16 +137,12 @@ function main() {
     const botPresenter = new rtt_threejs_renderer.BotPresenter(player, renderer.gameCoordsGroup);
     botPresenters.push(botPresenter);
     const shotgunTankPresenter = new rtt_threejs_renderer.ShotgunTankPresenter(player, renderer.gameCoordsGroup);
-    shotgunTankPresenter.predraw();
     shotgunTankPresenters.push(shotgunTankPresenter);
     const shotgunProjectilePresenter = new rtt_threejs_renderer.ShotgunProjectilePresenter(player, renderer.gameCoordsGroup);
-    shotgunProjectilePresenter.predraw();
     shotgunProjectilePresenters.push(shotgunProjectilePresenter);
     const artilleryTankPresenter = new rtt_threejs_renderer.ArtilleryTankPresenter(player, renderer.gameCoordsGroup);
-    artilleryTankPresenter.predraw();
     artilleryTankPresenters.push(artilleryTankPresenter);
     const artilleryProjectilePresenter = new rtt_threejs_renderer.ArtilleryProjectilePresenter(player, renderer.gameCoordsGroup);
-    artilleryProjectilePresenter.predraw();
     artilleryProjectilePresenters.push(artilleryProjectilePresenter);
     const titanPresenter = new rtt_threejs_renderer.TitanPresenter(player, renderer.gameCoordsGroup);
     titanPresenter.predraw();

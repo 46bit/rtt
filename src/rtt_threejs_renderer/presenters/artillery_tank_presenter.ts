@@ -1,7 +1,10 @@
 import * as THREE from 'three';
 import { Player } from '../../rtt_engine/player';
 import { ArtilleryTank, ArtilleryProjectile } from '../../rtt_engine/entities';
-import { InstancedRotateablePresenter } from './lib';
+import { InstancedGeometryPresenter } from './lib';
+
+import vehicle_vert from '../shaders/vehicle_vert.glsl.js';
+import vehicle_frag from '../shaders/vehicle_frag.glsl.js';
 
 export function artilleryTankShape(): THREE.Shape {
   var shape = new THREE.Shape();
@@ -13,14 +16,22 @@ export function artilleryTankShape(): THREE.Shape {
   return shape;
 }
 
-export class ArtilleryTankPresenter extends InstancedRotateablePresenter {
+export class ArtilleryTankPresenter extends InstancedGeometryPresenter {
+  player: Player;
+
   constructor(player: Player, scene: THREE.Group) {
-    super(
-      player,
-      (p) => p.units.vehicles.filter(v => v instanceof ArtilleryTank),
-      new THREE.ShapeBufferGeometry(artilleryTankShape()),
-      scene,
-    );
+    const geometry = new THREE.ShapeBufferGeometry(artilleryTankShape());
+    const material = new THREE.ShaderMaterial({
+      vertexShader: vehicle_vert,
+      fragmentShader: vehicle_frag,
+      blending: THREE.NoBlending,
+    });
+    super(geometry, material, scene);
+    this.player = player;
+  }
+
+  getInstances(): {position: Vector, direction: number, player: Player}[] {
+    return this.player.units.vehicles.filter(v => v instanceof ArtilleryTank);
   }
 }
 
@@ -34,13 +45,21 @@ export function artilleryProjectileShape(): THREE.Shape {
   return shape;
 }
 
-export class ArtilleryProjectilePresenter extends InstancedRotateablePresenter {
+export class ArtilleryProjectilePresenter extends InstancedGeometryPresenter {
+  player: Player;
+
   constructor(player: Player, scene: THREE.Group) {
-    super(
-      player,
-      (p) => p.turretProjectiles.filter(v => v instanceof ArtilleryProjectile),
-      new THREE.ShapeBufferGeometry(artilleryProjectileShape()),
-      scene,
-    );
+    const geometry = new THREE.ShapeBufferGeometry(artilleryProjectileShape());
+    const material = new THREE.ShaderMaterial({
+      vertexShader: vehicle_vert,
+      fragmentShader: vehicle_frag,
+      blending: THREE.NoBlending,
+    });
+    super(geometry, material, scene);
+    this.player = player;
+  }
+
+  getInstances(): {position: Vector, direction: number, player: Player}[] {
+    return this.player.turretProjectiles.filter(v => v instanceof ArtilleryProjectile);
   }
 }
