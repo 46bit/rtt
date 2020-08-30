@@ -60,20 +60,23 @@ export class InstancedGeometryPresenter {
       const instance = instances[i];
       this.attributes.position[i*2] = instance.position.x;
       this.attributes.position[i*2 + 1] = instance.position.y;
-      this.attributes.rotation[i] = instance.direction;
+      const facingDirection = instance.turret ? instance.turret.rotation : instance.direction;
+      this.attributes.rotation[i] = Math.PI/2 + facingDirection;
       this.attributes.playerColor[i*3] = instance.player.color.r;
       this.attributes.playerColor[i*3 + 1] = instance.player.color.g;
       this.attributes.playerColor[i*3 + 2] = instance.player.color.b;
     }
-    this.attributes.position.needsUpdate = true;
-    this.attributes.rotation.needsUpdate = true;
-    this.attributes.playerColor.needsUpdate = true;
+    this.instancedGeometry.getAttribute("instancePosition").needsUpdate = true;
+    this.instancedGeometry.getAttribute("instanceRotation").needsUpdate = true;
+    this.instancedGeometry.getAttribute("playerColor").needsUpdate = true;
   }
 
   dedraw() {
     if (this.instancedGeometry) {
       this.scene.remove(this.mesh);
       this.mesh = undefined;
+      this.instancedGeometry = undefined;
+      this.attributes = {};
     }
   }
 }

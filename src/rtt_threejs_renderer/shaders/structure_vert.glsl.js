@@ -1,6 +1,5 @@
 export default /* glsl */`
 attribute vec3 instancePosition;
-attribute vec3 instanceRotation;
 attribute vec3 playerColor;
 
 varying vec3 color;

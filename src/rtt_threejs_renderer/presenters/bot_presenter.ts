@@ -1,7 +1,10 @@
 import * as THREE from 'three';
 import { Player } from '../../rtt_engine/player';
 import { Bot } from '../../rtt_engine/entities';
-import { InstancedRotateablePresenter } from './lib';
+import { InstancedGeometryPresenter } from './lib';
+
+import vehicle_vert from '../shaders/vehicle_vert.glsl.js';
+import vehicle_frag from '../shaders/vehicle_frag.glsl.js';
 
 export function botShape(): THREE.Shape {
   var shape = new THREE.Shape();
@@ -12,13 +15,21 @@ export function botShape(): THREE.Shape {
   return shape;
 }
 
-export class BotPresenter extends InstancedRotateablePresenter {
+export class BotPresenter extends InstancedGeometryPresenter {
+  player: Player;
+
   constructor(player: Player, scene: THREE.Group) {
-    super(
-      player,
-      (p) => p.units.vehicles.filter(v => v instanceof Bot),
-      new THREE.ShapeBufferGeometry(botShape()),
-      scene,
-    );
+    const geometry = new THREE.ShapeBufferGeometry(botShape());
+    const material = new THREE.ShaderMaterial({
+      vertexShader: vehicle_vert,
+      fragmentShader: vehicle_frag,
+      blending: THREE.NoBlending,
+    });
+    super(geometry, material, scene);
+    this.player = player;
+  }
+
+  getInstances(): {position: Vector, direction: number, player: Player}[] {
+    return this.player.units.vehicles.filter(v => v instanceof Bot);
   }
 }

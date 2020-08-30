@@ -135,7 +135,6 @@ function main() {
       commanderPresenters.push(commanderPresenter);
     }
     const botPresenter = new rtt_threejs_renderer.BotPresenter(player, renderer.gameCoordsGroup);
-    botPresenter.predraw();
     botPresenters.push(botPresenter);
     const shotgunTankPresenter = new rtt_threejs_renderer.ShotgunTankPresenter(player, renderer.gameCoordsGroup);
     shotgunTankPresenter.predraw();

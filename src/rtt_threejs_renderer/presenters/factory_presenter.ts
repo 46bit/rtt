@@ -4,8 +4,8 @@ import { Factory } from '../../rtt_engine/entities/factory';
 import { Vector } from '../../rtt_engine/vector';
 import { InstancedGeometryPresenter } from './lib';
 
-import factory_vert from '../shaders/factory_vert.glsl.js';
-import factory_frag from '../shaders/factory_frag.glsl.js';
+import structure_vert from '../shaders/structure_vert.glsl.js';
+import structure_frag from '../shaders/structure_frag.glsl.js';
 
 export function factoryShape(): THREE.Shape {
   var shape = new THREE.Shape();
@@ -37,8 +37,8 @@ export class FactoryPresenter extends InstancedGeometryPresenter {
   constructor(player: Player, scene: THREE.Group) {
     const geometry = new THREE.ShapeBufferGeometry(factoryShape());
     const material = new THREE.ShaderMaterial({
-      vertexShader: factory_vert,
-      fragmentShader: factory_frag,
+      vertexShader: structure_vert,
+      fragmentShader: structure_frag,
       blending: THREE.NoBlending,
     });
     super(geometry, material, scene);
