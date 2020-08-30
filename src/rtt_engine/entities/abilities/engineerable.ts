@@ -26,7 +26,7 @@ export function Engineerable<T extends new(o: any) => any>(base: T) {
     }
 
     public productionProgress() {
-       return this.construction!.healthiness();
+       return this.construction ? this.construction.healthiness() : 0.0;
     }
 
     public energyConsumption() {

@@ -26,25 +26,25 @@ export class HealthinessPresenter {
     geometry.setAttribute('healthiness', new THREE.InstancedBufferAttribute(this.healthiness, 1));
     geometry.setAttribute('requiredHealthiness', new THREE.Float32BufferAttribute(requiredHealthiness, 1));
 
-    var material = new THREE.MeshBasicMaterial({ color: this.player.color });
-    var colorParsChunk = [
+    let material = new THREE.MeshBasicMaterial({ color: this.player.color });
+    let colorParsChunk = [
       'attribute float healthiness;',
       'attribute float requiredHealthiness;',
       'varying float vHealthiness;',
       'varying float vRequiredHealthiness;',
       '#include <common>'
     ].join('\n');
-    var instanceColorChunk = [
+    let instanceColorChunk = [
       '#include <begin_vertex>',
       '\tvHealthiness = healthiness;',
       '\tvRequiredHealthiness = requiredHealthiness;'
     ].join('\n');
-    var fragmentParsChunk = [
+    let fragmentParsChunk = [
       'varying float vHealthiness;',
       'varying float vRequiredHealthiness;',
       '#include <common>'
     ].join('\n');
-    var colorChunk = [
+    let colorChunk = [
       'float opacity = (vRequiredHealthiness <= vHealthiness) ? 1.0 : 0.2;',
       'vec4 diffuseColor = vec4( diffuse, opacity );'
     ].join('\n');
