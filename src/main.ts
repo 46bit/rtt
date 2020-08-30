@@ -156,7 +156,6 @@ function main() {
     titanProjectilePresenter.predraw();
     titanProjectilePresenters.push(titanProjectilePresenter);
     const factoryPresenter = new rtt_threejs_renderer.FactoryPresenter(player, renderer.gameCoordsGroup);
-    factoryPresenter.predraw();
     factoryPresenters.push(factoryPresenter);
     const healthinessPresenter = new rtt_threejs_renderer.HealthinessPresenter(player, renderer.gameCoordsGroup);
     healthinessPresenters.push(healthinessPresenter);
