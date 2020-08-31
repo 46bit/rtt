@@ -84,7 +84,7 @@ function main() {
   // Small values will make pathfinding collide a lot; large values will create slightly
   // suboptimal paths.
   let triangulatedMap = rtt_engine.triangulate(map.worldSize, map.obstructions, 10);
-  let triangulatedMapPresenter = new rtt_threejs_renderer.TriangulatedMapPresenter(triangulatedMap, renderer.gameCoordsGroup);
+  //let triangulatedMapPresenter = new rtt_threejs_renderer.TriangulatedMapPresenter(triangulatedMap, renderer.gameCoordsGroup);
   //triangulatedMapPresenter.predraw();
   let navmesh = rtt_engine.triangulatedMapToNavMesh(triangulatedMap);
   window.navmesh = navmesh;
@@ -108,61 +108,27 @@ function main() {
     return navmeshRoute.map((p) => new rtt_engine.Vector(p.x, p.y));
   };
 
-  let mapPresenter = new rtt_threejs_renderer.MapPresenter(map, renderer.gameCoordsGroup);
-  mapPresenter.predraw();
-  let powerSourcePresenter = new rtt_threejs_renderer.PowerSourcePresenter(game, renderer.gameCoordsGroup);
-  powerSourcePresenter.predraw();
-  let obstructionPresenter = new rtt_threejs_renderer.ObstructionPresenter(game, renderer.gameCoordsGroup);
-  obstructionPresenter.predraw();
-  let commanderPresenters: rtt_threejs_renderer.CommanderPresenter[] = [];
-  let botPresenters: rtt_threejs_renderer.BotPresenter[] = [];
-  let shotgunTankPresenters: rtt_threejs_renderer.ShotgunTankPresenter[] = [];
-  let shotgunProjectilePresenters: rtt_threejs_renderer.ShotgunProjectilePresenter[] = [];
-  let artilleryTankPresenters: rtt_threejs_renderer.ArtilleryTankPresenter[] = [];
-  let artilleryProjectilePresenters: rtt_threejs_renderer.ArtilleryProjectilePresenter[] = [];
-  let titanPresenters: rtt_threejs_renderer.TitanPresenter[] = [];
-  let titanProjectilePresenters: rtt_threejs_renderer.TitanProjectilePresenter[] = [];
-  let factoryPresenters: rtt_threejs_renderer.FactoryPresenter[] = [];
-  let healthinessPresenters: rtt_threejs_renderer.HealthinessPresenter[] = [];
-  let powerGeneratorPresenters: rtt_threejs_renderer.PowerGeneratorPresenter[] = [];
-  let turretPresenters: rtt_threejs_renderer.TurretPresenter[] = [];
-  let turretProjectilePresenters: rtt_threejs_renderer.TurretProjectilePresenter[] = [];
+  let presenters: any[] = [];
+  presenters.push(new rtt_threejs_renderer.MapPresenter(map, renderer.gameCoordsGroup));
+  presenters.push(new rtt_threejs_renderer.ObstructionPresenter(game, renderer.gameCoordsGroup));
+  presenters.push(new rtt_threejs_renderer.PowerSourcePresenter(game, renderer.gameCoordsGroup));
   for (let i in game.players) {
     const player = game.players[i];
     if (player.units.commander != null) {
-      const commanderPresenter = new rtt_threejs_renderer.CommanderPresenter(player.units.commander, renderer.gameCoordsGroup);
-      commanderPresenter.predraw();
-      commanderPresenters.push(commanderPresenter);
+      presenters.push(new rtt_threejs_renderer.CommanderPresenter(player.units.commander, renderer.gameCoordsGroup));
     }
-    const botPresenter = new rtt_threejs_renderer.BotPresenter(player, renderer.gameCoordsGroup);
-    botPresenters.push(botPresenter);
-    const shotgunTankPresenter = new rtt_threejs_renderer.ShotgunTankPresenter(player, renderer.gameCoordsGroup);
-    shotgunTankPresenters.push(shotgunTankPresenter);
-    const shotgunProjectilePresenter = new rtt_threejs_renderer.ShotgunProjectilePresenter(player, renderer.gameCoordsGroup);
-    shotgunProjectilePresenters.push(shotgunProjectilePresenter);
-    const artilleryTankPresenter = new rtt_threejs_renderer.ArtilleryTankPresenter(player, renderer.gameCoordsGroup);
-    artilleryTankPresenters.push(artilleryTankPresenter);
-    const artilleryProjectilePresenter = new rtt_threejs_renderer.ArtilleryProjectilePresenter(player, renderer.gameCoordsGroup);
-    artilleryProjectilePresenters.push(artilleryProjectilePresenter);
-    const titanPresenter = new rtt_threejs_renderer.TitanPresenter(player, renderer.gameCoordsGroup);
-    titanPresenter.predraw();
-    titanPresenters.push(titanPresenter);
-    const titanProjectilePresenter = new rtt_threejs_renderer.TitanProjectilePresenter(player, renderer.gameCoordsGroup);
-    titanProjectilePresenter.predraw();
-    titanProjectilePresenters.push(titanProjectilePresenter);
-    const factoryPresenter = new rtt_threejs_renderer.FactoryPresenter(player, renderer.gameCoordsGroup);
-    factoryPresenters.push(factoryPresenter);
-    const healthinessPresenter = new rtt_threejs_renderer.HealthinessPresenter(player, renderer.gameCoordsGroup);
-    healthinessPresenters.push(healthinessPresenter);
-    const powerGeneratorPresenter = new rtt_threejs_renderer.PowerGeneratorPresenter(player, renderer.gameCoordsGroup);
-    powerGeneratorPresenter.predraw();
-    powerGeneratorPresenters.push(powerGeneratorPresenter);
-    const turretPresenter = new rtt_threejs_renderer.TurretPresenter(player, renderer.gameCoordsGroup);
-    turretPresenter.predraw();
-    turretPresenters.push(turretPresenter);
-    const turretProjectilePresenter = new rtt_threejs_renderer.TurretProjectilePresenter(player, renderer.gameCoordsGroup);
-    turretProjectilePresenter.predraw();
-    turretProjectilePresenters.push(turretProjectilePresenter);
+    presenters.push(new rtt_threejs_renderer.BotPresenter(player, renderer.gameCoordsGroup));
+    presenters.push(new rtt_threejs_renderer.ShotgunTankPresenter(player, renderer.gameCoordsGroup));
+    presenters.push(new rtt_threejs_renderer.ShotgunProjectilePresenter(player, renderer.gameCoordsGroup));
+    presenters.push(new rtt_threejs_renderer.ArtilleryTankPresenter(player, renderer.gameCoordsGroup));
+    presenters.push(new rtt_threejs_renderer.ArtilleryProjectilePresenter(player, renderer.gameCoordsGroup));
+    presenters.push(new rtt_threejs_renderer.TitanPresenter(player, renderer.gameCoordsGroup));
+    presenters.push(new rtt_threejs_renderer.TitanProjectilePresenter(player, renderer.gameCoordsGroup));
+    presenters.push(new rtt_threejs_renderer.FactoryPresenter(player, renderer.gameCoordsGroup));
+    presenters.push(new rtt_threejs_renderer.HealthinessPresenter(player, renderer.gameCoordsGroup));
+    presenters.push(new rtt_threejs_renderer.PowerGeneratorPresenter(player, renderer.gameCoordsGroup));
+    presenters.push(new rtt_threejs_renderer.TurretPresenter(player, renderer.gameCoordsGroup));
+    presenters.push(new rtt_threejs_renderer.TurretProjectilePresenter(player, renderer.gameCoordsGroup));
   }
 
   let selected = undefined;
@@ -293,7 +259,6 @@ function main() {
 
       for (let unitOrProjectile of unitsAndProjectiles) {
         if (!bounds.contains(unitOrProjectile, () => 0)) {
-          //console.log("bounds " + JSON.stringify(bounds) + " killed " + unitOrProjectile.position.x + " " + unitOrProjectile.position.y);
           unitOrProjectile.kill();
         }
       }
@@ -339,115 +304,12 @@ function main() {
           obstruction.collide(unitOrProjectile);
         }
       }
-
-      // if (game.updateCounter % 100 == 0) {
-      //   if (path != undefined) {
-      //     renderer.gameCoordsGroup.remove(path);
-      //     path.material.dispose();
-      //     path.geometry.dispose();
-      //     path = undefined;
-      //   }
-      //   if (pathStart != undefined) {
-      //     renderer.gameCoordsGroup.remove(pathStart);
-      //     pathStart.material.dispose();
-      //     pathStart.geometry.dispose();
-      //     pathStart = undefined;
-      //   }
-      //   if (pathEnd != undefined) {
-      //     renderer.gameCoordsGroup.remove(pathEnd);
-      //     pathEnd.material.dispose();
-      //     pathEnd.geometry.dispose();
-      //     pathEnd = undefined;
-      //   }
-      //   let material = new THREE.LineBasicMaterial({ color: 0xffffff });
-      //   let from = new rtt_engine.Vector(
-      //     Math.random() * map.worldSize,
-      //     Math.random() * map.worldSize
-      //   );
-      //   let to = new rtt_engine.Vector(
-      //     Math.random() * map.worldSize,
-      //     Math.random() * map.worldSize
-      //   );
-
-      //   // from.x = 321.94381764911583;
-      //   // from.y = 311.00705914346884;
-      //   // to.x = 145.50164006384801;
-      //   // to.y = 335.0348767805669;
-      //   if (to.y < from.y || to.x < from.x) {
-      //     const temp = to;
-      //     to = from;
-      //     from = temp;
-      //   }
-
-      //   pathStart = new THREE.Mesh(new THREE.CircleBufferGeometry(5), new THREE.MeshBasicMaterial({color: 0x00ff00}));
-      //   pathStart.position.x = from.x;
-      //   pathStart.position.y = from.y;
-      //   //renderer.gameCoordsGroup.add(pathStart);
-      //   pathEnd = new THREE.Mesh(new THREE.CircleBufferGeometry(5), new THREE.MeshBasicMaterial({color: 0xff0000}));
-      //   pathEnd.position.x = to.x;
-      //   pathEnd.position.y = to.y;
-      //   //renderer.gameCoordsGroup.add(pathEnd);
-
-      //   let route = navmesh.findPath([from.x, from.y], [to.x, to.y]);
-      //   // let route = rtt_engine.findPathWithAStar({
-      //   //   collisionRadius: 10,
-      //   //   position: from,
-      //   // }, to, triangulatedMap);
-      //   if (route == undefined) {
-      //     console.log(`route not found from ${from.stringify()} to ${to.stringify()}`);
-      //   } else {
-      //     console.log(`route found from ${from.stringify()} to ${to.stringify()}: ${route.map((p) => [p.x, p.y])}`);
-      //     let points = route.map((p) => new THREE.Vector3(p.x, p.y, 0));
-      //     let geometry = new THREE.BufferGeometry().setFromPoints(points);
-      //     path = new THREE.LineSegments(geometry, material);
-      //     //renderer.gameCoordsGroup.add(path);
-      //   }
-      // }
     });
 
     rtt_threejs_renderer.time("update rendering", () => {
       game.draw();
-      mapPresenter.draw();
-      obstructionPresenter.draw();
-      powerSourcePresenter.draw();
-      for (let commanderPresenter of commanderPresenters) {
-        commanderPresenter.draw();
-      }
-      for (let botPresenter of botPresenters) {
-        botPresenter.draw();
-      }
-      for (let shotgunTankPresenter of shotgunTankPresenters) {
-        shotgunTankPresenter.draw();
-      }
-      for (let shotgunProjectilePresenter of shotgunProjectilePresenters) {
-        shotgunProjectilePresenter.draw();
-      }
-      for (let artilleryTankPresenter of artilleryTankPresenters) {
-        artilleryTankPresenter.draw();
-      }
-      for (let artilleryProjectilePresenter of artilleryProjectilePresenters) {
-        artilleryProjectilePresenter.draw();
-      }
-      for (let titanPresenter of titanPresenters) {
-        titanPresenter.draw();
-      }
-      for (let titanProjectilePresenter of titanProjectilePresenters) {
-        titanProjectilePresenter.draw();
-      }
-      for (let factoryPresenter of factoryPresenters) {
-        factoryPresenter.draw();
-      }
-      for (let healthinessPresenter of healthinessPresenters) {
-        healthinessPresenter.draw();
-      }
-      for (let powerGeneratorPresenter of powerGeneratorPresenters) {
-        powerGeneratorPresenter.draw();
-      }
-      for (let turretPresenter of turretPresenters) {
-        turretPresenter.draw();
-      }
-      for (let turretProjectilePresenter of turretProjectilePresenters) {
-        turretProjectilePresenter.draw();
+      for (let presenter of presenters) {
+        presenter.draw();
       }
       if (selected != null) {
         if (selectedBox == null) {
@@ -464,7 +326,6 @@ function main() {
         selectedBox = undefined;
       }
     });
-    //console.log("game draw time: " + ((new Date()) - start2));
   }, 1000 / 30);
 }
 

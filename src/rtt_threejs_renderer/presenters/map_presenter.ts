@@ -31,8 +31,8 @@ export class MapPresenter {
   }
 
   draw() {
-    if (this.edgeMaterial != null) {
-      //this.edgeMaterial!.color.offsetHSL(0.005, 0, 0);
+    if (!this.mesh) {
+      this.predraw();
     }
   }
 
