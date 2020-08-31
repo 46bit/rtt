@@ -2,7 +2,7 @@ import { Player } from '../player';
 import { Vector } from '../vector';
 import { Engineerable } from './abilities';
 import { Vehicle } from './lib';
-import { CommanderPresenter } from '../../rtt_threejs_renderer/presenters/commander_presenter';
+import { CommanderPresenter } from '../../rtt_renderer/presenters/commander_presenter';
 
 export class Commander extends Engineerable(Vehicle) {
   public energyOutput: number;

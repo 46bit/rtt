@@ -2,7 +2,7 @@ import { Player } from '../player';
 import { Vector } from '../vector';
 import { Engineerable } from './abilities';
 import { Vehicle } from './lib';
-import { BotPresenter } from '../../rtt_threejs_renderer/presenters/bot_presenter';
+import { BotPresenter } from '../../rtt_renderer/presenters/bot_presenter';
 
 export class Bot extends Engineerable(Vehicle) {
   constructor(position: Vector, direction: number, player: Player, built: boolean) {
