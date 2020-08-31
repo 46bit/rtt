@@ -169,7 +169,11 @@ function main() {
   let selectedBox = undefined;
   let buildChoice = undefined;
   let quadtree: any;
+  document.addEventListener('contextmenu', function (e) {
+    e.preventDefault();
+  });
   document.addEventListener('mousedown', function (e) {
+    e.preventDefault();
     let x = (e.clientX / window.innerWidth) * 2 - 1;
     let y = -(e.clientY / window.innerHeight) * 2 + 1;
     let mouse = new THREE.Vector2(x, y);
