@@ -38,9 +38,7 @@ export function triangulate(worldSize: number, obstructions: Obstruction[], clea
     boundaryEdges.push([startIndex+3, startIndex]);
   }
 
-  if (!cleanPSLG(points, boundaryEdges)) {
-    alert("cleaning the map before triangulation failed. sorry. contact the author :(");
-  }
+  cleanPSLG(points, boundaryEdges);
 
   const triangles = cdt2d(points, boundaryEdges);
 
