@@ -8,110 +8,38 @@
   "scripts": {
     "build": "npm run -s clean && webpack --config webpack-config.js",
     "watch": "ENABLE_WATCH=true ENABLE_TESTS=true npm run -s build",
-    "test": "npm run -s build && ENABLE_COVERAGE=true npm run -s test:unit && npm run -s lint",
-    "test:unit": "jest --coverage",
-    "test:audit": "npm audit",
-    "test:vulnerabilities": "if npm audit | grep -E -B9999 '\\d+\\s+(high|critical)'; then npm audit; else exit 0; fi",
-    "test:acceptance": "ts-mocha --exit acceptance-tests/**/*.test.ts",
-    "lint": "npm run -s lint:ts && npm run -s lint:sass",
-    "lint:ts": "tslint --format codeFrame -p .",
-    "lint:sass": "sass-lint -v",
-    "fix": "npm run -s fix:js",
-    "fix:ts": "tslint -p . --fix",
-    "fix:sass": "sass-lint --fix ./src",
-    "fix:vulnerabilities": "npm audit fix --update-binary",
-    "start": "npm run -s start",
     "clean": "rm -rf dist/* || echo 'already clean'"
   },
   "author": "Miki Mokrysz",
   "devDependencies": {
-    "@types/lodash": "^4.14.149",
-    "@types/moment": "^2.13.0",
     "@types/nanoid": "^2.1.0",
-    "@types/pino": "^5.15.1",
-    "@types/uuid": "^3.4.6",
-    "@types/webpack-env": "^1.15.0",
-    "expect": "^24.9.0",
-    "extract-loader": "^3.1.0",
-    "file-loader": "^5.0.2",
-    "html-loader": "^0.5.5",
-    "imports-loader": "^0.8.0",
-    "jest": "^24.9.0",
-    "loader-utils": "^1.2.3",
-    "lodash": "^4.17.19",
-    "nodemon-webpack-plugin": "^4.2.2",
-    "schema-utils": "^2.6.1",
-    "supertest": "^4.0.2",
-    "ts-jest": "^24.3.0",
-    "ts-loader": "^6.2.1",
-    "tslint": "^5.20.1",
-    "tslint-consistent-codestyle": "^1.16.0",
-    "tslint-immutable": "^6.0.1",
-    "tslint-microsoft-contrib": "^6.2.0",
-    "typescript": "^3.7.4",
-    "webpack": "^4.41.5",
-    "webpack-cli": "^3.3.10",
-    "webpack-node-externals": "^1.7.2"
+    "@types/webpack-env": "^1.15.2",
+    "extract-loader": "^5.1.0",
+    "file-loader": "^6.0.0",
+    "html-loader": "^1.3.0",
+    "imports-loader": "^1.1.0",
+    "loader-utils": "^2.0.0",
+    "nodemon-webpack-plugin": "^4.3.2",
+    "ts-loader": "^8.0.3",
+    "typescript": "^4.0.2",
+    "webpack": "^4.44.1",
+    "webpack-cli": "^3.3.12",
+    "webpack-node-externals": "^2.5.2"
   },
   "dependencies": {
-    "@types/delaunator": "^3.0.0",
-    "lodash": "^4.17.19",
+    "@types/lodash": "^4.14.161",
     "cdt2d": "^1.0.0",
     "clean-pslg": "^1.1.2",
-    "delaunator": "^4.0.1",
-    "moment": "^2.24.0",
-    "nanoid": "^2.1.8",
+    "lodash": "^4.17.20",
+    "nanoid": "^3.1.12",
     "nav2d": "^1.2.0",
-    "pino": "^5.16.0",
-    "source-map-support": "^0.5.16",
-    "three": "0.112.1",
+    "source-map-support": "^0.5.19",
+    "three": "0.120.1",
     "three.meshline": "v1.2.0",
-    "tinyqueue": "^2.0.3",
-    "tslib": "^1.10.0",
-    "uuid": "^3.3.3"
+    "tslib": "^2.0.1"
   },
   "engines": {
     "node": "12.x.x",
     "npm": ">=6.x.x"
-  },
-  "jest": {
-    "testEnvironment": "node",
-    "coveragePathIgnorePatterns": [
-      "/node_modules/",
-      "/.+.njk",
-      "<rootDir>/config/",
-      "index.ts"
-    ],
-    "coverageThreshold": {
-      "global": {
-        "branches": 100,
-        "functions": 100,
-        "lines": 100,
-        "statements": 100
-      }
-    },
-    "moduleFileExtensions": [
-      "ts",
-      "tsx",
-      "js",
-      "jsx",
-      "json"
-    ],
-    "transform": {
-      "^.+\\.(ts|tsx)$": "ts-jest",
-      "^.+\\.(css|scss|sass)$": "identity-obj-proxy",
-      "^.+\\.(html|njk)$": "<rootDir>/config/jest/njk.js",
-      "^.+\\.(pegjs)$": "<rootDir>/config/jest/pegjs.js",
-      "^.+\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/config/jest/file.js"
-    },
-    "globals": {
-      "ts-jest": {
-        "tsConfig": "tsconfig.json",
-        "diagnostics": false
-      }
-    },
-    "testMatch": [
-      "<rootDir>/src/**/*.test.+(ts|tsx|js|jsx)"
-    ]
   }
 }

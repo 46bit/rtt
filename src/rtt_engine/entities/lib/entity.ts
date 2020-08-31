@@ -1,4 +1,4 @@
-import nanoid from 'nanoid';
+import { nanoid } from 'nanoid';
 import { Vector } from '../../vector';
 
 export interface IEntityConfig {

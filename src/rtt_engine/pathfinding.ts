@@ -1,6 +1,5 @@
 import { Vector } from './vector';
 import { Obstruction } from './entities';
-import TinyQueue from 'tinyqueue';
 import { NavMesh } from "nav2d";
 import cleanPSLG from "clean-pslg";
 import cdt2d from "cdt2d";
