@@ -70,7 +70,7 @@ export class Vehicle extends Manoeuvrable(Unit) {
       // Find route
       this.routeTo = manoeuvreOrder.destination;
       this.route = window.routeBetween(this.position, this.routeTo);
-      console.log(this.route);
+      //console.log(this.route);
       //this.route?.shift();
     }
 

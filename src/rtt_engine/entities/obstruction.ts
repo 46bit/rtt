@@ -44,7 +44,7 @@ export class Obstruction extends Collidable(Entity) {
   }
 
   collide(unit: { position: Vector, collisionRadius: number }): void {
-    console.log("collided", unit);
+    console.debug("collided", unit);
     while (this.contains(unit)) {
       const aboveY = this.top - unit.collisionRadius;
       const belowY = this.bottom + unit.collisionRadius;

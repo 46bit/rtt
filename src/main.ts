@@ -165,8 +165,8 @@ function main() {
     turretProjectilePresenters.push(turretProjectilePresenter);
   }
 
-  let selected = undefined;
-  let selectedBox = undefined;
+  let screenPositionToWorldPosition = new rtt_renderer.ScreenPositionToWorldPosition(window, renderer.camera, map.worldSize);
+  let selection = new rtt_renderer.Selection(game, screenPositionToWorldPosition);
   let buildChoice = undefined;
   let quadtree: any;
   document.addEventListener('contextmenu', function (e) {
@@ -174,87 +174,15 @@ function main() {
   });
   document.addEventListener('mousedown', function (e) {
     e.preventDefault();
-    let x = (e.clientX / window.innerWidth) * 2 - 1;
-    let y = -(e.clientY / window.innerHeight) * 2 + 1;
-    let mouse = new THREE.Vector2(x, y);
-
-    let raycaster = new THREE.Raycaster();
-    raycaster.setFromCamera(mouse, renderer.camera);
-
-    let plane = new THREE.Plane(new THREE.Vector3(0, 0, 1));
-    //console.log(raycaster.intersectObject(plane));
-    let result = new THREE.Vector3();
-    raycaster.ray.intersectPlane(plane, result);
-    let rtsPosition = result.add(new THREE.Vector3(
-      map.worldSize / 2,
-      map.worldSize / 2,
-      0,
-    ));
-    let rttPosition = new rtt_engine.Vector(rtsPosition.x, rtsPosition.y);
-    let collisions = quadtree.getCollisionsFor({
-      collisionRadius: 1,
-      position: rttPosition,
-      player: null,
-    });
-    //console.log(collisions);
-    // Based upon https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button
-    if (e.button == 0) {
-      if (collisions.length == 1) {
-        selected = collisions[0];
-        if (selected instanceof rtt_engine.Commander) {
-          document.getElementById("build-controls").style.display = "block";
-        } else {
-          document.getElementById("build-controls").style.display = "none";
-          buildChoice = undefined;
-        }
-      } else {
-        selected = undefined;
-        document.getElementById("build-controls").style.display = "none";
-        buildChoice = undefined;
-      }
-    } else if (e.button == 2) {
-      // FIXME: There needs to be a better way than this to detect movable stuff
-      if (selected != null && selected.movementRate != null) {
-        //console.log("order");
-        if (selected instanceof rtt_engine.Commander && (buildChoice == "factory" || buildChoice == "power-generator" || buildChoice == "turret")) {
-          if (buildChoice == "factory") {
-            selected.orders[0] = {
-              kind: 'construct',
-              structureClass: rtt_engine.Factory,
-              position: rttPosition,
-            }
-          } else if (buildChoice == "power-generator") {
-            const nearestPowerSource = _.minBy(game.powerSources.filter((p) => p.structure == null), (p) => (rtt_engine.Vector.subtract(rttPosition, p.position).magnitude()));
-            if (rtt_engine.Vector.subtract(rttPosition, nearestPowerSource.position).magnitude() < nearestPowerSource.collisionRadius + 2) {
-              selected.orders[0] = {
-                kind: 'construct',
-                structureClass: rtt_engine.PowerGenerator,
-                position: nearestPowerSource.position,
-                extra: [nearestPowerSource],
-              }
-            }
-          } else if (buildChoice == "turret") {
-            selected.orders[0] = {
-              kind: 'construct',
-              structureClass: rtt_engine.Turret,
-              position: rttPosition,
-            }
-          }
-          // Reset the build choice. Temporary hack until the user interface is better designed.
-          buildChoice = undefined;
-        } else if (collisions.length == 1 && collisions[0].player != selected.player) {
-          selected.orders[0] = {
-            kind: 'attack',
-            target: collisions[0],
-          }
-        } else {
-          selected.orders[0] = {
-            kind: 'manoeuvre',
-            destination: rttPosition,
-          }
-        }
-      }
-    }
+    selection.mousedown(e);
+  }, false);
+  document.addEventListener('mousemove', function (e) {
+    e.preventDefault();
+    selection.mousemove(e);
+  }, false);
+  document.addEventListener('mouseup', function (e) {
+    e.preventDefault();
+    selection.mouseup(e, quadtree);
   }, false);
   document.getElementById("build-factory").addEventListener('mousedown', function (e) {
     e.stopPropagation();
@@ -278,6 +206,8 @@ function main() {
   let path: any;
   let pathStart: any;
   let pathEnd: any;
+  let selectionBoxes = {};
+  let selectionCircle = null;
   setInterval(() => {
     rtt_renderer.time("update", () => {
       for (let ai of ais) {
@@ -449,19 +379,48 @@ function main() {
       for (let turretProjectilePresenter of turretProjectilePresenters) {
         turretProjectilePresenter.draw();
       }
-      if (selected != null) {
-        if (selectedBox == null) {
-          const geo = new THREE.RingBufferGeometry(selected.collisionRadius * 1.5, selected.collisionRadius * 1.5 + 4);
-          let material = new THREE.MeshBasicMaterial({ color: selected.player.color, opacity: 0.5 });
-          material.blending = THREE.AdditiveBlending;
-          selectedBox = new THREE.Mesh(geo, material);
-          renderer.gameCoordsGroup.add(selectedBox);
+
+      // FIXME: Remove selection boxes around units that are de-selected but where the box
+      // isn't removed because the new selection isn't empty
+      // FIXME: Use geometry instancing for this
+      // FIXME: Move out of the main function into a `SelectionPresenter`
+      if (selection.selectionInProgress && selection.selectionCentre) {
+        if (selectionCircle && selectionCircle.geometry.parameters.innerRadius != selection.selectionRadius) {
+          renderer.gameCoordsGroup.remove(selectionCircle);
+          selectionCircle = null;
         }
-        selectedBox.position.x = selected.position.x;
-        selectedBox.position.y = selected.position.y;
-      } else if (selectedBox != null) {
-        renderer.gameCoordsGroup.remove(selectedBox);
-        selectedBox = undefined;
+        if (!selectionCircle) {
+          const geo = new THREE.RingBufferGeometry(selection.selectionRadius, selection.selectionRadius + 3, 32);
+          let material = new THREE.MeshBasicMaterial({ color: "white", opacity: 0.5 });
+          material.blending = THREE.AdditiveBlending;
+          selectionCircle = new THREE.Mesh(geo, material);
+          renderer.gameCoordsGroup.add(selectionCircle);
+        }
+        selectionCircle.position.x = selection.selectionCentre.x;
+        selectionCircle.position.y = selection.selectionCentre.y;
+      } else if (selectionCircle) {
+        renderer.gameCoordsGroup.remove(selectionCircle);
+        selectionCircle = null;
+      }
+      if (selection.selectedEntities.length > 0) {
+        for (let selected of selection.selectedEntities) {
+          if (!selectionBoxes[selected.id]) {
+            const geo = new THREE.RingBufferGeometry(selected.collisionRadius * 1.5, selected.collisionRadius * 1.5 + 4);
+            let material = new THREE.MeshBasicMaterial({ color: selected.player.color, opacity: 0.5 });
+            material.blending = THREE.AdditiveBlending;
+            selectionBoxes[selected.id] = new THREE.Mesh(geo, material);
+            renderer.gameCoordsGroup.add(selectionBoxes[selected.id]);
+          }
+
+          selectionBoxes[selected.id].position.x = selected.position.x;
+          selectionBoxes[selected.id].position.y = selected.position.y;
+        }
+      } else {
+        for (let id in selectionBoxes) {
+          let selectionBox = selectionBoxes[id];
+          renderer.gameCoordsGroup.remove(selectionBox);
+        }
+        selectionBoxes = {};
       }
     });
     //console.log("game draw time: " + ((new Date()) - start2));
