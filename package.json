@@ -55,7 +55,6 @@
   },
   "dependencies": {
     "@types/delaunator": "^3.0.0",
-    "camera-controls": "1.18.2",
     "lodash": "^4.17.19",
     "cdt2d": "^1.0.0",
     "clean-pslg": "^1.1.2",
