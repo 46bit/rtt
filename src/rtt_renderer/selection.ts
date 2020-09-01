@@ -86,6 +86,15 @@ export class Selection {
       player: null,
     });
   }
+
+  update() {
+    for (let id in this.selectedEntities) {
+      const entity = this.selectedEntities[id];
+      if (entity.dead) {
+        delete (this.selectedEntities[id])
+      }
+    }
+  }
 }
 
 export type IWindow = {innerWidth: number; innerHeight: number};

@@ -167,6 +167,8 @@ function main() {
 
   let screenPositionToWorldPosition = new rtt_renderer.ScreenPositionToWorldPosition(window, renderer.camera, map.worldSize);
   let selection = new rtt_renderer.Selection(game, screenPositionToWorldPosition);
+  let selectionPresenter = new rtt_renderer.SelectionPresenter(selection, renderer.gameCoordsGroup);
+
   let buildChoice = undefined;
   let quadtree: any;
   document.addEventListener('contextmenu', function (e) {
@@ -203,13 +205,10 @@ function main() {
     return new aiClass(game, player, game.players.filter((p) => p != player));
   });
 
-  let path: any;
-  let pathStart: any;
-  let pathEnd: any;
-  let selectionBoxes = {};
-  let selectionCircle = null;
   setInterval(() => {
     rtt_renderer.time("update", () => {
+      selection.update();
+
       for (let ai of ais) {
         if (ai.player.isDefeated()) {
           continue;
@@ -269,70 +268,6 @@ function main() {
           obstruction.collide(unitOrProjectile);
         }
       }
-
-      // if (game.updateCounter % 100 == 0) {
-      //   if (path != undefined) {
-      //     renderer.gameCoordsGroup.remove(path);
-      //     path.material.dispose();
-      //     path.geometry.dispose();
-      //     path = undefined;
-      //   }
-      //   if (pathStart != undefined) {
-      //     renderer.gameCoordsGroup.remove(pathStart);
-      //     pathStart.material.dispose();
-      //     pathStart.geometry.dispose();
-      //     pathStart = undefined;
-      //   }
-      //   if (pathEnd != undefined) {
-      //     renderer.gameCoordsGroup.remove(pathEnd);
-      //     pathEnd.material.dispose();
-      //     pathEnd.geometry.dispose();
-      //     pathEnd = undefined;
-      //   }
-      //   let material = new THREE.LineBasicMaterial({ color: 0xffffff });
-      //   let from = new rtt_engine.Vector(
-      //     Math.random() * map.worldSize,
-      //     Math.random() * map.worldSize
-      //   );
-      //   let to = new rtt_engine.Vector(
-      //     Math.random() * map.worldSize,
-      //     Math.random() * map.worldSize
-      //   );
-
-      //   // from.x = 321.94381764911583;
-      //   // from.y = 311.00705914346884;
-      //   // to.x = 145.50164006384801;
-      //   // to.y = 335.0348767805669;
-      //   if (to.y < from.y || to.x < from.x) {
-      //     const temp = to;
-      //     to = from;
-      //     from = temp;
-      //   }
-
-      //   pathStart = new THREE.Mesh(new THREE.CircleBufferGeometry(5), new THREE.MeshBasicMaterial({color: 0x00ff00}));
-      //   pathStart.position.x = from.x;
-      //   pathStart.position.y = from.y;
-      //   //renderer.gameCoordsGroup.add(pathStart);
-      //   pathEnd = new THREE.Mesh(new THREE.CircleBufferGeometry(5), new THREE.MeshBasicMaterial({color: 0xff0000}));
-      //   pathEnd.position.x = to.x;
-      //   pathEnd.position.y = to.y;
-      //   //renderer.gameCoordsGroup.add(pathEnd);
-
-      //   let route = navmesh.findPath([from.x, from.y], [to.x, to.y]);
-      //   // let route = rtt_engine.findPathWithAStar({
-      //   //   collisionRadius: 10,
-      //   //   position: from,
-      //   // }, to, triangulatedMap);
-      //   if (route == undefined) {
-      //     console.log(`route not found from ${from.stringify()} to ${to.stringify()}`);
-      //   } else {
-      //     console.log(`route found from ${from.stringify()} to ${to.stringify()}: ${route.map((p) => [p.x, p.y])}`);
-      //     let points = route.map((p) => new THREE.Vector3(p.x, p.y, 0));
-      //     let geometry = new THREE.BufferGeometry().setFromPoints(points);
-      //     path = new THREE.LineSegments(geometry, material);
-      //     //renderer.gameCoordsGroup.add(path);
-      //   }
-      // }
     });
 
     rtt_renderer.time("update rendering", () => {
@@ -340,6 +275,7 @@ function main() {
       mapPresenter.draw();
       obstructionPresenter.draw();
       powerSourcePresenter.draw();
+      selectionPresenter.draw();
       for (let commanderPresenter of commanderPresenters) {
         commanderPresenter.draw();
       }
@@ -379,51 +315,7 @@ function main() {
       for (let turretProjectilePresenter of turretProjectilePresenters) {
         turretProjectilePresenter.draw();
       }
-
-      // FIXME: Remove selection boxes around units that are de-selected but where the box
-      // isn't removed because the new selection isn't empty
-      // FIXME: Use geometry instancing for this
-      // FIXME: Move out of the main function into a `SelectionPresenter`
-      if (selection.selectionInProgress && selection.selectionCentre) {
-        if (selectionCircle && selectionCircle.geometry.parameters.innerRadius != selection.selectionRadius) {
-          renderer.gameCoordsGroup.remove(selectionCircle);
-          selectionCircle = null;
-        }
-        if (!selectionCircle) {
-          const geo = new THREE.RingBufferGeometry(selection.selectionRadius, selection.selectionRadius + 3, 32);
-          let material = new THREE.MeshBasicMaterial({ color: "white", opacity: 0.5 });
-          material.blending = THREE.AdditiveBlending;
-          selectionCircle = new THREE.Mesh(geo, material);
-          renderer.gameCoordsGroup.add(selectionCircle);
-        }
-        selectionCircle.position.x = selection.selectionCentre.x;
-        selectionCircle.position.y = selection.selectionCentre.y;
-      } else if (selectionCircle) {
-        renderer.gameCoordsGroup.remove(selectionCircle);
-        selectionCircle = null;
-      }
-      if (selection.selectedEntities.length > 0) {
-        for (let selected of selection.selectedEntities) {
-          if (!selectionBoxes[selected.id]) {
-            const geo = new THREE.RingBufferGeometry(selected.collisionRadius * 1.5, selected.collisionRadius * 1.5 + 4);
-            let material = new THREE.MeshBasicMaterial({ color: selected.player.color, opacity: 0.5 });
-            material.blending = THREE.AdditiveBlending;
-            selectionBoxes[selected.id] = new THREE.Mesh(geo, material);
-            renderer.gameCoordsGroup.add(selectionBoxes[selected.id]);
-          }
-
-          selectionBoxes[selected.id].position.x = selected.position.x;
-          selectionBoxes[selected.id].position.y = selected.position.y;
-        }
-      } else {
-        for (let id in selectionBoxes) {
-          let selectionBox = selectionBoxes[id];
-          renderer.gameCoordsGroup.remove(selectionBox);
-        }
-        selectionBoxes = {};
-      }
     });
-    //console.log("game draw time: " + ((new Date()) - start2));
   }, 1000 / 30);
 }
 
