@@ -4,6 +4,7 @@ import * as rtt_renderer from './rtt_renderer';
 import { IAI, ExistingAI, AttackNearestAI } from './ai';
 
 window.THREE = THREE;
+window.rttPaused = false;
 
 function main() {
   const size = 1000;
@@ -167,6 +168,7 @@ function main() {
 
   let screenPositionToWorldPosition = new rtt_renderer.ScreenPositionToWorldPosition(window, renderer.camera, map.worldSize);
   let selection = new rtt_renderer.Selection(game, screenPositionToWorldPosition);
+  window.selection = selection;
   let selectionPresenter = new rtt_renderer.SelectionPresenter(selection, renderer.gameCoordsGroup);
 
   let buildChoice = undefined;
@@ -206,6 +208,10 @@ function main() {
   });
 
   setInterval(() => {
+    if (window.rttPaused) {
+      return;
+    }
+
     rtt_renderer.time("update", () => {
       selection.update();
 
