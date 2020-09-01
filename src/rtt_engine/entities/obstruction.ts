@@ -20,7 +20,11 @@ export class Obstruction extends Collidable(Entity) {
       (left + right) / 2,
       (top + bottom) / 2,
     );
-    const collisionRadius = Math.max(right - left, bottom - top) / 2 + 0.1;
+
+    const topLeft = new Vector(left, top);
+    const bottomRight = new Vector(right, bottom);
+    const diagonalDistance = Vector.distance(topLeft, bottomRight);
+    const collisionRadius = diagonalDistance + 0.1;
     super({ position, collisionRadius });
     this.left = left;
     this.right = right;

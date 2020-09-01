@@ -88,6 +88,7 @@ export class Selection {
   }
 
   update() {
+    // FIXME: `this.selectedEntities` is a list, filter out instead of creating holes in it!
     for (let id in this.selectedEntities) {
       const entity = this.selectedEntities[id];
       if (entity.dead) {
