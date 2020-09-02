@@ -14,7 +14,7 @@ export class Titan extends Vehicle {
     super({
       position,
       direction,
-      collisionRadius: 16,
+      collisionRadius: 12,
       built,
       buildCost: 7000,
       player,
