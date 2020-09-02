@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Game, Vector, IQuadrant, ICollidable } from '../rtt_engine';
-import { Entity } from '../rtt_engine/entities/lib';
+import { Entity, Projectile } from '../rtt_engine/entities/lib';
 
 export type IClickEvent = {clientX: number; clientY: number; button: Button};
 
@@ -84,7 +84,7 @@ export class Selection {
       collisionRadius: this.selectionRadius,
       position: this.selectionCentre,
       player: null,
-    });
+    }).filter((entity) => !(entity instanceof Projectile));
   }
 
   update() {
