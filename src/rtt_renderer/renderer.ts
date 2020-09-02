@@ -4,7 +4,7 @@ export function time(name: string, callback: () => void): void {
   let clock = new THREE.Clock();
   clock.start();
   callback();
-  console.debug("time of '" + name + "': " + clock.getElapsedTime());
+  //console.debug("time of '" + name + "': " + clock.getElapsedTime());
 }
 
 export class Renderer {
@@ -68,7 +68,7 @@ export class Renderer {
 
     time("animate", () => {
       this.renderer.render(this.scene, this.camera);
-      console.debug("draw calls: " + this.renderer.info.render.calls);
+      //console.debug("draw calls: " + this.renderer.info.render.calls);
     });
   }
 }
