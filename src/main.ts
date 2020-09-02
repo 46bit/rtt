@@ -15,8 +15,10 @@ function main() {
     name: 'double-cross',
     worldSize: size,
     obstructions: [
-      new rtt_engine.Obstruction(edge + spacing * 2, size - edge - spacing * 2, size / 2 - spacing, size / 2 + spacing),
-      new rtt_engine.Obstruction(size / 2 - spacing, size / 2 + spacing, edge + spacing * 2, size - edge - spacing * 2),
+      new rtt_engine.Obstruction(edge + spacing, edge + spacing * 3, size / 2 - spacing * 1.5, size / 2 + spacing * 1.5),
+      new rtt_engine.Obstruction(size - edge - 3 * spacing, size - edge - spacing, size / 2 - spacing * 1.5, size / 2 + spacing * 1.5),
+      new rtt_engine.Obstruction(size / 2 - spacing * 1.5, size / 2 + spacing * 1.5, edge + spacing, edge + spacing * 3),
+      new rtt_engine.Obstruction(size / 2 - spacing * 1.5, size / 2 + spacing * 1.5, size - edge - 3 * spacing, size - edge - spacing),
     ],
     powerSources: [
       new rtt_engine.Vector(edge, edge),
