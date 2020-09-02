@@ -98,15 +98,13 @@ export class Selection {
   }
 }
 
-export type IWindow = {innerWidth: number; innerHeight: number};
-
 export class ScreenPositionToWorldPosition {
-  window: {innerWidth: number; innerHeight: number};
+  rendererDomElement: any;
   camera: THREE.Camera;
   worldSize: number;
 
-  constructor(window: IWindow, camera: THREE.Camera, worldSize: number) {
-    this.window = window;
+  constructor(rendererDomElement: any, camera: THREE.Camera, worldSize: number) {
+    this.rendererDomElement = rendererDomElement;
     this.camera = camera;
     this.worldSize = worldSize;
   }
@@ -114,8 +112,8 @@ export class ScreenPositionToWorldPosition {
   convert(clientX: number, clientY: number): Vector | undefined {
     // FIXME: This must encode the coordinate system being used. That coordinate system really,
     // really needs documenting.
-    const x = (clientX / window.innerWidth) * 2 - 1;
-    const y = -(clientY / window.innerHeight) * 2 + 1;
+    const x = (clientX / parseInt(this.rendererDomElement.style.width)) * 2 - 1;
+    const y = -(clientY / parseInt(this.rendererDomElement.style.height)) * 2 + 1;
     const mousePosition = new THREE.Vector2(x, y);
 
     const raycaster = new THREE.Raycaster();

@@ -168,7 +168,7 @@ function main() {
     turretProjectilePresenters.push(turretProjectilePresenter);
   }
 
-  let screenPositionToWorldPosition = new rtt_renderer.ScreenPositionToWorldPosition(window, renderer.camera, map.worldSize);
+  let screenPositionToWorldPosition = new rtt_renderer.ScreenPositionToWorldPosition(renderer.renderer.domElement, renderer.camera, map.worldSize);
   let selection = new rtt_renderer.Selection(game, screenPositionToWorldPosition);
   window.selection = selection;
   let selectionPresenter = new rtt_renderer.SelectionPresenter(selection, renderer.gameCoordsGroup);
@@ -178,15 +178,15 @@ function main() {
   document.addEventListener('contextmenu', function (e) {
     e.preventDefault();
   });
-  document.addEventListener('mousedown', function (e) {
+  renderer.renderer.domElement.addEventListener('mousedown', function (e) {
     e.preventDefault();
     selection.mousedown(e);
   }, false);
-  document.addEventListener('mousemove', function (e) {
+  renderer.renderer.domElement.addEventListener('mousemove', function (e) {
     e.preventDefault();
     selection.mousemove(e);
   }, false);
-  document.addEventListener('mouseup', function (e) {
+  renderer.renderer.domElement.addEventListener('mouseup', function (e) {
     e.preventDefault();
     selection.mouseup(e, quadtree);
   }, false);

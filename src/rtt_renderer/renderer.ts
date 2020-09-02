@@ -49,6 +49,8 @@ export class Renderer {
     }
     this.renderer.setSize(this.screenSize, this.screenSize);
     document.body.appendChild(this.renderer.domElement);
+
+    this.renderer.domElement.addEventListener("wheel", (e) => this.wheel(e), false);
   }
 
   animate(force = false) {
@@ -69,5 +71,29 @@ export class Renderer {
       this.renderer.render(this.scene, this.camera);
       //console.debug("draw calls: " + this.renderer.info.render.calls);
     });
+  }
+
+  wheel(event: {deltaY: number, clientX: number, clientY: number}) {
+    const magnitude = Math.abs(event.deltaY);
+    if (event.deltaY > 0) {
+      const viewWidth = this.camera.right - this.camera.left;
+      if (viewWidth < 200 || viewWidth < magnitude) {
+        return;
+      }
+      this.camera.left += magnitude;
+      this.camera.right -= magnitude;
+      this.camera.top -= magnitude;
+      this.camera.bottom += magnitude;
+    } else if (event.deltaY < 0) {
+      const viewWidth = this.camera.right - this.camera.left;
+      if (viewWidth > this.worldSize + this.border * 2) {
+        return;
+      }
+      this.camera.left -= magnitude;
+      this.camera.right += magnitude;
+      this.camera.top += magnitude;
+      this.camera.bottom -= magnitude;
+    }
+    this.camera.updateProjectionMatrix();
   }
 }
