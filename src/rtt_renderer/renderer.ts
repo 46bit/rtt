@@ -11,7 +11,7 @@ export class Renderer {
   clock: THREE.Clock;
   border: number;
   worldSize: number;
-  aspect: number;
+  screenSize: number;
   camera: THREE.OrthographicCamera;
   scene: THREE.Scene;
   gameCoordsGroup: THREE.Group;
@@ -22,12 +22,12 @@ export class Renderer {
     this.clock = new THREE.Clock();
 
     this.worldSize = worldSize;
-    this.aspect = window.innerWidth / window.innerHeight;
+    this.screenSize = Math.min(window.innerWidth, window.innerHeight);
     // FIXME: Relate this to the window size vs the world size so it is constant and in pixels
     this.border = 20;
     this.camera = new THREE.OrthographicCamera(
-      -this.worldSize / 2 * this.aspect - this.border,
-      this.worldSize / 2 * this.aspect + this.border,
+      -this.worldSize / 2 - this.border,
+      this.worldSize / 2 + this.border,
       this.worldSize / 2 + this.border,
       -this.worldSize / 2 - this.border,
       0.01, this.worldSize * 10,
@@ -47,23 +47,22 @@ export class Renderer {
     if (window.devicePixelRatio != null) {
       this.renderer.setPixelRatio(window.devicePixelRatio);
     }
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.renderer.setSize(this.screenSize, this.screenSize);
     document.body.appendChild(this.renderer.domElement);
   }
 
   animate(force = false) {
-    //this.controls.update(this.clock.getDelta());
     requestAnimationFrame(() => this.animate());
 
-    let aspect = window.innerWidth / window.innerHeight;
-    if (aspect != this.aspect) {
-      this.aspect = aspect;
-      this.camera.left = -this.worldSize / 2 * this.aspect - this.border;
-      this.camera.right = this.worldSize / 2 * this.aspect + this.border;
+    const screenSize = Math.min(window.innerWidth, window.innerHeight);
+    if (screenSize != this.screenSize) {
+      this.screenSize = screenSize;
+      this.camera.left = -this.worldSize / 2 - this.border;
+      this.camera.right = this.worldSize / 2 + this.border;
       this.camera.top = this.worldSize / 2 + this.border;
       this.camera.bottom = -this.worldSize / 2 - this.border;
       this.camera.updateProjectionMatrix();
-      this.renderer.setSize(window.innerWidth, window.innerHeight);
+      this.renderer.setSize(screenSize, screenSize);
     }
 
     time("animate", () => {
