@@ -84,7 +84,7 @@ function main() {
   // The final parameter here is how closely the triangles should go to unpassable obstacles.
   // Small values will make pathfinding collide a lot; large values will create slightly
   // suboptimal paths.
-  let triangulatedMap = rtt_engine.triangulate(map.worldSize, map.obstructions, 10);
+  let triangulatedMap = rtt_engine.triangulate(map.worldSize, map.obstructions, 18);
   let triangulatedMapPresenter = new rtt_renderer.TriangulatedMapPresenter(triangulatedMap, renderer.gameCoordsGroup);
   //triangulatedMapPresenter.predraw();
   let navmesh = rtt_engine.triangulatedMapToNavMesh(triangulatedMap);
