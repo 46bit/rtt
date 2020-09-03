@@ -25,7 +25,7 @@ export class TriangulatedMapPresenter {
 
   protected drawTriangle(points: [number, number][]) {
     let geometry = new THREE.Geometry();
-    let vertices = points.map((p) => new THREE.Vector3(p[0], p[1], -2));
+    let vertices = points.map((p) => new THREE.Vector3(p[0], p[1], 2));
     console.log(vertices);
     geometry.vertices.push(...vertices);
     geometry.faces.push(new THREE.Face3(0, 1, 2));

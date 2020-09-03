@@ -32,7 +32,7 @@
     "clean-pslg": "^1.1.2",
     "lodash": "^4.17.20",
     "nanoid": "^3.1.12",
-    "nav2d": "^1.2.0",
+    "nav2d": "git+https://github.com/46bit/nav2d.git#46bit",
     "source-map-support": "^0.5.19",
     "three": "0.120.1",
     "three.meshline": "v1.2.0",

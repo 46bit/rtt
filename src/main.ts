@@ -87,8 +87,6 @@ function main() {
   // Small values will make pathfinding collide a lot; large values will create slightly
   // suboptimal paths.
   let triangulatedMap = rtt_engine.triangulate(map.worldSize, map.obstructions, 18);
-  let triangulatedMapPresenter = new rtt_renderer.TriangulatedMapPresenter(triangulatedMap, renderer.gameCoordsGroup);
-  //triangulatedMapPresenter.predraw();
   let navmesh = rtt_engine.triangulatedMapToNavMesh(triangulatedMap);
   window.navmesh = navmesh;
   // To prevent units close to obstacles from suddenly not being able to path because they are
@@ -99,6 +97,9 @@ function main() {
   let obstacleBorderLessTriangulatedMap = rtt_engine.triangulate(map.worldSize, map.obstructions, 0);
   let obstacleBorderLessNavmesh = rtt_engine.triangulatedMapToNavMesh(obstacleBorderLessTriangulatedMap);
   window.obstacleBorderLessNavmesh = obstacleBorderLessNavmesh;
+
+  //let triangulatedMapPresenter = new rtt_renderer.TriangulatedMapPresenter(obstacleBorderLessTriangulatedMap, renderer.gameCoordsGroup);
+  //triangulatedMapPresenter.predraw();
 
   window.routeBetween = function(from, to) {
     let navmeshRoute = navmesh.findPath([from.x, from.y], [to.x, to.y]);
