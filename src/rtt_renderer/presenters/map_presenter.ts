@@ -6,8 +6,6 @@ export class MapPresenter {
   map: IMap;
   scene: THREE.Group;
   mesh?: THREE.Mesh;
-  edgeMaterial?: THREE.LineBasicMaterial;
-  edges?: THREE.LineSegments;
 
   constructor(map: IMap, scene: THREE.Group) {
     this.map = map;
@@ -21,29 +19,14 @@ export class MapPresenter {
     this.mesh.position.x = this.map.worldSize / 2;
     this.mesh.position.y = this.map.worldSize / 2;
     this.scene.add(this.mesh);
-
-    this.edgeMaterial = new THREE.LineDashedMaterial({ color: 0x808080, gapSize: 3 });
-    this.edges = new THREE.LineSegments(new THREE.EdgesGeometry(geometry), this.edgeMaterial);
-    this.edges.computeLineDistances();
-    this.edges.position.x = this.map.worldSize / 2;
-    this.edges.position.y = this.map.worldSize / 2;
-    this.scene.add(this.edges);
   }
 
-  draw() {
-    if (this.edgeMaterial != null) {
-      //this.edgeMaterial!.color.offsetHSL(0.005, 0, 0);
-    }
-  }
+  draw() { }
 
   dedraw() {
     if (this.mesh != null) {
       this.scene.remove(this.mesh!);
       this.mesh = undefined;
-    }
-    if (this.edges != null) {
-      this.scene.remove(this.edges!);
-      this.edges = undefined;
     }
   }
 }

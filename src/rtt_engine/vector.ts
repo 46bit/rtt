@@ -48,6 +48,11 @@ export class Vector {
     this.y *= v2.y;
   }
 
+  public scale(multiplier: number) {
+    this.x *= multiplier;
+    this.y *= multiplier;
+  }
+
   public angle(): number {
     return Math.atan2(this.x, this.y);
   }
