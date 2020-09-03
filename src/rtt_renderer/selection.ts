@@ -101,32 +101,29 @@ export class Selection {
 export class ScreenPositionToWorldPosition {
   rendererDomElement: any;
   camera: THREE.Camera;
-  worldSize: number;
 
-  constructor(rendererDomElement: any, camera: THREE.Camera, worldSize: number) {
+  constructor(rendererDomElement: any, camera: THREE.Camera) {
     this.rendererDomElement = rendererDomElement;
     this.camera = camera;
-    this.worldSize = worldSize;
   }
 
   convert(clientX: number, clientY: number): Vector | undefined {
     // FIXME: This must encode the coordinate system being used. That coordinate system really,
     // really needs documenting.
-    const x = (clientX / parseInt(this.rendererDomElement.style.width)) * 2 - 1;
-    const y = -(clientY / parseInt(this.rendererDomElement.style.height)) * 2 + 1;
-    const mousePosition = new THREE.Vector2(x, y);
+    const normalisedX = clientX / parseInt(this.rendererDomElement.style.width) * 2 - 1;
+    const normalisedY = - clientY / parseInt(this.rendererDomElement.style.height) * 2 + 1;
+    const normalisedMousePosition = new THREE.Vector2(normalisedX, normalisedY);
 
     const raycaster = new THREE.Raycaster();
-    raycaster.setFromCamera(mousePosition, this.camera);
+    raycaster.setFromCamera(normalisedMousePosition, this.camera);
 
     const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1));
     const result = new THREE.Vector3();
     raycaster.ray.intersectPlane(plane, result);
 
-    // FIXME: Again this encodes the coordinate system and needs documenting.
     return new Vector(
-      result.x + this.worldSize / 2,
-      result.y + this.worldSize / 2,
+      result.x,
+      result.y,
     );
   }
 }
