@@ -6,45 +6,107 @@ import { IAI, ExistingAI, AttackNearestAI } from './ai';
 window.THREE = THREE;
 window.rttPaused = false;
 
+function mirrorFor4Players(worldSize: number, powerSources: rtt_engine.Vector[], obstructions: rtt_engine.Obstruction[]): [rtt_engine.Vector[], rtt_engine.Obstruction[]] {
+  let newPowerSources = [];
+  for (const powerSource of powerSources) {
+    newPowerSources.push(new rtt_engine.Vector(
+      worldSize - powerSource.y,
+      powerSource.x,
+    ));
+    newPowerSources.push(new rtt_engine.Vector(
+      powerSource.y,
+      worldSize - powerSource.x,
+    ));
+    newPowerSources.push(new rtt_engine.Vector(
+      worldSize - powerSource.x,
+      worldSize - powerSource.y,
+    ));
+  }
+  powerSources = powerSources.concat(...newPowerSources);
+
+  let newObstructions = [];
+  for (const obstruction of obstructions) {
+    newObstructions.push(new rtt_engine.Obstruction(
+      worldSize - obstruction.right,
+      worldSize - obstruction.left,
+      worldSize - obstruction.bottom,
+      worldSize - obstruction.top,
+    ));
+    newObstructions.push(new rtt_engine.Obstruction(
+      worldSize - obstruction.bottom,
+      worldSize - obstruction.top,
+      obstruction.right,
+      obstruction.left,
+    ));
+    newObstructions.push(new rtt_engine.Obstruction(
+      obstruction.bottom,
+      obstruction.top,
+      worldSize - obstruction.right,
+      worldSize - obstruction.left,
+    ));
+  }
+  obstructions = obstructions.concat(...newObstructions);
+
+  return [powerSources, obstructions];
+}
+
 function main() {
-  const size = 1000;
+  const size = 1600;
   const edge = 70;
   const spacing = 70;
   const crossSpacing = size / 7;
+  let [powerSources, obstructions] = mirrorFor4Players(size, [
+    new rtt_engine.Vector(edge, edge),
+    new rtt_engine.Vector(edge + spacing, edge),
+    new rtt_engine.Vector(edge + spacing, edge + spacing),
+    new rtt_engine.Vector(edge, edge + spacing),
+    new rtt_engine.Vector(edge, edge + spacing * 3.5),
+    new rtt_engine.Vector(edge + spacing * 2, edge + spacing * 3.5),
+    new rtt_engine.Vector(edge + spacing * 4, edge + spacing * 3.5),
+    new rtt_engine.Vector(edge, size / 2 - spacing * 1.5),
+    new rtt_engine.Vector(edge, size / 2),
+    new rtt_engine.Vector(edge + spacing * 3.5, edge + spacing * 7.5),
+    new rtt_engine.Vector(edge + spacing * 3.5, edge + spacing * 9.5),
+    new rtt_engine.Vector(edge + spacing * 3.5, edge + spacing * 11.5),
+    new rtt_engine.Vector(edge + spacing * 6, edge + spacing * 5),
+    new rtt_engine.Vector(edge + spacing * 7.5, edge + spacing * 5),
+    new rtt_engine.Vector(edge + spacing * 5.2, edge + spacing * 1.5),
+    new rtt_engine.Vector(edge + spacing * 7.8, edge + spacing * 7.8),
+    new rtt_engine.Vector(edge + spacing * 7.8, edge + spacing * 9.3),
+  ], [
+    new rtt_engine.Obstruction(0, spacing * 3, size - edge - spacing * 4, size - edge - spacing * 3),
+
+    new rtt_engine.Obstruction(edge + spacing, edge + spacing * 2, size / 2 - spacing * 4.5, size / 2 + spacing * 4),
+    new rtt_engine.Obstruction(edge + spacing, edge + spacing * 3, size / 2 - spacing * 5.5, size / 2 - spacing * 4.5),
+
+    new rtt_engine.Obstruction(edge + spacing * 5, edge + spacing * 7, size / 2 + spacing, size / 2 + spacing * 2),
+    new rtt_engine.Obstruction(edge + spacing * 6, edge + spacing * 7, size / 2 - spacing * 4, size / 2 - spacing * 2),
+    new rtt_engine.Obstruction(edge + spacing * 6, edge + spacing * 7, size / 2 + spacing * 2, size / 2 + spacing * 4),
+  ]);
   const map = {
     name: 'double-cross',
     worldSize: size,
-    obstructions: [
-      new rtt_engine.Obstruction(edge + spacing, edge + spacing * 3, size / 2 - spacing * 1.5, size / 2 + spacing * 1.5),
-      new rtt_engine.Obstruction(size - edge - 3 * spacing, size - edge - spacing, size / 2 - spacing * 1.5, size / 2 + spacing * 1.5),
-      new rtt_engine.Obstruction(size / 2 - spacing * 1.5, size / 2 + spacing * 1.5, edge + spacing, edge + spacing * 3),
-      new rtt_engine.Obstruction(size / 2 - spacing * 1.5, size / 2 + spacing * 1.5, size - edge - 3 * spacing, size - edge - spacing),
-    ],
-    powerSources: [
-      new rtt_engine.Vector(edge, edge),
-      new rtt_engine.Vector(edge + spacing, edge),
-      new rtt_engine.Vector(edge + spacing, edge + spacing),
-      new rtt_engine.Vector(edge + spacing * 1.5, edge + spacing * 1.5),
-      new rtt_engine.Vector(edge, edge + spacing),
+    obstructions: obstructions,
+    powerSources: powerSources,
 
-      new rtt_engine.Vector(size - edge, edge),
-      new rtt_engine.Vector(size - edge - spacing, edge),
-      new rtt_engine.Vector(size - edge - spacing, edge + spacing),
-      new rtt_engine.Vector(size - edge - spacing * 1.5, edge + spacing * 1.5),
-      new rtt_engine.Vector(size - edge, edge + spacing),
+    //   new rtt_engine.Vector(size - edge, edge),
+    //   new rtt_engine.Vector(size - edge - spacing, edge),
+    //   new rtt_engine.Vector(size - edge - spacing, edge + spacing),
+    //   new rtt_engine.Vector(size - edge - spacing * 1.5, edge + spacing * 1.5),
+    //   new rtt_engine.Vector(size - edge, edge + spacing),
 
-      new rtt_engine.Vector(size - edge, size - edge - spacing),
-      new rtt_engine.Vector(size - edge - spacing, size - edge - spacing),
-      new rtt_engine.Vector(size - edge - spacing * 1.5, size - edge - spacing * 1.5),
-      new rtt_engine.Vector(size - edge - spacing, size - edge),
-      new rtt_engine.Vector(size - edge, size - edge),
+    //   new rtt_engine.Vector(size - edge, size - edge - spacing),
+    //   new rtt_engine.Vector(size - edge - spacing, size - edge - spacing),
+    //   new rtt_engine.Vector(size - edge - spacing * 1.5, size - edge - spacing * 1.5),
+    //   new rtt_engine.Vector(size - edge - spacing, size - edge),
+    //   new rtt_engine.Vector(size - edge, size - edge),
 
-      new rtt_engine.Vector(edge + spacing, size - edge),
-      new rtt_engine.Vector(edge, size - edge),
-      new rtt_engine.Vector(edge, size - edge - spacing),
-      new rtt_engine.Vector(edge + spacing, size - edge - spacing),
-      new rtt_engine.Vector(edge + spacing * 1.5, size - edge - spacing * 1.5),
-    ],
+    //   new rtt_engine.Vector(edge + spacing, size - edge),
+    //   new rtt_engine.Vector(edge, size - edge),
+    //   new rtt_engine.Vector(edge, size - edge - spacing),
+    //   new rtt_engine.Vector(edge + spacing, size - edge - spacing),
+    //   new rtt_engine.Vector(edge + spacing * 1.5, size - edge - spacing * 1.5),
+    // ],
   };
   const config = {
     map,

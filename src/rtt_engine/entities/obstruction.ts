@@ -10,6 +10,13 @@ export class Obstruction extends Collidable(Entity) {
   bottom: number;
 
   constructor(left: number, right: number, top: number, bottom: number) {
+    if (left > right) {
+      [left, right] = [right, left];
+    }
+    if (top > bottom) {
+      [top, bottom] = [bottom, top];
+    }
+
     if (left >= right) {
       throw "left bigger than right;"
     }
