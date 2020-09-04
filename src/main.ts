@@ -249,7 +249,8 @@ function main() {
     e.preventDefault();
     selection.mousemove(e);
   }, false);
-  renderer.renderer.domElement.addEventListener('mouseup', function (e) {
+  // Detect mouseup anywhere, so selections in progress don't miss the mouseup
+  document.body.addEventListener('mouseup', function (e) {
     e.preventDefault();
     selection.mouseup(e, quadtree);
   }, false);

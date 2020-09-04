@@ -69,7 +69,7 @@ export class Selection {
   }
 
   mouseup(event: IClickEvent, quadtree: IQuadrant<ICollidable>) {
-    if (event.button != Button.LeftClick) {
+    if (!this.selectionInProgress || event.button != Button.LeftClick) {
       return;
     }
 
