@@ -201,3 +201,93 @@ export class AttackNearestAI implements IAI {
     }
   }
 }
+
+export class PeacefulExpansionAI implements IAI {
+  game: rtt_engine.Game;
+  player: rtt_engine.Player;
+  opponents: rtt_engine.Player[];
+  assignedOrders: {[id: string]: rtt_engine.IOrder};
+
+  constructor(game: rtt_engine.Game, player: rtt_engine.Player, opponents: rtt_engine.Player[]) {
+    this.game = game;
+    this.player = player;
+    this.opponents = opponents;
+    this.assignedOrders = {};
+  }
+
+  update() {
+    this.updateFactoryConstruction();
+    this.updateExpansion();
+
+    if (this.player.units.powerGenerators.length > 0) {
+      const upgrading = this.player.units.powerGenerators.filter((p) => p.upgrading).length > 0;
+      if (!upgrading) {
+        const cheapestUpgrade = _.minBy(this.player.units.powerGenerators, (p) => p.fullHealth);
+        cheapestUpgrade!.orders[0] = { 'kind': 'upgrade' };
+      }
+    }
+  }
+
+  updateFactoryConstruction() {
+    // STRATEGY:
+    // If we have as many engineers as there are power generators we don't own,
+    //   build more engineers from every factory.
+    // Otherwise build nothing.
+
+    const numberOfPowerGeneratorsWeDontOwn = this.game.powerSources.filter((p) => {
+      return p.structure == null || p.structure.player != this.player;
+    }).length;
+    const numberOfEngineersWeHave = this.player.units.engineers.length;
+
+    if (numberOfEngineersWeHave < numberOfPowerGeneratorsWeDontOwn) {
+      for (let factory of this.player.units.factories) {
+        if (factory.orders.length > 0) {
+          continue;
+        }
+        factory.orders[0] = { kind: 'construct', unitClass: rtt_engine.Engineer };
+      }
+    }
+  }
+
+  updateExpansion() {
+    // STRATEGY:
+    // If we have no factories, build one. Get the commander to do it if still alive.
+    // Any engineers without orders should go build at the nearest unoccupied or unfinished power source.
+    // FUTURE IMPROVEMTN: Also, have every engineer go to the nearest capturable power source that doesn't already have
+    // an engineer on the way. Any engineers left without orders should go to the nearest capturable power source.
+
+    const powerSourcesWeDontOwn = this.game.powerSources.filter((p) => {
+      return p.structure == null || (p.structure.player == this.player && !p.structure.built);
+    });
+
+    if (this.player.units.factories.length == 0) {
+      const factoryBuildingUnit = this.player.units.commander || this.player.units.engineers[0];
+      if (!factoryBuildingUnit) {
+        return;
+      }
+      if (!factoryBuildingUnit.orders[0] || factoryBuildingUnit.orders[0].kind !== "construct") {
+        factoryBuildingUnit.orders[0] = {
+          kind: 'construct',
+          structureClass: rtt_engine.Factory,
+          position: factoryBuildingUnit.position,
+        };
+      }
+    }
+
+    for (let engineer of this.player.units.engineers) {
+      if (engineer.orders.length > 0) {
+        continue;
+      }
+
+      const nearestDesiredPowerSource = _.minBy(powerSourcesWeDontOwn, (powerSource) => {
+        return rtt_engine.Vector.distance(powerSource.position, engineer.position);
+      });
+      engineer.orders[0] = {
+        kind: 'construct',
+        structureClass: rtt_engine.PowerGenerator,
+        position: nearestDesiredPowerSource!.position,
+        extra: [nearestDesiredPowerSource],
+      };
+    }
+  }
+}
