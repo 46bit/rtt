@@ -219,7 +219,7 @@ export class ExpansionAI implements IAI {
     this.updateFactoryConstruction();
     this.updateExpansion();
 
-    if (this.player.units.powerGenerators.length > 0) {
+    if (this.player.units.powerGenerators.length > 3) {
       const upgrading = this.player.units.powerGenerators.filter((p) => p.upgrading).length > 0;
       if (!upgrading) {
         const cheapestUpgrade = _.minBy(this.player.units.powerGenerators, (p) => p.fullHealth);
