@@ -202,7 +202,7 @@ export class AttackNearestAI implements IAI {
   }
 }
 
-export class PeacefulExpansionAI implements IAI {
+export class ExpansionAI implements IAI {
   game: rtt_engine.Game;
   player: rtt_engine.Player;
   opponents: rtt_engine.Player[];
@@ -237,19 +237,29 @@ export class PeacefulExpansionAI implements IAI {
     // Otherwise build nothing.
 
     const numberOfPowerGeneratorsWeOwn = this.player.units.powerGenerators.length;
-    const numberOfPowerGeneratorsWeDontOwn = this.game.powerSources.filter((p) => {
-      return p.structure == null || p.structure.player != this.player;
-    }).length;
-    const numberOfEngineersWeHave = this.player.units.engineers.length;
-    const desiredNumberOfEngineers = numberOfPowerGeneratorsWeOwn <= 3 ? 3 : numberOfPowerGeneratorsWeDontOwn;
+    if (numberOfPowerGeneratorsWeOwn <= 3 || Math.random() < 0.5) {
+      const numberOfPowerGeneratorsWeDontOwn = this.game.powerSources.filter((p) => {
+        return p.structure == null || p.structure.player != this.player;
+      }).length;
+      const numberOfEngineersWeHave = this.player.units.engineers.length;
+      const desiredNumberOfEngineers = numberOfPowerGeneratorsWeOwn <= 3 ? 3 : numberOfPowerGeneratorsWeDontOwn;
 
-    if (numberOfEngineersWeHave < desiredNumberOfEngineers) {
-      for (let factory of this.player.units.factories) {
-        if (factory.orders.length > 0) {
-          continue;
+      if (numberOfEngineersWeHave < desiredNumberOfEngineers) {
+        for (let factory of this.player.units.factories) {
+          if (factory.orders.length > 0) {
+            continue;
+          }
+          factory.orders[0] = { kind: 'construct', unitClass: rtt_engine.Engineer };
         }
-        factory.orders[0] = { kind: 'construct', unitClass: rtt_engine.Engineer };
       }
+      return;
+    }
+
+    for (let factory of this.player.units.factories) {
+      if (factory.orders.length > 0) {
+        continue;
+      }
+      factory.orders[0] = { kind: 'construct', unitClass: rtt_engine.ShotgunTank };
     }
   }
 
@@ -292,6 +302,19 @@ export class PeacefulExpansionAI implements IAI {
         position: nearestDesiredPowerSource!.position,
         extra: [nearestDesiredPowerSource],
       };
+    }
+
+    const opposingUnits = this.opponents.map((p) => p.units.allKillableCollidableUnits()).flat();
+    for (let vehicle of this.player.units.vehicles) {
+      if (vehicle instanceof rtt_engine.Engineer) {
+        continue;
+      }
+      if (vehicle.orders.length > 0) {
+        continue;
+      }
+
+      let nearestOpposingUnit = _.minBy(opposingUnits, (u) => rtt_engine.Vector.distance(u.position, vehicle.position));
+      vehicle.orders[0] = { kind: 'attack', target: nearestOpposingUnit };
     }
   }
 }
