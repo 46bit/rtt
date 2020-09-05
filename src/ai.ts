@@ -230,16 +230,20 @@ export class PeacefulExpansionAI implements IAI {
 
   updateFactoryConstruction() {
     // STRATEGY:
-    // If we have as many engineers as there are power generators we don't own,
-    //   build more engineers from every factory.
+    // If we have less than 3 power generators, don't spam engineers because
+    //   we don't have the economy for it yet.
+    // Once we have more than 3 power generators, build one engineer per unoccupied
+    //   power generator.
     // Otherwise build nothing.
 
+    const numberOfPowerGeneratorsWeOwn = this.player.units.powerGenerators.length;
     const numberOfPowerGeneratorsWeDontOwn = this.game.powerSources.filter((p) => {
       return p.structure == null || p.structure.player != this.player;
     }).length;
     const numberOfEngineersWeHave = this.player.units.engineers.length;
+    const desiredNumberOfEngineers = numberOfPowerGeneratorsWeOwn <= 3 ? 3 : numberOfPowerGeneratorsWeDontOwn;
 
-    if (numberOfEngineersWeHave < numberOfPowerGeneratorsWeDontOwn) {
+    if (numberOfEngineersWeHave < desiredNumberOfEngineers) {
       for (let factory of this.player.units.factories) {
         if (factory.orders.length > 0) {
           continue;
