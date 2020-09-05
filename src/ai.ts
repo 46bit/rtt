@@ -242,7 +242,7 @@ export class ExpansionAI implements IAI {
         return p.structure == null || p.structure.player != this.player;
       }).length;
       const numberOfEngineersWeHave = this.player.units.engineers.length;
-      const desiredNumberOfEngineers = numberOfPowerGeneratorsWeOwn <= 3 ? 3 : numberOfPowerGeneratorsWeDontOwn;
+      const desiredNumberOfEngineers = numberOfPowerGeneratorsWeOwn <= 3 ? 3 : Math.ceil(numberOfPowerGeneratorsWeDontOwn / 2);
 
       if (numberOfEngineersWeHave < desiredNumberOfEngineers) {
         for (let factory of this.player.units.factories) {
@@ -278,13 +278,31 @@ export class ExpansionAI implements IAI {
     const powerSourcesWeDontOwn = this.game.powerSources.filter((p) => {
       return p.structure == null || (p.structure.player == this.player && !p.structure.built);
     });
+    const opposingUnits = this.opponents.map((p) => p.units.allKillableCollidableUnits()).flat();
 
     if (this.player.units.factories.length == 0 || this.player.storedEnergy > 500) {
-      const factoryBuildingUnit = this.player.units.commander || this.player.units.engineers[0];
+      let factoryBuildingUnit;
+      if (this.player.units.factories.length == 0) {
+        factoryBuildingUnit = this.player.units.commander || this.player.units.engineers[0];
+      } else {
+        const constructionUnits = [];
+        if (this.player.units.commander) {
+          constructionUnits.push(this.player.units.commander);
+        }
+        constructionUnits.push(...this.player.units.engineers);
+        factoryBuildingUnit = _.maxBy(constructionUnits, (vehicle) => {
+          let nearestOpposingUnit = _.minBy(opposingUnits, (u) => rtt_engine.Vector.distance(u.position, vehicle.position));
+          let nearestFactory = _.minBy(this.player.units.factories, (f) => rtt_engine.Vector.distance(f.position, vehicle.position));
+          if (!nearestOpposingUnit || !nearestFactory) {
+            return 10000000000000;
+          }
+          return rtt_engine.Vector.distance(nearestFactory.position, vehicle.position) / ( rtt_engine.Vector.distance(nearestOpposingUnit.position, vehicle.position)**3 );
+        });
+      }
       if (!factoryBuildingUnit) {
         return;
       }
-      if (!factoryBuildingUnit.orders[0] || factoryBuildingUnit.orders[0].kind !== "construct") {
+      if (!factoryBuildingUnit.orders[0] || factoryBuildingUnit.orders[0].kind !== "construct" || factoryBuildingUnit.orders[0].structureClass != rtt_engine.Factory) {
         factoryBuildingUnit.orders[0] = {
           kind: 'construct',
           structureClass: rtt_engine.Factory,
@@ -293,23 +311,24 @@ export class ExpansionAI implements IAI {
       }
     }
 
-    for (let engineer of this.player.units.engineers) {
-      if (engineer.orders.length > 0) {
-        continue;
-      }
+    if (powerSourcesWeDontOwn.length > 0) {
+      for (let engineer of this.player.units.engineers) {
+        if (engineer.orders.length > 0) {
+          continue;
+        }
 
-      const nearestDesiredPowerSource = _.minBy(powerSourcesWeDontOwn, (powerSource) => {
-        return rtt_engine.Vector.distance(powerSource.position, engineer.position);
-      });
-      engineer.orders[0] = {
-        kind: 'construct',
-        structureClass: rtt_engine.PowerGenerator,
-        position: nearestDesiredPowerSource!.position,
-        extra: [nearestDesiredPowerSource],
-      };
+        const nearestDesiredPowerSource = _.minBy(powerSourcesWeDontOwn, (powerSource) => {
+          return rtt_engine.Vector.distance(powerSource.position, engineer.position);
+        });
+        engineer.orders[0] = {
+          kind: 'construct',
+          structureClass: rtt_engine.PowerGenerator,
+          position: nearestDesiredPowerSource!.position,
+          extra: [nearestDesiredPowerSource],
+        };
+      }
     }
 
-    const opposingUnits = this.opponents.map((p) => p.units.allKillableCollidableUnits()).flat();
     for (let vehicle of this.player.units.vehicles) {
       if (vehicle instanceof rtt_engine.Engineer) {
         continue;
