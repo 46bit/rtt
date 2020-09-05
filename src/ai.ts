@@ -279,7 +279,7 @@ export class ExpansionAI implements IAI {
       return p.structure == null || (p.structure.player == this.player && !p.structure.built);
     });
 
-    if (this.player.units.factories.length == 0) {
+    if (this.player.units.factories.length == 0 || this.player.storedEnergy > 500) {
       const factoryBuildingUnit = this.player.units.commander || this.player.units.engineers[0];
       if (!factoryBuildingUnit) {
         return;
