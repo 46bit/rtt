@@ -255,11 +255,16 @@ export class ExpansionAI implements IAI {
       return;
     }
 
+    const numberOfTitans = this.player.units.vehicles.filter((v) => v instanceof rtt_engine.Titan).length;
+    const numberOfEnemyTitans = this.opponents.map((o) => o.units.vehicles.filter((v) => v instanceof rtt_engine.Titan)).flat().length;
     for (let factory of this.player.units.factories) {
       if (factory.orders.length > 0) {
         continue;
       }
-      factory.orders[0] = { kind: 'construct', unitClass: rtt_engine.ShotgunTank };
+      factory.orders[0] = {
+        kind: 'construct',
+        unitClass: numberOfTitans < numberOfEnemyTitans && Math.random() > 0.5 ? rtt_engine.Titan : rtt_engine.ShotgunTank,
+      };
     }
   }
 
