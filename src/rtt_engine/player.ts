@@ -38,6 +38,7 @@ export class Player {
     if (this.units.commander != null) {
       drainingUnits.push(this.units.commander);
     }
+    drainingUnits.push(...this.units.engineers);
     const desiredEnergy = lodash.sum(drainingUnits.map((u) => u.energyConsumption()));
 
     const proportionOfEnergyProvided = Math.min(this.storedEnergy / desiredEnergy, 1);

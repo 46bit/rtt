@@ -3,6 +3,7 @@ import {
   ArtilleryTank,
   ShotgunTank,
   Titan,
+  Engineer,
   Commander,
   Factory,
   PowerGenerator,
@@ -13,15 +14,16 @@ import {
 } from './entities';
 
 // FIXME: Do this based upon an `IUnit`?
-type Unit = Bot | ArtilleryTank | ShotgunTank | Titan | Commander | PowerGenerator | Factory | Turret;
+type Unit = Bot | ArtilleryTank | ShotgunTank | Titan | Engineer | Commander | PowerGenerator | Factory | Turret;
 
 // FIXME: Do this based upon an `IVehicle`?
-type Vehicle = Bot | ArtilleryTank | ShotgunTank | Titan;
+type Vehicle = Bot | ArtilleryTank | ShotgunTank | Titan | Engineer;
 
 export class PlayerUnits {
   public unitCap: number | null;
   public commander: Commander | null;
   public vehicles: Vehicle[];
+  public engineers: Engineer[];
   public factories: Factory[];
   public powerGenerators: PowerGenerator[];
   public turrets: Turret[];
@@ -31,6 +33,7 @@ export class PlayerUnits {
     this.unitCap = unitCap;
     this.commander = null;
     this.vehicles = [];
+    this.engineers = [];
     this.factories = [];
     this.powerGenerators = [];
     this.turrets = [];
@@ -39,6 +42,7 @@ export class PlayerUnits {
 
   public allKillableCollidableUnits(): (IKillable & ICollidable)[] {
     let units = [];
+    // Engineers are also in this.vehicles
     units.push(...this.vehicles);
     units.push(...this.factories);
     units.push(...this.powerGenerators);
@@ -90,6 +94,9 @@ export class PlayerUnits {
         case Titan:
           (vehicle as Titan).update(enemies);
           break;
+        case Engineer:
+          (vehicle as Engineer).update();
+          break;
       }
     }
     for (const turret of this.turrets) {
@@ -109,6 +116,11 @@ export class PlayerUnits {
     if (this.commander != null && this.commander.construction != null) {
       this.constructions[this.commander.construction.id] = this.commander.construction;
     }
+    for (let engineer of this.engineers) {
+      if (engineer.construction != null) {
+        this.constructions[engineer.construction.id] = engineer.construction;
+      }
+    }
 
     for (let unitId in this.constructions) {
       const unit = this.constructions[unitId];
@@ -125,7 +137,12 @@ export class PlayerUnits {
           this.factories.push(unit as Factory);
           break;
         case PowerGenerator:
-          this.powerGenerators.push(unit as PowerGenerator);
+          // Power generators have special support for being built by multiple engineers at once
+          // and so needs guard logic for the multiple completions that will happen. Eventually this
+          // will be present for all structures.
+          if (!(this.powerGenerators.includes(unit as PowerGenerator))) {
+            this.powerGenerators.push(unit as PowerGenerator);
+          }
           break;
         case Bot:
           this.vehicles.push(unit as Bot);
@@ -138,6 +155,10 @@ export class PlayerUnits {
           break;
         case Titan:
           this.vehicles.push(unit as Titan);
+          break;
+        case Engineer:
+          this.vehicles.push(unit as Engineer);
+          this.engineers.push(unit as Engineer);
           break;
         case Turret:
           this.turrets.push(unit as Turret);
@@ -155,14 +176,12 @@ export class PlayerUnits {
     this.powerGenerators = this.powerGenerators.filter((powerGenerator) => powerGenerator.isAlive());
     this.factories = this.factories.filter((factory) => factory.isAlive());
     this.vehicles = this.vehicles.filter((vehicle) => vehicle.isAlive());
+    this.engineers = this.engineers.filter((engineer) => engineer.isAlive());
     this.turrets = this.turrets.filter((turret) => turret.isAlive());
   }
 
   public draw() {
     this.commander?.presenter?.draw();
-    // for (let vehicle of this.vehicles) {
-    //   vehicle.presenter?.draw();
-    // }
     for (let powerGenerator of this.powerGenerators) {
       powerGenerator.presenter?.draw();
     }

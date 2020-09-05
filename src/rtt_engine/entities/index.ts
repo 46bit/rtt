@@ -10,3 +10,4 @@ export * from './power_generator';
 export * from './power_source';
 export * from './turret';
 export * from './obstruction';
+export * from './engineer';

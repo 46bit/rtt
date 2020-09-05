@@ -188,6 +188,7 @@ function main() {
   let artilleryProjectilePresenters: rtt_renderer.ArtilleryProjectilePresenter[] = [];
   let titanPresenters: rtt_renderer.TitanPresenter[] = [];
   let titanProjectilePresenters: rtt_renderer.TitanProjectilePresenter[] = [];
+  let engineerPresenters: rtt_renderer.EngineerPresenter[] = [];
   let factoryPresenters: rtt_renderer.FactoryPresenter[] = [];
   let healthinessPresenters: rtt_renderer.HealthinessPresenter[] = [];
   let powerGeneratorPresenters: rtt_renderer.PowerGeneratorPresenter[] = [];
@@ -216,6 +217,8 @@ function main() {
     const titanProjectilePresenter = new rtt_renderer.TitanProjectilePresenter(player, renderer.gameCoordsGroup);
     titanProjectilePresenter.predraw();
     titanProjectilePresenters.push(titanProjectilePresenter);
+    const engineerPresenter = new rtt_renderer.EngineerPresenter(player, renderer.gameCoordsGroup);
+    engineerPresenters.push(engineerPresenter);
     const factoryPresenter = new rtt_renderer.FactoryPresenter(player, renderer.gameCoordsGroup);
     factoryPresenters.push(factoryPresenter);
     const healthinessPresenter = new rtt_renderer.HealthinessPresenter(player, renderer.gameCoordsGroup);
@@ -303,7 +306,7 @@ function main() {
       let unitOriginalHealths: {[id: string]: number} = {};
       for (let unit of unitsAndProjectiles) {
         if (unit.damage != null) {
-          unitOriginalHealths[unit.id] = unit.health;
+          unitOriginalHealths[unit.id] = (unit instanceof rtt_engine.Engineer) ? unit.health / 6 : unit.health;
         }
       }
 
@@ -371,6 +374,9 @@ function main() {
       }
       for (let titanProjectilePresenter of titanProjectilePresenters) {
         titanProjectilePresenter.draw();
+      }
+      for (let engineerPresenter of engineerPresenters) {
+        engineerPresenter.draw();
       }
       for (let factoryPresenter of factoryPresenters) {
         factoryPresenter.draw();

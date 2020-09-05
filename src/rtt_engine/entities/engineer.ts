@@ -4,25 +4,23 @@ import { Engineerable } from './abilities';
 import { Vehicle } from './lib';
 import { PowerGenerator, PowerSource } from './';
 
-export class Commander extends Engineerable(Vehicle) {
-  public energyOutput: number;
+export class Engineer extends Engineerable(Vehicle) {
   constructing: boolean;
 
-  constructor(position: Vector, direction: number, player: Player) {
+  constructor(position: Vector, direction: number, player: Player, built: boolean) {
     super({
       position,
       direction,
-      collisionRadius: 8,
-      built: true,
-      buildCost: 10000,
+      collisionRadius: 6,
+      built,
+      buildCost: 50,
       player,
-      fullHealth: 1000,
-      health: 1000,
-      movementRate: 0.03,
-      turnRate: 2.0 / 3.0,
-      productionRange: 35.0,
+      fullHealth: 16,
+      health: built ? 16 : 0,
+      movementRate: 0.06,
+      turnRate: 4.0 / 3.0,
+      productionRange: 25.0,
     } as any);
-    this.energyOutput = 5;
     this.orderExecutionCallbacks['construct'] = (constructionOrder: any): boolean => {
       return this.construct(constructionOrder);
     };
@@ -71,6 +69,8 @@ export class Commander extends Engineerable(Vehicle) {
         } else if (powerSource.structure.player == this.player && powerSource.structure.isUnderConstruction()) {
           this.constructing = true;
           this.construction = powerSource.structure;
+        } else {
+          return false;
         }
       } else {
         this.constructing = true;
