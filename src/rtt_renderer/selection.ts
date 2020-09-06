@@ -48,6 +48,15 @@ export class Selection {
       // FIXME: Just record this info on the class, then figure out how to process the info outside
       // this class?
       this.target = worldPosition;
+      this.selectedEntities.forEach((entity) => {
+        // FIXME: There needs to be a better way to check for abilities than checking for fields…
+        if (entity.orders && entity.velocity) {
+          entity.orders[0] = {
+            kind: 'manoeuvre',
+            destination: worldPosition,
+          };
+        }
+      })
     }
   }
 

@@ -51,6 +51,10 @@ function mirrorFor4Players(worldSize: number, powerSources: rtt_engine.Vector[],
 }
 
 function main() {
+  const rttDiv = document.getElementById("rtt")!;
+  const rttViewport = rttDiv.getElementsByClassName("game--viewport")[0]!;
+  const rttSidebar = rttDiv.getElementsByClassName("game--sidebar")[0]!;
+
   const size = 1600;
   const edge = 70;
   const spacing = 70;
@@ -112,19 +116,19 @@ function main() {
     map,
     unitCap: 500,
     players: [{
-      name: 'green',
+      name: 'Green',
       color: new THREE.Color("rgb(0, 255, 0)"),
       commanderPosition: new rtt_engine.Vector(size - edge - spacing/2, edge + spacing/2),
     }, {
-      name: 'red',
+      name: 'Red',
       color: new THREE.Color("rgb(255, 0, 0)"),
       commanderPosition: new rtt_engine.Vector(size - edge - spacing/2, size - edge - spacing/2),
     }, {
-      name: 'purple',
+      name: 'Purple',
       color: new THREE.Color('magenta'),
       commanderPosition: new rtt_engine.Vector(edge + spacing/2, edge + spacing/2),
     }, {
-      name: 'blue',
+      name: 'Blue',
       color: new THREE.Color('deepskyblue'),
       commanderPosition: new rtt_engine.Vector(edge + spacing/2, size - edge - spacing/2),
     }]
@@ -141,9 +145,16 @@ function main() {
   // FIXME: Remove after debugging
   //return;
 
-  let renderer = new rtt_renderer.Renderer(map.worldSize, window, document);
+  let renderer = new rtt_renderer.Renderer(map.worldSize, window, document, rttViewport);
   renderer.animate(true);
   window.renderer = renderer;
+
+  let screenPositionToWorldPosition = new rtt_renderer.ScreenPositionToWorldPosition(renderer.renderer.domElement, renderer.camera);
+  let selection = new rtt_renderer.Selection(game, screenPositionToWorldPosition);
+  window.selection = selection;
+  let selectionPresenter = new rtt_renderer.SelectionPresenter(selection, renderer.gameCoordsGroup);
+
+  let ui = new rtt_renderer.UI(game, selection, document.getElementsByClassName("game--sidebar")[0]);
 
   // The final parameter here is how closely the triangles should go to unpassable obstacles.
   // Small values will make pathfinding collide a lot; large values will create slightly
@@ -234,11 +245,6 @@ function main() {
     turretProjectilePresenters.push(turretProjectilePresenter);
   }
 
-  let screenPositionToWorldPosition = new rtt_renderer.ScreenPositionToWorldPosition(renderer.renderer.domElement, renderer.camera);
-  let selection = new rtt_renderer.Selection(game, screenPositionToWorldPosition);
-  window.selection = selection;
-  let selectionPresenter = new rtt_renderer.SelectionPresenter(selection, renderer.gameCoordsGroup);
-
   let buildChoice = undefined;
   let quadtree: any;
   document.addEventListener('contextmenu', function (e) {
@@ -256,18 +262,6 @@ function main() {
   document.body.addEventListener('mouseup', function (e) {
     e.preventDefault();
     selection.mouseup(e, quadtree);
-  }, false);
-  document.getElementById("build-factory").addEventListener('mousedown', function (e) {
-    e.stopPropagation();
-    buildChoice = "factory";
-  }, false);
-  document.getElementById("build-power-generator").addEventListener('mousedown', function (e) {
-    e.stopPropagation();
-    buildChoice = "power-generator";
-  }, false);
-  document.getElementById("build-turret").addEventListener('mousedown', function (e) {
-    e.stopPropagation();
-    buildChoice = "turret";
   }, false);
 
   let ais: IAI[] = game.players.map((player) => {
@@ -393,6 +387,8 @@ function main() {
       for (let turretProjectilePresenter of turretProjectilePresenters) {
         turretProjectilePresenter.draw();
       }
+
+      ui.update();
     });
   }, 1000 / 30);
 }

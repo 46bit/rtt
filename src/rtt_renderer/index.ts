@@ -1,5 +1,6 @@
 export * from './renderer';
 export * from './selection';
+export * from './ui';
 export * from './presenters/bot_presenter';
 export * from './presenters/shotgun_tank_presenter';
 export * from './presenters/artillery_tank_presenter';

@@ -21,7 +21,7 @@ export class Renderer {
   screenPositionToWorldPosition: ScreenPositionToWorldPosition;
   pressedArrowKeys: Set<number>;
 
-  constructor(worldSize: number, window: any, document: any) {
+  constructor(worldSize: number, window: any, document: any, rttViewport: any) {
     this.clock = new THREE.Clock();
 
     this.worldSize = worldSize;
@@ -52,8 +52,10 @@ export class Renderer {
     if (window.devicePixelRatio != null) {
       this.renderer.setPixelRatio(window.devicePixelRatio);
     }
-    this.renderer.setSize(this.screenSize, this.screenSize);
-    document.body.appendChild(this.renderer.domElement);
+    // FIXME: Allow for a rectangular game viewport
+    const viewportSize = Math.min(rttViewport.offsetWidth, rttViewport.offsetHeight);
+    this.renderer.setSize(viewportSize, viewportSize);
+    rttViewport.appendChild(this.renderer.domElement);
 
     this.screenPositionToWorldPosition = new ScreenPositionToWorldPosition(this.renderer.domElement, this.camera);
     this.pressedArrowKeys = new Set();
