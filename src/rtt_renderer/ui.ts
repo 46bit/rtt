@@ -1,10 +1,13 @@
 import { Game, Player } from '../rtt_engine';
 import { Selection, Button } from './';
 
+type ScoreTableRow = {"energyCell": any, "incomeCell": any, "unitsCell": any};
+
 export class UI {
   game: Game;
   selection: Selection;
   sidebar: any;
+  scoreTableRows: {[playerName: string]: ScoreTableRow};
   playerTabs: {[name: string]: any};
   energyIncomes: {[name: string]: any};
   selectedPlayer: Player;
@@ -15,6 +18,35 @@ export class UI {
     this.game = game;
     this.selection = selection;
     this.sidebar = sidebar;
+
+    this.scoreTableRows = {};
+    const scoreTable = document.getElementsByClassName("player-scores")[0];
+    const scoreTableBody = scoreTable.getElementsByTagName("tbody")[0];
+    this.game.players.forEach((player) => {
+      const row = document.createElement("tr");
+      const nameCell = document.createElement("th");
+      nameCell.innerText = player.name;
+      nameCell.style.color = player.color.getStyle();
+      row.appendChild(nameCell);
+      const energyCell = document.createElement("td");
+      energyCell.innerText = Math.round(player.storedEnergy).toString();
+      row.appendChild(energyCell);
+      const incomeCell = document.createElement("td");
+      incomeCell.innerText = "+" + Math.round(player.units.energyOutput()).toString();
+      row.appendChild(incomeCell);
+      const unitsCell = document.createElement("td");
+      unitsCell.innerText = player.units.unitCount().toString();
+      row.appendChild(unitsCell);
+      const aiCell = document.createElement("td");
+      aiCell.innerText = player.aiName || "none";
+      row.appendChild(aiCell);
+      scoreTableBody.appendChild(row);
+      this.scoreTableRows[player.name] = {
+        energyCell: energyCell,
+        incomeCell: incomeCell,
+        unitsCell: unitsCell,
+      };
+    });
 
     const playersTabs = document.getElementsByClassName("players--tabs")[0];
     playersTabs.innerHTML = "";
@@ -45,11 +77,15 @@ export class UI {
 
   update() {
     this.game.players.forEach((player) => {
+      this.scoreTableRows[player.name].energyCell.innerText = Math.round(player.storedEnergy).toString();
+      this.scoreTableRows[player.name].incomeCell.innerText = "+" + Math.round(player.units.energyOutput()).toString();
+      this.scoreTableRows[player.name].unitsCell.innerText = player.units.unitCount().toString();
+
       if (player.isDefeated()) {
         this.playerTabs[player.name].style.color = "grey";
         this.energyIncomes[player.name].style.display = "none";
       } else {
-        this.energyIncomes[player.name].innerText = "+" + player.units.energyOutput().toString();
+        this.energyIncomes[player.name].innerText = "+" + Math.round(player.units.energyOutput()).toString();
       }
     });
 

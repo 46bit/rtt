@@ -36,6 +36,25 @@
       .game--sidebar {
         height: 100vh;
       }
+      .player-scores {
+        width: 100%;
+        background: #000000;
+        color: #fefefe;
+        border-collapse: collapse;
+        line-height: 25px;
+      }
+      .player-scores th {
+        text-align: left;
+      }
+      .player-scores tbody th {
+        font-size: 15px;
+      }
+      .player-scores th, .player-scores td {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+      }
+      .player-scores tr:last-child th, .player-scores tr:last-child td {
+        border-bottom: none;
+      }
       .players--tabs {
         display: grid;
         list-style: none;
@@ -136,6 +155,18 @@
       <section class="game--viewport">
       </section>
       <aside class="game--sidebar">
+        <table class="player-scores">
+          <thead>
+            <tr>
+              <th style="min-width: 65px;"></th>
+              <th style="min-width: 60px;">Energy</th>
+              <th style="min-width: 60px;">Income</th>
+              <th style="min-width: 50px;">Units</th>
+              <th>AI</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
         <ul class="players--tabs"></ul>
         <section class="player--ui">
           <h2 class="player--selected-units-heading">Selected units</h2>

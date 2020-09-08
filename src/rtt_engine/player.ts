@@ -5,6 +5,7 @@ import * as THREE from 'three';
 
 export class Player {
   public name: string;
+  public aiName?: string;
   public color: THREE.Color;
   public units: PlayerUnits;
   public storedEnergy: number;

@@ -142,6 +142,12 @@ function main() {
   window.rtt_engine = rtt_engine;
   window.rtt_renderer = rtt_renderer;
 
+  let ais: IAI[] = game.players.map((player) => {
+    const aiClass = Math.random() >= 0.3 ? AttackNearestAI : Math.random() > 0.5 ? ExistingAI : ExpansionAI;
+    player.aiName = aiClass.name;
+    return new aiClass(game, player, game.players.filter((p) => p != player));
+  });
+
   // FIXME: Remove after debugging
   //return;
 
@@ -263,12 +269,6 @@ function main() {
     e.preventDefault();
     selection.mouseup(e, quadtree);
   }, false);
-
-  let ais: IAI[] = game.players.map((player) => {
-    const aiClass = Math.random() >= 0.3 ? AttackNearestAI : Math.random() > 0.5 ? ExistingAI : ExpansionAI;
-    console.log("player " + player.name + " using AI " + aiClass.name);
-    return new aiClass(game, player, game.players.filter((p) => p != player));
-  });
 
   setInterval(() => {
     if (window.rttPaused) {
