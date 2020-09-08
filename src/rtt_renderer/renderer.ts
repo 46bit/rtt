@@ -11,9 +11,10 @@ export function time(name: string, callback: () => void): void {
 
 export class Renderer {
   clock: THREE.Clock;
-  border: number;
+  rttViewport: any;
   worldSize: number;
-  screenSize: number;
+  screenWidth: number;
+  screenHeight: number;
   camera: THREE.OrthographicCamera;
   scene: THREE.Scene;
   gameCoordsGroup: THREE.Group;
@@ -23,16 +24,17 @@ export class Renderer {
 
   constructor(worldSize: number, window: any, document: any, rttViewport: any) {
     this.clock = new THREE.Clock();
+    this.rttViewport = rttViewport;
 
     this.worldSize = worldSize;
-    this.screenSize = Math.min(window.innerWidth, window.innerHeight);
-    // FIXME: Relate this to the window size vs the world size so it is constant and in pixels
-    this.border = 0;
+    this.screenWidth = this.rttViewport.offsetWidth;
+    this.screenHeight = this.rttViewport.offsetHeight;
+
     this.camera = new THREE.OrthographicCamera(
-      - this.worldSize/2 - this.border,
-      this.worldSize/2 + this.border,
-      this.worldSize/2 + this.border,
-      - this.worldSize/2 - this.border,
+      - this.worldSize/2 * this.screenWidth/this.screenHeight,
+      this.worldSize/2 * this.screenWidth/this.screenHeight,
+      this.worldSize/2,
+      - this.worldSize/2,
       0.01, this.worldSize * 10,
     );
     this.camera.position.z = this.worldSize;
@@ -52,10 +54,9 @@ export class Renderer {
     if (window.devicePixelRatio != null) {
       this.renderer.setPixelRatio(window.devicePixelRatio);
     }
-    // FIXME: Allow for a rectangular game viewport
-    const viewportSize = Math.min(rttViewport.offsetWidth, rttViewport.offsetHeight);
-    this.renderer.setSize(viewportSize, viewportSize);
-    rttViewport.appendChild(this.renderer.domElement);
+
+    this.renderer.setSize(this.screenWidth, this.screenHeight);
+    this.rttViewport.appendChild(this.renderer.domElement);
 
     this.screenPositionToWorldPosition = new ScreenPositionToWorldPosition(this.renderer.domElement, this.camera);
     this.pressedArrowKeys = new Set();
@@ -68,17 +69,29 @@ export class Renderer {
   animate(force = false) {
     requestAnimationFrame(() => this.animate());
 
-    // FIXME: Accommodate resizing the window
-    // const screenSize = Math.min(window.innerWidth, window.innerHeight);
-    // if (screenSize != this.screenSize) {
-    //   this.screenSize = screenSize;
-    //   this.camera.left = -this.border;// -this.worldSize / 2 - this.border;
-    //   this.camera.right = this.worldSize + this.border;
-    //   this.camera.bottom = -this.border;
-    //   this.camera.top = this.worldSize + this.border;
-    //   this.camera.updateProjectionMatrix();
-    //   this.renderer.setSize(screenSize, screenSize);
-    // }
+    const newScreenWidth = this.rttViewport.offsetWidth;
+    const newScreenHeight = this.rttViewport.offsetHeight;
+    if (newScreenWidth != this.screenWidth || newScreenHeight != this.screenHeight) {
+      // Keep the same centre, but let the edges go out of sight rather than adjusting zoom
+      const screenWidthMultiplier = newScreenWidth/this.screenWidth;
+      const screenHeightMultiplier = newScreenHeight/this.screenHeight;
+
+      const cameraWidth = this.camera.right - this.camera.left;
+      const cameraHeight = this.camera.top - this.camera.bottom;
+
+      const cameraCentreX = (this.camera.right + this.camera.left) / 2;
+      const cameraCentreY = (this.camera.top + this.camera.bottom) / 2;
+
+      this.camera.left = cameraCentreX - cameraWidth * screenWidthMultiplier / 2;
+      this.camera.right = cameraCentreX + cameraWidth * screenWidthMultiplier / 2;
+      this.camera.top = cameraCentreY + cameraHeight * screenHeightMultiplier / 2;
+      this.camera.bottom = cameraCentreY - cameraHeight * screenHeightMultiplier / 2;
+      this.camera.updateProjectionMatrix();
+
+      this.renderer.setSize(newScreenWidth, newScreenHeight);
+      this.screenWidth = newScreenWidth;
+      this.screenHeight = newScreenHeight;
+    }
 
     time("animate", () => {
       let dx = 0;
@@ -115,7 +128,7 @@ export class Renderer {
 
   wheel(event: {deltaY: number, clientX: number, clientY: number}) {
     const gameMouse = this.screenPositionToWorldPosition.convert(event.clientX, event.clientY)!;
-    let scale = 1 + event.deltaY / this.screenSize;
+    let scale = 1 + event.deltaY / this.screenHeight;
     // Prevent zooming in beyond 250px on the screen
     // FIXME: Try to encapsulate this logic
     scale = Math.max(scale, 250 / this.worldSize / this.camera.matrix.elements[0]);
