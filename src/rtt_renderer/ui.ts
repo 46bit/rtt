@@ -1,7 +1,7 @@
 import { Game, Player } from '../rtt_engine';
 import { Selection, Button } from './';
 
-type ScoreTableRow = {"energyCell": any, "incomeCell": any, "unitsCell": any};
+type ScoreTableRow = {"nameCell": any, "energyCell": any, "incomeCell": any, "unitsCell": any};
 
 export class UI {
   game: Game;
@@ -42,6 +42,7 @@ export class UI {
       row.appendChild(aiCell);
       scoreTableBody.appendChild(row);
       this.scoreTableRows[player.name] = {
+        nameCell: nameCell,
         energyCell: energyCell,
         incomeCell: incomeCell,
         unitsCell: unitsCell,
@@ -77,14 +78,21 @@ export class UI {
 
   update() {
     this.game.players.forEach((player) => {
-      this.scoreTableRows[player.name].energyCell.innerText = Math.round(player.storedEnergy).toString();
-      this.scoreTableRows[player.name].incomeCell.innerText = "+" + Math.round(player.units.energyOutput()).toString();
-      this.scoreTableRows[player.name].unitsCell.innerText = player.units.unitCount().toString();
-
       if (player.isDefeated()) {
+        this.scoreTableRows[player.name].nameCell.style.color = "grey";
+        this.scoreTableRows[player.name].nameCell.parentElement.style.color = "grey";
+        this.scoreTableRows[player.name].nameCell.style.textDecoration = "line-through double";
+        this.scoreTableRows[player.name].energyCell.innerText = "-";
+        this.scoreTableRows[player.name].incomeCell.innerText = "-";
+        this.scoreTableRows[player.name].unitsCell.innerText = "-";
+
         this.playerTabs[player.name].style.color = "grey";
         this.energyIncomes[player.name].style.display = "none";
       } else {
+        this.scoreTableRows[player.name].energyCell.innerText = Math.round(player.storedEnergy).toString();
+        this.scoreTableRows[player.name].incomeCell.innerText = "+" + Math.round(player.units.energyOutput()).toString();
+        this.scoreTableRows[player.name].unitsCell.innerText = player.units.unitCount().toString();
+
         this.energyIncomes[player.name].innerText = "+" + Math.round(player.units.energyOutput()).toString();
       }
     });

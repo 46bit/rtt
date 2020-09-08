@@ -41,12 +41,13 @@ export class Player {
     }
     drainingUnits.push(...this.units.engineers);
     const desiredEnergy = lodash.sum(drainingUnits.map((u) => u.energyConsumption()));
-
-    const proportionOfEnergyProvided = Math.min(this.storedEnergy / desiredEnergy, 1);
-    for (let drainingUnit of drainingUnits) {
-      drainingUnit.energyProvided = drainingUnit.energyConsumption() * proportionOfEnergyProvided;
+    if (desiredEnergy > 0) {
+      const proportionOfEnergyProvided = Math.min(this.storedEnergy / desiredEnergy, 1);
+      for (let drainingUnit of drainingUnits) {
+        drainingUnit.energyProvided = drainingUnit.energyConsumption() * proportionOfEnergyProvided;
+      }
+      this.storedEnergy -= desiredEnergy * proportionOfEnergyProvided;
     }
-    this.storedEnergy -= desiredEnergy * proportionOfEnergyProvided;
   }
 
   public draw() {
