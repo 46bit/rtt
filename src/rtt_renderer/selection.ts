@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { Game, Vector, IQuadrant, ICollidable } from '../rtt_engine';
+import { Game, Player, Vector, IQuadrant, ICollidable } from '../rtt_engine';
 import { Entity, Projectile } from '../rtt_engine/entities/lib';
 
 export type IClickEvent = {clientX: number; clientY: number; button: Button};
@@ -19,12 +19,14 @@ export class Selection {
   selectionRadius?: number;
   selectedEntities: Entity[];
   target?: Vector | Entity;
+  selectedPlayer: Player | null;
 
   constructor(game: Game, screenPositionToWorldPosition: ScreenPositionToWorldPosition) {
     this.game = game;
     this.screenPositionToWorldPosition = screenPositionToWorldPosition;
     this.selectionInProgress = false;
     this.selectedEntities = [];
+    this.selectedPlayer = null;
   }
 
   mousedown(event: IClickEvent) {
@@ -85,15 +87,15 @@ export class Selection {
     this.mousemove(event);
 
     this.selectionInProgress = false;
-    // FIXME: Find things inside the rectangle bounded by selectStart and selectEnd,
-    // and store them in this.selectedEntities
-    // The quadtree only supports searching by circle, but I could search with a circle at
-    // the centre of the selection with the proper radius, then check everything returned?
+    // FIXME: Try to cut down on some of this allocation?
     this.selectedEntities = quadtree.getCollisionsFor({
       collisionRadius: this.selectionRadius,
       position: this.selectionCentre,
       player: null,
     }).filter((entity) => !(entity instanceof Projectile));
+    if (this.selectedPlayer) {
+      this.selectedEntities = this.selectedEntities.filter((e) => e.player == this.selectedPlayer);
+    }
   }
 
   update() {

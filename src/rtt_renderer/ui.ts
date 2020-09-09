@@ -9,7 +9,6 @@ export class UI {
   sidebar: any;
   scoreTableRows: {[playerName: string]: ScoreTableRow};
   playerTabs: {[name: string]: any};
-  selectedPlayer: Player | null;
   selectedUnitList: any;
   selectedUnits: {[name: string]: any};
 
@@ -51,13 +50,12 @@ export class UI {
     const playersTabs = document.getElementsByClassName("players--tabs")[0];
     playersTabs.innerHTML = "";
     this.playerTabs = {};
-    this.selectedPlayer = null;
     this.game.players.forEach((player) => {
       const playerTab = document.createElement("li");
       playerTab.dataset.playerName = player.name;
       playerTab.style.setProperty("--player-color", player.color.getStyle());
       playerTab.innerText = player.name;
-      if (this.selectedPlayer && player == this.selectedPlayer) {
+      if (this.selection.selectedPlayer && player == this.selection.selectedPlayer) {
         playerTab.className = "active";
       }
       playerTab.addEventListener("mousedown", (e) => this.playerTabMouseDown(e));
@@ -91,7 +89,7 @@ export class UI {
         this.scoreTableRows[player.name].unitsCell.innerText = player.units.unitCount().toString();
       }
 
-      this.playerTabs[player.name].className = player == this.selectedPlayer ? "active": "";
+      this.playerTabs[player.name].className = player == this.selection.selectedPlayer ? "active": "";
     });
 
     const selectionEntityCounts = new Map();
@@ -139,10 +137,10 @@ export class UI {
 
   playerTabMouseDown(event: {currentTarget: any}) {
     const playerName = event.currentTarget.dataset.playerName;
-    if (this.selectedPlayer && this.selectedPlayer.name == playerName) {
-      this.selectedPlayer = null;
+    if (this.selection.selectedPlayer && this.selection.selectedPlayer.name == playerName) {
+      this.selection.selectedPlayer = null;
     } else {
-      this.selectedPlayer = this.game.players.filter((p) => p.name == playerName)[0];
+      this.selection.selectedPlayer = this.game.players.filter((p) => p.name == playerName)[0];
     }
   }
 
