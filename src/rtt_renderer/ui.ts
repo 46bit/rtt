@@ -7,15 +7,18 @@ export class UI {
   game: Game;
   selection: Selection;
   sidebar: any;
+  viewport: any;
   scoreTableRows: {[playerName: string]: ScoreTableRow};
   playerTabs: {[name: string]: any};
   selectedUnitList: any;
   selectedUnits: {[name: string]: any};
+  orderInProgress: string | null;
 
-  constructor(game: Game, selection: Selection, sidebar: any) {
+  constructor(game: Game, selection: Selection, sidebar: any, viewport: any) {
     this.game = game;
     this.selection = selection;
     this.sidebar = sidebar;
+    this.viewport = viewport;
 
     this.scoreTableRows = {};
     const scoreTable = document.getElementsByClassName("player-scores")[0];
@@ -70,6 +73,8 @@ export class UI {
 
     this.selectedUnitList = document.getElementsByClassName("player--selected-units")[0];
     this.selectedUnits = new Map();
+    this.orderInProgress = null;
+    this.viewport.addEventListener("mousedown", (e) => this.viewportMouseDown(e));
   }
 
   update() {
@@ -140,9 +145,32 @@ export class UI {
         this.selectedUnits.delete(entityName);
       }
     });
+
+    const issuableOrders = this.selection.issuableOrders();
+    let panelEmpty = true;
+    const orderPanel = document.getElementsByClassName("player--order-panel")[0];
+    // FIXME: Start updating rather than recreating each update
+    orderPanel.innerHTML = "";
+    issuableOrders.forEach((entitiesThatCanTakeOrder, orderKind) => {
+      // FIXME: Enable more kinds of orders
+      if (orderKind != "manoeuvre") {
+        return;
+      }
+      panelEmpty = false;
+      const element = document.createElement("li");
+      const button = document.createElement("button");
+      button.innerText = orderKind;
+      button.dataset.orderKind = orderKind;
+      button.addEventListener("mousedown", (e) => this.orderMouseDown(e));
+      element.appendChild(button);
+      orderPanel.appendChild(element);
+    });
+    document.getElementsByClassName("player--order-panel-heading")[0].style.display = panelEmpty ? "none" : "block";
   }
 
   playerTabMouseDown(event: {currentTarget: any}) {
+    event.preventDefault();
+    event.stopPropagation();
     const playerName = event.currentTarget.dataset.playerName;
     if (this.selection.selectedPlayer && this.selection.selectedPlayer.name == playerName) {
       this.selection.selectedPlayer = null;
@@ -158,6 +186,34 @@ export class UI {
     this.selection.selectedEntities = this.selection.selectedEntities.filter((entity) => {
       const entityName = entity.constructor.name;
       return event.button == Button.RightClick ? entityName != clickedEntityName : entityName == clickedEntityName;
+    });
+  }
+
+  orderMouseDown(event: {currentTarget: any}) {
+    event.preventDefault();
+    event.stopPropagation();
+    const orderKind = event.currentTarget.dataset.orderKind;
+    this.orderInProgress = orderKind;
+  }
+
+  // FIXME: Ordering needs to be done better than this. Somehow.
+  viewportMouseDown(event: {clientX: number, clientY: number, button: number}) {
+    if (event.button != Button.RightClick) {
+      return;
+    }
+
+    const orderKind = this.orderInProgress ? this.orderInProgress : "manoeuvre";
+    const issuableOrders = this.selection.issuableOrders();
+    if (!issuableOrders.has(orderKind)) {
+      return;
+    }
+
+    let worldPosition = this.selection.screenPositionToWorldPosition.convert(event.clientX, event.clientY);
+    issuableOrders.get(orderKind)!.forEach((entity, _) => {
+      entity.orders[0] = {
+        kind: orderKind,
+        destination: worldPosition,
+      };
     });
   }
 }

@@ -43,22 +43,22 @@ export class Selection {
       this.selectionRadius = undefined;
       this.selectedEntities = [];
       this.target = undefined;
-    } else if (event.button == Button.RightClick && this.selectedEntities.length > 0) {
-      // FIXME: See if anything is at the current location
-      // FIXME: Move selected entities to attack the entity being right clicked, or move to the location,
-      // or build at this location if it's a commander?
-      // FIXME: Just record this info on the class, then figure out how to process the info outside
-      // this class?
-      this.target = worldPosition;
-      this.selectedEntities.forEach((entity) => {
-        // FIXME: There needs to be a better way to check for abilities than checking for fields…
-        if (entity.orders && entity.velocity) {
-          entity.orders[0] = {
-            kind: 'manoeuvre',
-            destination: worldPosition,
-          };
-        }
-      })
+    // } else if (event.button == Button.RightClick && this.selectedEntities.length > 0) {
+    //   // FIXME: See if anything is at the current location
+    //   // FIXME: Move selected entities to attack the entity being right clicked, or move to the location,
+    //   // or build at this location if it's a commander?
+    //   // FIXME: Just record this info on the class, then figure out how to process the info outside
+    //   // this class?
+    //   this.target = worldPosition;
+    //   this.selectedEntities.forEach((entity) => {
+    //     // FIXME: There needs to be a better way to check for abilities than checking for fields…
+    //     if (entity.orders && entity.velocity) {
+    //       entity.orders[0] = {
+    //         kind: 'manoeuvre',
+    //         destination: worldPosition,
+    //       };
+    //     }
+    //   })
     }
   }
 
@@ -96,6 +96,23 @@ export class Selection {
     if (this.selectedPlayer) {
       this.selectedEntities = this.selectedEntities.filter((e) => e.player == this.selectedPlayer);
     }
+  }
+
+  issuableOrders(): Map<string, Entity[]> {
+    const entitiesByOrderKinds = new Map();
+    this.selectedEntities.forEach((entity) => {
+      if (!entity.orderExecutionCallbacks) {
+        return;
+      }
+      for (let orderKind in entity.orderExecutionCallbacks) {
+        if (entitiesByOrderKinds.has(orderKind)) {
+          entitiesByOrderKinds.get(orderKind).push(entity);
+        } else {
+          entitiesByOrderKinds.set(orderKind, [entity]);
+        }
+      }
+    });
+    return entitiesByOrderKinds;
   }
 
   update() {

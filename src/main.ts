@@ -160,7 +160,7 @@ function main() {
   window.selection = selection;
   let selectionPresenter = new rtt_renderer.SelectionPresenter(selection, renderer.gameCoordsGroup);
 
-  let ui = new rtt_renderer.UI(game, selection, document.getElementsByClassName("game--sidebar")[0]);
+  let ui = new rtt_renderer.UI(game, selection, rttSidebar, rttViewport);
 
   // The final parameter here is how closely the triangles should go to unpassable obstacles.
   // Small values will make pathfinding collide a lot; large values will create slightly
