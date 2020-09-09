@@ -9,7 +9,7 @@ export class UI {
   sidebar: any;
   scoreTableRows: {[playerName: string]: ScoreTableRow};
   playerTabs: {[name: string]: any};
-  selectedPlayer: Player;
+  selectedPlayer: Player | null;
   selectedUnitList: any;
   selectedUnits: {[name: string]: any};
 
@@ -51,19 +51,23 @@ export class UI {
     const playersTabs = document.getElementsByClassName("players--tabs")[0];
     playersTabs.innerHTML = "";
     this.playerTabs = {};
-    this.selectedPlayer = this.game.players[0];
+    this.selectedPlayer = null;
     this.game.players.forEach((player) => {
       const playerTab = document.createElement("li");
+      playerTab.dataset.playerName = player.name;
       playerTab.style.setProperty("--player-color", player.color.getStyle());
       playerTab.innerText = player.name;
-      if (player == this.selectedPlayer) {
+      if (this.selectedPlayer && player == this.selectedPlayer) {
         playerTab.className = "active";
       }
+      playerTab.addEventListener("mousedown", (e) => this.playerTabMouseDown(e));
+
       const bottomLine = document.createElement("div");
       bottomLine.className = "bottom-line";
       playerTab.appendChild(bottomLine);
-      this.playerTabs[player.name] = playerTab;
+
       playersTabs.appendChild(playerTab);
+      this.playerTabs[player.name] = playerTab;
     });
 
     this.selectedUnitList = document.getElementsByClassName("player--selected-units")[0];
@@ -86,6 +90,8 @@ export class UI {
         this.scoreTableRows[player.name].incomeCell.innerText = "+" + Math.round(player.units.energyOutput()).toString();
         this.scoreTableRows[player.name].unitsCell.innerText = player.units.unitCount().toString();
       }
+
+      this.playerTabs[player.name].className = player == this.selectedPlayer ? "active": "";
     });
 
     const selectionEntityCounts = new Map();
@@ -129,6 +135,15 @@ export class UI {
         this.selectedUnits.delete(entityName);
       }
     });
+  }
+
+  playerTabMouseDown(event: {currentTarget: any}) {
+    const playerName = event.currentTarget.dataset.playerName;
+    if (this.selectedPlayer && this.selectedPlayer.name == playerName) {
+      this.selectedPlayer = null;
+    } else {
+      this.selectedPlayer = this.game.players.filter((p) => p.name == playerName)[0];
+    }
   }
 
   selectedUnitMouseDown(event: {currentTarget: any}) {
