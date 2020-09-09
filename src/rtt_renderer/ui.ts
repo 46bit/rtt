@@ -106,8 +106,9 @@ export class UI {
       document.getElementsByClassName("player--selected-units-heading")[0].style.display = "none";
     }
     selectionEntityCounts.forEach((entityCount, entityName) => {
+      let element;
       if (!this.selectedUnits.has(entityName)) {
-        const element = document.createElement("li");
+        element = document.createElement("li");
         element.dataset.entityName = entityName;
         element.style.cursor = "pointer";
         element.title = entityName;
@@ -124,8 +125,14 @@ export class UI {
 
         this.selectedUnitList.appendChild(element);
         this.selectedUnits.set(entityName, element);
+      } else {
+        element = this.selectedUnits.get(entityName);
       }
-      this.selectedUnits.get(entityName).getElementsByClassName("count")[0].innerText = entityCount.toString();
+      // FIXME: Start updating styling when the player changes, not every single UI update
+      if (this.selection.selectedPlayer) {
+        element.style.setProperty("--player-color", this.selection.selectedPlayer.color.getStyle());
+      }
+      element.getElementsByClassName("count")[0].innerText = entityCount.toString();
     });
     this.selectedUnits.forEach((element, entityName) => {
       if (!selectionEntityCounts.has(entityName)) {
