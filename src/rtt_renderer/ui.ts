@@ -9,7 +9,6 @@ export class UI {
   sidebar: any;
   scoreTableRows: {[playerName: string]: ScoreTableRow};
   playerTabs: {[name: string]: any};
-  energyIncomes: {[name: string]: any};
   selectedPlayer: Player;
   selectedUnitList: any;
   selectedUnits: {[name: string]: any};
@@ -52,7 +51,6 @@ export class UI {
     const playersTabs = document.getElementsByClassName("players--tabs")[0];
     playersTabs.innerHTML = "";
     this.playerTabs = {};
-    this.energyIncomes = {};
     this.selectedPlayer = this.game.players[0];
     this.game.players.forEach((player) => {
       const playerTab = document.createElement("li");
@@ -61,10 +59,6 @@ export class UI {
       if (player == this.selectedPlayer) {
         playerTab.className = "active";
       }
-      const energyIncome = document.createElement("span");
-      energyIncome.className = "energy-income";
-      this.energyIncomes[player.name] = energyIncome;
-      playerTab.appendChild(energyIncome);
       const bottomLine = document.createElement("div");
       bottomLine.className = "bottom-line";
       playerTab.appendChild(bottomLine);
@@ -87,13 +81,10 @@ export class UI {
         this.scoreTableRows[player.name].unitsCell.innerText = "-";
 
         this.playerTabs[player.name].style.color = "grey";
-        this.energyIncomes[player.name].style.display = "none";
       } else {
         this.scoreTableRows[player.name].energyCell.innerText = Math.round(player.storedEnergy).toString();
         this.scoreTableRows[player.name].incomeCell.innerText = "+" + Math.round(player.units.energyOutput()).toString();
         this.scoreTableRows[player.name].unitsCell.innerText = player.units.unitCount().toString();
-
-        this.energyIncomes[player.name].innerText = "+" + Math.round(player.units.energyOutput()).toString();
       }
     });
 
