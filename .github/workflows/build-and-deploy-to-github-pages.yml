@@ -24,10 +24,10 @@ jobs:
         rm -f release/main-*.js
         js_hash=$(cat dist/main.js | sha1sum | awk '{ print $1 }')
         cp dist/main.js "release/main-${js_hash}.js"
-        cp dist/main.js.map "release/main-${js_hash}.js.map"
+        # cp dist/main.js.map "release/main-${js_hash}.js.map"
         cp index.html release/index.html
         sed -i "s/src=\"dist\/main\.js/src=\"main-${js_hash}\.js/g" release/index.html
-        sed -i "s/main\.js\.map/main-${js_hash}\.js\.map/g" "release/main-${js_hash}.js"
+        # sed -i "s/main\.js\.map/main-${js_hash}\.js\.map/g" "release/main-${js_hash}.js"
         ls -la release
 
     - name: Install SSH Client

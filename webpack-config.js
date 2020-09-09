@@ -1,6 +1,7 @@
 const path = require('path');
 const webpack = require('webpack');
 const nodeModules = require('webpack-node-externals');
+const TerserPlugin = require('terser-webpack-plugin');
 
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
@@ -21,7 +22,14 @@ let cfg = {
   },
   optimization: {
     splitChunks: false,
-    runtimeChunk: false
+    runtimeChunk: false,
+    minimize: true,
+    minimizer: [
+      new TerserPlugin({ terserOptions: {
+          keep_classnames: true,
+          keep_fnames: true
+      }})
+    ]
   },
   performance: {
     hints: "warning"
