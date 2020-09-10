@@ -1,3 +1,4 @@
+import lodash from 'lodash';
 import * as rtt_engine from './rtt_engine';
 
 export interface IAI {
@@ -26,24 +27,23 @@ export class ExistingAI implements IAI {
     }
 
     if (this.player.units.commander != null && this.player.units.factories.length == 0) {
-      this.player.units.commander.orders[0] = {
-        kind: 'construct',
+      this.player.units.commander.orders[0] = rtt_engine.OrderUnion.constructStructure({
         structureClass: rtt_engine.Factory,
         position: new rtt_engine.Vector(
           this.player.units.commander.position.x,
           this.player.units.commander.position.y,
         ),
-      };
+      });
     }
 
     for (let factory of this.player.units.factories) {
       if (factory.orders.length > 0) {
         continue;
       }
-      factory.orders[0] = {
-        kind: 'construct',
-        unitClass: Math.random() < 0.6 ? rtt_engine.Bot : (Math.random() < 0.7 ? rtt_engine.ShotgunTank : rtt_engine.ArtilleryTank),
-      };
+      const factoryOrderUnit = Math.random() < 0.6
+        ? rtt_engine.Bot
+        : (Math.random() < 0.7 ? rtt_engine.ShotgunTank : rtt_engine.ArtilleryTank);
+      factory.orders[0] = rtt_engine.OrderUnion.constructVehicle({vehicleClass: factoryOrderUnit});
     }
 
     const opponent = this.opponents[0];
@@ -55,7 +55,7 @@ export class ExistingAI implements IAI {
           continue;
         }
         const target = opposingUnits[j % opposingUnitCount];
-        this.player.units.vehicles[j].orders[0] = { kind: 'attack', target: target };
+        this.player.units.vehicles[j].orders[0] = rtt_engine.OrderUnion.attack({target});
       }
     }
   }
@@ -65,7 +65,7 @@ export class AttackNearestAI implements IAI {
   game: rtt_engine.Game;
   player: rtt_engine.Player;
   opponents: rtt_engine.Player[];
-  assignedOrders: {[id: string]: rtt_engine.IOrder};
+  assignedOrders: {[id: string]: rtt_engine.Order};
 
   constructor(game: rtt_engine.Game, player: rtt_engine.Player, opponents: rtt_engine.Player[]) {
     this.game = game;
@@ -87,7 +87,7 @@ export class AttackNearestAI implements IAI {
       const upgrading = this.player.units.powerGenerators.filter((p) => p.upgrading).length > 0;
       if (!upgrading) {
         const cheapestUpgrade = _.minBy(this.player.units.powerGenerators, (p) => p.fullHealth);
-        cheapestUpgrade!.orders[0] = { 'kind': 'upgrade' };
+        cheapestUpgrade!.orders[0] = rtt_engine.OrderUnion.upgrade();
       }
     }
   }
@@ -124,7 +124,7 @@ export class AttackNearestAI implements IAI {
       if (factory.orders.length > 0) {
         continue;
       }
-      factory.orders[0] = { kind: 'construct', unitClass: unitClass };
+      factory.orders[0] = rtt_engine.OrderUnion.constructVehicle({vehicleClass: unitClass});
     }
   }
 
@@ -142,11 +142,10 @@ export class AttackNearestAI implements IAI {
     }
 
     if (this.player.units.factories.length == 0 || this.player.storedEnergy > 500) {
-      this.player.units.commander!.orders[0] = {
-        kind: 'construct',
+      this.player.units.commander!.orders[0] = rtt_engine.OrderUnion.constructStructure({
         structureClass: rtt_engine.Factory,
         position: this.player.units.commander!.position,
-      };
+      });
       return;
     }
 
@@ -164,12 +163,11 @@ export class AttackNearestAI implements IAI {
       const nearestDesiredPowerSource = _.minBy(desiredPowerSources, (powerSource) => {
         return rtt_engine.Vector.distance(powerSource.position, this.player.units.commander!.position);
       });
-      this.player.units.commander!.orders[0] = {
-        kind: 'construct',
+      this.player.units.commander!.orders[0] = rtt_engine.OrderUnion.constructStructure({
         structureClass: rtt_engine.PowerGenerator,
         position: nearestDesiredPowerSource!.position,
-        extra: [nearestDesiredPowerSource],
-      };
+        metadata: nearestDesiredPowerSource,
+      });
       return;
     }
 
@@ -178,13 +176,12 @@ export class AttackNearestAI implements IAI {
         return rtt_engine.Vector.distance(this.player.units.commander!.position, factory.position);
       });
       if (rtt_engine.Vector.distance(this.player.units.commander!.position, nearestFactory!.position) < 50) {
-        this.player.units.commander!.orders[0] = {
-          kind: 'construct',
+        this.player.units.commander!.orders[0] = rtt_engine.OrderUnion.constructStructure({
           structureClass: rtt_engine.Turret,
           position: this.player.units.commander!.position,
-        };
+        });
       } else {
-        this.player.units.commander!.orders[0] = { kind: 'manoeuvre', destination: nearestFactory!.position };
+        this.player.units.commander!.orders[0] = rtt_engine.OrderUnion.manoeuvre({destination: nearestFactory!.position});
       }
     }
   }
@@ -195,8 +192,8 @@ export class AttackNearestAI implements IAI {
       if (vehicle.orders.length > 0 && vehicle.orders[0] != this.assignedOrders[vehicle.id]) {
         continue;
       }
-      let nearestOpposingUnit = _.minBy(opposingUnits, (u) => rtt_engine.Vector.distance(u.position, vehicle.position));
-      vehicle.orders[0] = { kind: 'attack', target: nearestOpposingUnit };
+      let nearestOpposingUnit = lodash.minBy(opposingUnits, (u: rtt_engine.IKillable) => rtt_engine.Vector.distance(u.position, vehicle.position));
+      vehicle.orders[0] = rtt_engine.OrderUnion.attack({ target: nearestOpposingUnit });
       this.assignedOrders[vehicle.id] = vehicle.orders[0];
     }
   }
@@ -206,7 +203,7 @@ export class ExpansionAI implements IAI {
   game: rtt_engine.Game;
   player: rtt_engine.Player;
   opponents: rtt_engine.Player[];
-  assignedOrders: {[id: string]: rtt_engine.IOrder};
+  assignedOrders: {[id: string]: rtt_engine.Order};
 
   constructor(game: rtt_engine.Game, player: rtt_engine.Player, opponents: rtt_engine.Player[]) {
     this.game = game;
@@ -223,7 +220,7 @@ export class ExpansionAI implements IAI {
       const upgrading = this.player.units.powerGenerators.filter((p) => p.upgrading).length > 0;
       if (!upgrading) {
         const cheapestUpgrade = _.minBy(this.player.units.powerGenerators, (p) => p.fullHealth);
-        cheapestUpgrade!.orders[0] = { 'kind': 'upgrade' };
+        cheapestUpgrade!.orders[0] = rtt_engine.OrderUnion.upgrade();
       }
     }
   }
@@ -249,7 +246,7 @@ export class ExpansionAI implements IAI {
           if (factory.orders.length > 0) {
             continue;
           }
-          factory.orders[0] = { kind: 'construct', unitClass: rtt_engine.Engineer };
+          factory.orders[0] = rtt_engine.OrderUnion.constructVehicle({vehicleClass: rtt_engine.Engineer});
         }
       }
       return;
@@ -261,10 +258,11 @@ export class ExpansionAI implements IAI {
       if (factory.orders.length > 0) {
         continue;
       }
-      factory.orders[0] = {
-        kind: 'construct',
-        unitClass: numberOfTitans < numberOfEnemyTitans && Math.random() > 0.5 ? rtt_engine.Titan : rtt_engine.ShotgunTank,
-      };
+      const factoryOrderUnit =
+        numberOfTitans < numberOfEnemyTitans && Math.random() > 0.5
+        ? rtt_engine.Titan
+        : rtt_engine.ShotgunTank;
+      factory.orders[0] = rtt_engine.OrderUnion.constructVehicle({vehicleClass: factoryOrderUnit});
     }
   }
 
@@ -303,11 +301,7 @@ export class ExpansionAI implements IAI {
         return;
       }
       if (!factoryBuildingUnit.orders[0] || factoryBuildingUnit.orders[0].kind !== "construct" || factoryBuildingUnit.orders[0].structureClass != rtt_engine.Factory) {
-        factoryBuildingUnit.orders[0] = {
-          kind: 'construct',
-          structureClass: rtt_engine.Factory,
-          position: factoryBuildingUnit.position,
-        };
+        factoryBuildingUnit.orders[0] = rtt_engine.OrderUnion.constructStructure({structureClass: rtt_engine.Factory, position: factoryBuildingUnit.position});
       }
     }
 
@@ -320,12 +314,11 @@ export class ExpansionAI implements IAI {
         const nearestDesiredPowerSource = _.minBy(powerSourcesWeDontOwn, (powerSource) => {
           return rtt_engine.Vector.distance(powerSource.position, engineer.position);
         });
-        engineer.orders[0] = {
-          kind: 'construct',
+        engineer.orders[0] = rtt_engine.OrderUnion.constructStructure({
           structureClass: rtt_engine.PowerGenerator,
           position: nearestDesiredPowerSource!.position,
-          extra: [nearestDesiredPowerSource],
-        };
+          metadata: nearestDesiredPowerSource,
+        });
       }
     }
 
@@ -337,8 +330,8 @@ export class ExpansionAI implements IAI {
         continue;
       }
 
-      let nearestOpposingUnit = _.minBy(opposingUnits, (u) => rtt_engine.Vector.distance(u.position, vehicle.position));
-      vehicle.orders[0] = { kind: 'attack', target: nearestOpposingUnit };
+      let nearestOpposingUnit = lodash.minBy(opposingUnits, (u: rtt_engine.IKillable) => rtt_engine.Vector.distance(u.position, vehicle.position));
+      vehicle.orders[0] = rtt_engine.OrderUnion.attack({target: nearestOpposingUnit});
     }
   }
 }

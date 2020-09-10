@@ -3,7 +3,7 @@ import { Entity, IEntity } from '../lib/entity';
 import { ComposableConstructor } from '../lib/mixins';
 
 export interface IMovableConfig {
-  velocity: number?;
+  velocity?: number;
   direction: number;
 }
 

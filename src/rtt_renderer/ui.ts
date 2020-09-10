@@ -1,4 +1,5 @@
 import { Game, Player } from '../rtt_engine';
+import { Order } from '../rtt_engine/entities/abilities';
 import { Selection, Button } from './';
 
 type ScoreTableRow = {"nameCell": any, "energyCell": any, "incomeCell": any, "unitsCell": any};
@@ -12,7 +13,7 @@ export class UI {
   playerTabs: {[name: string]: any};
   selectedUnitList: any;
   selectedUnits: {[name: string]: any};
-  orderInProgress: string | null;
+  orderInProgress: Order["kind"] | null;
 
   constructor(game: Game, selection: Selection, sidebar: any, viewport: any) {
     this.game = game;
@@ -192,7 +193,7 @@ export class UI {
   orderMouseDown(event: {currentTarget: any}) {
     event.preventDefault();
     event.stopPropagation();
-    const orderKind = event.currentTarget.dataset.orderKind;
+    const orderKind = event.currentTarget.dataset.orderKind as Order["kind"];
     this.orderInProgress = orderKind;
   }
 
@@ -208,7 +209,12 @@ export class UI {
       return;
     }
 
-    let worldPosition = this.selection.screenPositionToWorldPosition.convert(event.clientX, event.clientY);
+    // FIXME: Support other types of orders
+    if (orderKind != "manoeuvre") {
+      return;
+    }
+
+    let worldPosition = this.selection.screenPositionToWorldPosition.convert(event.clientX, event.clientY)!;
     issuableOrders.get(orderKind)!.forEach((entity, _) => {
       entity.orders[0] = {
         kind: orderKind,

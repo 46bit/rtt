@@ -1,7 +1,7 @@
 import { Player } from '../player';
 import { Vector } from '../vector';
 import { Vehicle, IEntity, Projectile } from './lib';
-import { IKillable } from './abilities';
+import { AttackOrder } from './abilities';
 import lodash from 'lodash';
 
 export const ARTILLERY_RANGE = 210;
@@ -57,7 +57,7 @@ export class ArtilleryTank extends Vehicle {
     return offset.angle();
   }
 
-  protected attack(attackOrder: { target: IEntity & IKillable }): boolean {
+  protected attack(attackOrder: AttackOrder): boolean {
     if (attackOrder.target.dead) {
       return false;
     }

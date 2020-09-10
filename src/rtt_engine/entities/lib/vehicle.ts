@@ -10,8 +10,13 @@ import {
   Ownable,
   Orderable,
   IKillable,
+  ManoeuvreOrder,
+  AttackOrder,
+  PatrolOrder,
+  GuardOrder,
 } from '../abilities';
 import { Unit, IUnitConfig } from './unit';
+import { Entity } from './entity';
 import { Vector } from '../../vector';
 
 export interface IVehicleConfig extends IUnitConfig, IManoeuverableConfig {
@@ -27,19 +32,13 @@ export class Vehicle extends Manoeuvrable(Unit) {
 
   constructor(cfg: IVehicleConfig) {
     cfg.constructableByMobileUnits = false;
-    cfg.orderExecutionCallbacks = {
-      'manoeuvre': (manoeuvreOrder: any): boolean => {
-        return this.manoeuvre(manoeuvreOrder);
-      },
-      'attack': (attackOrder: any): boolean => {
-        return this.attack(attackOrder);
-      },
-      'patrol': (patrolOrder: any): boolean => {
-        return this.patrol(patrolOrder);
-      },
-      'guard': (guardOrder: any): boolean => {
-        return this.guard(guardOrder);
-      }
+    cfg.orderBehaviours = {
+      manoeuvre: (o) => this.manoeuvre(o),
+      attack: (o) => this.attack(o),
+      patrol: (o) => this.patrol(o),
+      guard: (o) => this.guard(o),
+      default: (_) => false,
+      ...cfg.orderBehaviours,
     };
     super(cfg);
     this.movementRate = cfg.movementRate;
@@ -59,7 +58,7 @@ export class Vehicle extends Manoeuvrable(Unit) {
     this.updatePosition(this.movementRate);
   }
 
-  protected manoeuvre(manoeuvreOrder: { destination: Vector }): boolean {
+  protected manoeuvre(manoeuvreOrder: ManoeuvreOrder): boolean {
     const distanceToDestination = Vector.subtract(this.position, manoeuvreOrder.destination).magnitude();
     if (distanceToDestination < 10) {
       this.routeTo = null;
@@ -101,7 +100,7 @@ export class Vehicle extends Manoeuvrable(Unit) {
     return true;
   }
 
-  protected attack(attackOrder: { target: IKillable }): boolean {
+  protected attack(attackOrder: AttackOrder): boolean {
     if (attackOrder.target.dead) {
       return false;
     }
@@ -109,7 +108,10 @@ export class Vehicle extends Manoeuvrable(Unit) {
     return true;
   }
 
-  protected patrol(patrolOrder: { location: Vector, range: number }): boolean {
+  protected patrol(patrolOrder: PatrolOrder): boolean {
+    if (patrolOrder.range === undefined) {
+      patrolOrder.range = this.collisionRadius;
+    }
     const distanceToLocation = Vector.subtract(this.position, patrolOrder.location).magnitude();
     if (distanceToLocation <= patrolOrder.range) {
       // FIXME: Circle the location
@@ -120,7 +122,7 @@ export class Vehicle extends Manoeuvrable(Unit) {
     return true;
   }
 
-  protected guard(guardOrder: { entity: Entity }): boolean {
+  protected guard(guardOrder: GuardOrder): boolean {
     throw new Error("guarding units not yet implemented. requires knowing position of enemy units…")
   }
 }

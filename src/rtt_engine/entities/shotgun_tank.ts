@@ -1,7 +1,7 @@
 import { Player } from '../player';
 import { Vector } from '../vector';
 import { Vehicle, IEntity, Projectile, VehicleTurret } from './lib';
-import { IKillable } from './abilities';
+import { AttackOrder } from './abilities';
 import lodash from 'lodash';
 
 export const SHOTGUN_RANGE = 80;
@@ -65,7 +65,7 @@ export class ShotgunTank extends Vehicle {
     return [offset.angle(), offset.magnitude()];
   }
 
-  protected attack(attackOrder: { target: IEntity & IKillable }): boolean {
+  protected attack(attackOrder: AttackOrder): boolean {
     if (attackOrder.target.dead) {
       return false;
     }

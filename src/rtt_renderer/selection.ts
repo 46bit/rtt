@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { Game, Player, Vector, IQuadrant, ICollidable } from '../rtt_engine';
+import { Game, Player, Vector, IQuadrant, ICollidable, IOrderable } from '../rtt_engine';
 import { Entity, Projectile } from '../rtt_engine/entities/lib';
 
 export type IClickEvent = {clientX: number; clientY: number; button: Button};
@@ -98,13 +98,13 @@ export class Selection {
     }
   }
 
-  issuableOrders(): Map<string, Entity[]> {
+  issuableOrders(): Map<string, IOrderable[]> {
     const entitiesByOrderKinds = new Map();
     this.selectedEntities.forEach((entity) => {
-      if (!entity.orderExecutionCallbacks) {
+      if (!entityIsOrderable(entity)) {
         return;
       }
-      for (let orderKind in entity.orderExecutionCallbacks) {
+      for (let orderKind in entity.supportedKindsOfOrders()) {
         if (entitiesByOrderKinds.has(orderKind)) {
           entitiesByOrderKinds.get(orderKind).push(entity);
         } else {
@@ -124,6 +124,10 @@ export class Selection {
       }
     }
   }
+}
+
+function entityIsOrderable(entity: Entity | IOrderable): entity is IOrderable {
+  return (entity as IOrderable).supportedKindsOfOrders !== undefined;
 }
 
 export class ScreenPositionToWorldPosition {

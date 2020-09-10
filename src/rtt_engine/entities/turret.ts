@@ -19,7 +19,6 @@ export class Turret extends Structure {
       fullHealth: 60,
       health: built ? 60 : 0,
       constructableByMobileUnits: true,
-      orderExecutionCallbacks: {},
     });
     this.firingRate = 5;
     this.updateCounter = 0;
