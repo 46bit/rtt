@@ -26,6 +26,7 @@ export function Killable<T extends new(o: any) => any>(base: T) {
     public fullHealth: number;
     public health: number;
     public dead: boolean;
+    public orders?: any;
 
     constructor(cfg: IKillableConfig) {
       super(cfg);
@@ -37,6 +38,9 @@ export function Killable<T extends new(o: any) => any>(base: T) {
     public kill() {
       this.dead = true;
       this.health = 0;
+      if (this.orders) {
+        this.orders = [];
+      }
       // FIXME: Things like this make me think I shouldn't use mixins
       (this as any).presenter?.predraw();
     }
