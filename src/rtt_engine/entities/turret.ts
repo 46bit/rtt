@@ -1,6 +1,6 @@
 import { Vector } from '../vector';
 import { Player } from '../player';
-import { Structure, Projectile, IEntity } from './lib';
+import { Structure, Projectile, IEntity, IEntityUpdateContext } from './lib';
 import lodash from 'lodash';
 
 export const TURRET_RANGE = 180;
@@ -24,14 +24,14 @@ export class Turret extends Structure {
     this.updateCounter = 0;
   }
 
-  update(enemies: IEntity[]) {
+  update(input: {enemies: IEntity[], context: IEntityUpdateContext}) {
     if (this.dead) {
       return;
     }
     this.updateCounter++;
 
     if (this.updateCounter >= this.firingRate) {
-      const angleToFireProjectile = this.angleToNearestEnemy(enemies);
+      const angleToFireProjectile = this.angleToNearestEnemy(input.enemies);
       if (angleToFireProjectile == null) {
         return;
       }

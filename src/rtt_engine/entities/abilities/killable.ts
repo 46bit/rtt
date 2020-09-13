@@ -1,4 +1,4 @@
-import { IEntityConfig, Entity } from '../lib/entity';
+import { IEntity, Entity } from '../lib/entity';
 import { ComposableConstructor } from '../lib/mixins';
 
 export interface IKillableConfig {
@@ -6,7 +6,7 @@ export interface IKillableConfig {
   health: number;
 }
 
-export interface IKillable extends IEntityConfig {
+export interface IKillable extends IEntity {
   fullHealth: number;
   health: number;
   dead: boolean;
@@ -41,8 +41,6 @@ export function Killable<T extends new(o: any) => any>(base: T) {
       if (this.orders) {
         this.orders = [];
       }
-      // FIXME: Things like this make me think I shouldn't use mixins
-      (this as any).presenter?.predraw();
     }
 
     public repair(amount: number) {

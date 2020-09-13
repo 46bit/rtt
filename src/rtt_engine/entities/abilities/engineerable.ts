@@ -1,18 +1,24 @@
 import { Vector } from '../../vector';
-import { Entity } from '../lib/entity';
-import { IConstructable } from './constructable';
+import { IEntity, Entity } from '../lib/entity';
+import { IConstructable, IKillable, ICollidable, IOwnable } from './';
 import { ComposableConstructor } from '../lib/mixins';
 
 export interface IEngineerableConfig {
   productionRange: number;
 }
 
+export interface IEngineerable extends IEntity {
+  energyProvided: number;
+
+  energyConsumption(): number;
+}
+
 export function Engineerable<T extends new(o: any) => any>(base: T) {
-  class Engineerable extends (base as new(o: any) => Entity) {
+  class Engineerable extends (base as new(o: any) => Entity) implements IEngineerable {
     // FIXME: Store velocity as a Vector instead?
     public productionRange: number;
     public energyProvided: number;
-    public construction: IConstructable | null;
+    public construction: (IConstructable & IKillable & ICollidable & IOwnable) | null;
 
     constructor(cfg: IEngineerableConfig) {
       super(cfg);

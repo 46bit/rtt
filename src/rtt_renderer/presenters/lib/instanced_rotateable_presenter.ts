@@ -5,7 +5,7 @@ import { Vector } from '../../../rtt_engine/vector';
 
 export class InstancedRotateablePresenter {
   player: Player;
-  instanceCallback: (player: Player) => IMovable[];
+  instanceCallback: (player: Player) => (IMovable & {turret?: {rotation: number}})[];
   scene: THREE.Group;
   material?: THREE.Material;
   geometry?: THREE.BufferGeometry;

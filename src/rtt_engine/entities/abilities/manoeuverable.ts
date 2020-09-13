@@ -18,7 +18,7 @@ export function Manoeuvrable<T extends new(o: any) => any>(base: T) {
     public physics: Physics;
     public angularVelocity: number;
 
-    constructor(cfg: IManoeuverableConfig) {
+    constructor(cfg: IManoeuverableConfig & IMovableConfig) {
       super(cfg);
       this.physics = cfg.physics == null ? new Physics() : cfg.physics;
       this.angularVelocity = 0;

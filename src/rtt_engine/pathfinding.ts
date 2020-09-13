@@ -1,8 +1,9 @@
-import { Vector } from './vector';
-import { Obstruction } from './entities';
+import lodash from 'lodash';
+import cdt2d from "cdt2d";
 import { NavMesh } from "nav2d";
 import cleanPSLG from "clean-pslg";
-import cdt2d from "cdt2d";
+import { Vector } from './vector';
+import { Obstruction } from './entities';
 
 export interface ITriangulatedMap {
   worldSize: number;
@@ -50,12 +51,12 @@ export function triangulate(worldSize: number, obstructions: Obstruction[], clea
   //    will be triangles aligned to the obstructions
   const passableTriangles: [number, number, number][] = [];
   for (let triangle of triangles) {
-    let trianglePoints = triangle.map((i) => points[i]);
+    let trianglePoints = triangle.map((i: number) => points[i]);
     let centreOfTriangle = [
-      _.sum(trianglePoints.map((p) => p[0])) / 3,
-      _.sum(trianglePoints.map((p) => p[1])) / 3,
+      lodash.sum(trianglePoints.map((p: [number, number]) => p[0])) / 3,
+      lodash.sum(trianglePoints.map((p: [number, number]) => p[1])) / 3,
     ];
-    let obstructed = trianglePoints.filter((p) => {
+    let obstructed = trianglePoints.filter((p: [number, number]) => {
       return (p[0] < 0 || p[1] < 0 || p[0] > worldSize || p[1] > worldSize);
     }).length > 0;
     if (!obstructed) {

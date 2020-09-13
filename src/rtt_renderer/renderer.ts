@@ -61,9 +61,9 @@ export class Renderer {
     this.screenPositionToWorldPosition = new ScreenPositionToWorldPosition(this.renderer.domElement, this.camera);
     this.pressedArrowKeys = new Set();
 
-    this.renderer.domElement.addEventListener("wheel", (e) => this.wheel(e), false);
-    window.addEventListener("keydown", (e) => this.keydown(e), false);
-    window.addEventListener("keyup", (e) => this.keyup(e), false);
+    this.renderer.domElement.addEventListener("wheel", (e: WheelEvent) => this.wheel(e), false);
+    window.addEventListener("keydown", (e: KeyboardEvent) => this.keydown(e), false);
+    window.addEventListener("keyup", (e: KeyboardEvent) => this.keyup(e), false);
   }
 
   animate(force = false) {
@@ -126,7 +126,7 @@ export class Renderer {
     });
   }
 
-  wheel(event: {deltaY: number, clientX: number, clientY: number}) {
+  wheel(event: WheelEvent) {
     const gameMouse = this.screenPositionToWorldPosition.convert(event.clientX, event.clientY)!;
     let scale = 1 + event.deltaY / this.screenHeight;
     // Prevent zooming in beyond 250px on the screen
@@ -148,13 +148,13 @@ export class Renderer {
     this.moveWithinBounds();
   }
 
-  keydown(event: {keyCode: number}) {
+  keydown(event: KeyboardEvent) {
     if ([37, 38, 39, 40].includes(event.keyCode)) {
       this.pressedArrowKeys.add(event.keyCode);
     }
   }
 
-  keyup(event: {keyCode: number}) {
+  keyup(event: KeyboardEvent) {
     this.pressedArrowKeys.delete(event.keyCode);
   }
 

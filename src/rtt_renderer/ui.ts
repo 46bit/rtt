@@ -62,7 +62,7 @@ export class UI {
       if (this.selection.selectedPlayer && player == this.selection.selectedPlayer) {
         playerTab.className = "active";
       }
-      playerTab.addEventListener("mousedown", (e) => this.playerTabMouseDown(e));
+      playerTab.addEventListener("mousedown", (e: MouseEvent) => this.playerTabMouseDown(e));
 
       const bottomLine = document.createElement("div");
       bottomLine.className = "bottom-line";
@@ -75,7 +75,7 @@ export class UI {
     this.selectedUnitList = document.getElementsByClassName("player--selected-units")[0];
     this.selectedUnits = new Map();
     this.orderInProgress = null;
-    this.viewport.addEventListener("mousedown", (e) => this.viewportMouseDown(e));
+    this.viewport.addEventListener("mousedown", (e: MouseEvent) => this.viewportMouseDown(e));
   }
 
   update() {
@@ -107,9 +107,9 @@ export class UI {
       selectionEntityCounts.set(entityName, selectionEntityCounts.get(entityName) + 1);
     });
     if (selectionEntityCounts.size > 0) {
-      document.getElementsByClassName("player--selected-units-heading")[0].style.display = "block";
+      (document.getElementsByClassName("player--selected-units-heading")[0] as HTMLElement).style.display = "block";
     } else {
-      document.getElementsByClassName("player--selected-units-heading")[0].style.display = "none";
+      (document.getElementsByClassName("player--selected-units-heading")[0] as HTMLElement).style.display = "none";
     }
     selectionEntityCounts.forEach((entityCount, entityName) => {
       let element;
@@ -118,7 +118,7 @@ export class UI {
         element.dataset.entityName = entityName;
         element.style.cursor = "pointer";
         element.title = entityName;
-        element.addEventListener("mousedown", (e) => this.selectedUnitMouseDown(e), false);
+        element.addEventListener("mousedown", (e: MouseEvent) => this.selectedUnitMouseDown(e), false);
 
         const count = document.createElement("span");
         count.className = "count";
@@ -140,7 +140,7 @@ export class UI {
       }
       element.getElementsByClassName("count")[0].innerText = entityCount.toString();
     });
-    this.selectedUnits.forEach((element, entityName) => {
+    this.selectedUnits.forEach((element: HTMLElement, entityName: string) => {
       if (!selectionEntityCounts.has(entityName)) {
         this.selectedUnitList.removeChild(element);
         this.selectedUnits.delete(entityName);
@@ -166,13 +166,13 @@ export class UI {
       element.appendChild(button);
       orderPanel.appendChild(element);
     });
-    document.getElementsByClassName("player--order-panel-heading")[0].style.display = panelEmpty ? "none" : "block";
+    (document.getElementsByClassName("player--order-panel-heading")[0] as HTMLElement).style.display = panelEmpty ? "none" : "block";
   }
 
-  playerTabMouseDown(event: {currentTarget: any}) {
+  playerTabMouseDown(event: MouseEvent) {
     event.preventDefault();
     event.stopPropagation();
-    const playerName = event.currentTarget.dataset.playerName;
+    const playerName = (event.currentTarget! as HTMLElement).dataset.playerName;
     if (this.selection.selectedPlayer && this.selection.selectedPlayer.name == playerName) {
       this.selection.selectedPlayer = null;
     } else {
@@ -180,25 +180,25 @@ export class UI {
     }
   }
 
-  selectedUnitMouseDown(event: {currentTarget: any}) {
+  selectedUnitMouseDown(event: MouseEvent) {
     event.preventDefault();
     event.stopPropagation();
-    const clickedEntityName = event.currentTarget.dataset.entityName;
+    const clickedEntityName = (event.currentTarget! as HTMLElement).dataset.entityName;
     this.selection.selectedEntities = this.selection.selectedEntities.filter((entity) => {
       const entityName = entity.constructor.name;
       return event.button == Button.RightClick ? entityName != clickedEntityName : entityName == clickedEntityName;
     });
   }
 
-  orderMouseDown(event: {currentTarget: any}) {
+  orderMouseDown(event: MouseEvent) {
     event.preventDefault();
     event.stopPropagation();
-    const orderKind = event.currentTarget.dataset.orderKind as Order["kind"];
+    const orderKind = (event.currentTarget! as HTMLElement).dataset.orderKind as Order["kind"];
     this.orderInProgress = orderKind;
   }
 
   // FIXME: Ordering needs to be done better than this. Somehow.
-  viewportMouseDown(event: {clientX: number, clientY: number, button: number}) {
+  viewportMouseDown(event: MouseEvent) {
     if (event.button != Button.RightClick) {
       return;
     }

@@ -1,12 +1,20 @@
 import { Player } from '../../player';
+import { IEntity, Entity } from '../lib/entity';
 import { ComposableConstructor } from '../lib/mixins';
 
 export interface IOwnableConfig {
   player: Player | null;
 }
 
+export interface IOwnable extends IEntity {
+  player: Player | null;
+  capture(player: Player | null): void;
+  isOccupied(): boolean;
+  isOwner(player: Player | null): boolean;
+}
+
 export function Ownable<T extends new(o: any) => any>(base: T) {
-  class Ownable extends (base as new(o: any) => {}) {
+  class Ownable extends (base as new(o: any) => Entity) implements IOwnable {
     public player: Player | null;
 
     constructor(cfg: IOwnableConfig) {

@@ -30,7 +30,7 @@ export class EngineerPresenter extends InstancedGeometryPresenter {
     this.player = player;
   }
 
-  getInstances(): {position: Vector, direction: number, player: Player}[] {
+  getInstances(): {position: Vector, direction: number, player: Player | null}[] {
     return this.player.units.engineers;
   }
 }

@@ -16,7 +16,7 @@ import {
   GuardOrder,
 } from '../abilities';
 import { Unit, IUnitConfig } from './unit';
-import { Entity } from './entity';
+import { Entity, IEntityUpdateContext } from './entity';
 import { Vector } from '../../vector';
 
 export interface IVehicleConfig extends IUnitConfig, IManoeuverableConfig {
@@ -37,7 +37,6 @@ export class Vehicle extends Manoeuvrable(Unit) {
       attack: (o) => this.attack(o),
       patrol: (o) => this.patrol(o),
       guard: (o) => this.guard(o),
-      default: (_) => false,
       ...cfg.orderBehaviours,
     };
     super(cfg);
@@ -47,13 +46,13 @@ export class Vehicle extends Manoeuvrable(Unit) {
     this.routeTo = null;
   }
 
-  public update() {
+  public update(input: {context: IEntityUpdateContext}) {
     if (this.dead) {
       return;
     }
     // FIXME: Drag should be applied after acceleration, but based on the previous velocity?
     this.applyDragForces();
-    this.updateOrders();
+    this.updateOrders(input);
     this.updateDirection(this.turnRate);
     this.updatePosition(this.movementRate);
   }
@@ -68,7 +67,7 @@ export class Vehicle extends Manoeuvrable(Unit) {
     if (!this.routeTo || !this.route || this.route.length == 0 || !this.routeTo.equals(manoeuvreOrder.destination) || Math.random() < 0.1) {
       // Find route
       this.routeTo = manoeuvreOrder.destination;
-      this.route = window.routeBetween(this.position, this.routeTo);
+      this.route = manoeuvreOrder.context!.pathfinder(this.position, this.routeTo);
       //console.log(this.route);
       //this.route?.shift();
     }
@@ -104,7 +103,7 @@ export class Vehicle extends Manoeuvrable(Unit) {
     if (attackOrder.target.dead) {
       return false;
     }
-    this.manoeuvre({ destination: attackOrder.target.position });
+    this.manoeuvre({ destination: attackOrder.target.position, context: attackOrder.context });
     return true;
   }
 
@@ -115,9 +114,9 @@ export class Vehicle extends Manoeuvrable(Unit) {
     const distanceToLocation = Vector.subtract(this.position, patrolOrder.location).magnitude();
     if (distanceToLocation <= patrolOrder.range) {
       // FIXME: Circle the location
-      this.manoeuvre({ destination: patrolOrder.location });
+      this.manoeuvre({ destination: patrolOrder.location, context: patrolOrder.context });
     } else {
-      this.manoeuvre({ destination: patrolOrder.location });
+      this.manoeuvre({ destination: patrolOrder.location, context: patrolOrder.context });
     }
     return true;
   }

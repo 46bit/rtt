@@ -1,6 +1,6 @@
 import { Vector } from '../vector';
 import { Player } from '../player';
-import { Structure } from './lib';
+import { Structure, IEntityUpdateContext } from './lib';
 import { Engineerable } from './abilities/engineerable';
 import { Orderable, ConstructVehicleOrder } from './abilities/orderable';
 import { IManoeuvrable } from './abilities/manoeuverable';
@@ -30,12 +30,12 @@ export class Factory extends Orderable(Engineerable(Structure)) {
     this.construction?.kill();
   }
 
-  update() {
+  update(input: {context: IEntityUpdateContext}) {
     if (this.construction != null && this.construction.isBuilt()) {
       this.construction = null;
     }
     this.updateProduction();
-    this.updateOrders();
+    this.updateOrders(input);
     if (this.construction == null) {
       this.constructing = false;
     }

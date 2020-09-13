@@ -48,12 +48,17 @@ export class SelectionPresenter {
   }
 
   drawSelectedEntities() {
-    let activeEntityIds = {};
+    let activeEntityIds: {[id: string]: boolean} = {};
 
     // FIXME: Use geometry instancing for this (n.b., will need to use custom geometry
     // because naively scaling a ring geometry varies the ring thickness too)
     for (let id in this.selection.selectedEntities) {
       let selected = this.selection.selectedEntities[id];
+      // FIXME: Think through what to with playerless units
+      if (!selected.player) {
+        continue;
+      }
+
       activeEntityIds[id] = true;
 
       if (!this.selectedEntityOutlines[id]) {

@@ -1,7 +1,7 @@
 import { Player } from '../player';
 import { Vector } from '../vector';
 import { Engineerable, ConstructStructureOrder } from './abilities';
-import { Vehicle } from './lib';
+import { Vehicle, IEntityUpdateContext } from './lib';
 import { PowerGenerator, PowerSource } from './';
 
 export class Engineer extends Engineerable(Vehicle) {
@@ -21,7 +21,7 @@ export class Engineer extends Engineerable(Vehicle) {
       turnRate: 4.0 / 3.0,
       productionRange: 25.0,
       orderBehaviours: {
-        constructStructure: (o: any) => this.constructStructure(o),
+        constructStructure: (o: ConstructStructureOrder) => this.constructStructure(o),
       },
     } as any);
     this.constructing = false;
@@ -31,13 +31,14 @@ export class Engineer extends Engineerable(Vehicle) {
     super.kill();
   }
 
-  update() {
-    super.update();
+  update(input: {context: IEntityUpdateContext}) {
+    // FIXME: This seems to be updating orders etc twice!
+    super.update(input);
     if (this.construction != null && (this.construction.isBuilt() || this.construction.isDead())) {
       this.construction = null;
     }
     this.updateProduction();
-    this.updateOrders();
+    this.updateOrders(input);
     if (this.construction == null) {
       this.constructing = false;
     }
@@ -46,7 +47,7 @@ export class Engineer extends Engineerable(Vehicle) {
   // FIXME: Deduplicate this code with what's on Engineer
   constructStructure(constructionOrder: ConstructStructureOrder): boolean {
     if (Vector.subtract(this.position, constructionOrder.position).magnitude() > this.productionRange) {
-      this.manoeuvre({ destination: constructionOrder.position });
+      this.manoeuvre({ destination: constructionOrder.position, context: constructionOrder.context });
       return true;
     }
     if (this.construction == null) {

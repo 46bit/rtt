@@ -1,6 +1,7 @@
 import { Player } from '../player';
 import { Vector } from '../vector';
-import { Vehicle, IEntity, Projectile, VehicleTurret } from './lib';
+import { Vehicle, IEntity, Projectile, VehicleTurret, IEntityUpdateContext } from './lib';
+import { IKillable, ICollidable } from './abilities';
 import { AttackOrder } from './abilities';
 import lodash from 'lodash';
 
@@ -28,14 +29,14 @@ export class Titan extends Vehicle {
     this.laserStopAfter = undefined;
   }
 
-  update(enemies: IEntity[]) {
+  update(input: {enemies: (IKillable & ICollidable)[], context: IEntityUpdateContext}) {
     if (this.dead) {
       return;
     }
-    super.update();
+    super.update(input);
 
     this.laserStopAfter = undefined;
-    const angleToFireProjectile = this.angleToNearestEnemy(enemies);
+    const angleToFireProjectile = this.angleToNearestEnemy(input.enemies);
     if (angleToFireProjectile == null) {
       this.turret2.update(this.direction);
       return;
@@ -47,7 +48,7 @@ export class Titan extends Vehicle {
       let u = Vector.from_magnitude_and_direction(1, this.turret2.rotation);
       for (let d = 0; d < TITAN_RANGE; d++) {
         p.add(u);
-        let hitEnemies = enemies.filter((e) => !e.dead && Vector.distance(e.position, p) < e.collisionRadius);
+        let hitEnemies = input.enemies.filter((e) => !e.dead && Vector.distance(e.position, p) < e.collisionRadius);
         if (hitEnemies.length > 0) {
           for (let hitEnemy of hitEnemies) {
             hitEnemy.damage(3 / hitEnemies.length);
@@ -77,7 +78,7 @@ export class Titan extends Vehicle {
     }
     const distance = Vector.subtract(this.position, attackOrder.target.position).magnitude();
     if (distance > TITAN_RANGE) {
-      this.manoeuvre({ destination: attackOrder.target.position });
+      this.manoeuvre({ destination: attackOrder.target.position, context: attackOrder.context });
     }
     return true;
   }

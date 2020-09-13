@@ -1,36 +1,41 @@
 import lodash from 'lodash';
 import { unionize, ofType, UnionOf } from 'unionize';
 import { Vector } from '../../vector';
-import { Entity } from '../lib/entity';
+import { IEntity, Entity, IEntityUpdateContext } from '../lib/entity';
 import { IKillable } from './killable';
 import { ComposableConstructor } from '../lib/mixins';
 
 export interface IOrderableConfig {
-  orderBehaviours: OrderMatchCases<boolean>;
+  orderBehaviours?: OrderMatchCases<boolean>;
 }
 
-export interface IOrderable {
+export interface IOrderable extends IEntity {
   orders: Order[];
-  orderBehaviours: OrderMatchCases<boolean>;
+  orderBehaviours: OrderMatchAllCases<boolean>;
   supportedKindsOfOrders(): string[];
 }
 
 export function Orderable<T extends new(o: any) => any>(base: T) {
   class Orderable extends (base as new(o: any) => Entity) {
     public orders: Order[];
-    public orderBehaviours: OrderMatchCases<boolean>;
+    public orderBehaviours: OrderMatchAllCases<boolean>;
 
     constructor(cfg: IOrderableConfig) {
       super(cfg);
       this.orders = [];
-      this.orderBehaviours = cfg.orderBehaviours;
-      this.orders[0] = OrderUnion.manoeuvre({ destination: new Vector(1, 2) });
+      this.orderBehaviours = {
+        default: (_) => false,
+        ...cfg.orderBehaviours,
+      };
     }
 
-    updateOrders() {
+    updateOrders(input: {context: IEntityUpdateContext}) {
       const order = this.orders[0];
       if (order) {
-        const orderStillInProgress = OrderUnion.match(order, this.orderBehaviours);
+        // FIXME: Add support for arbitrary extra arguments to unionize, and then use that
+        // instead of hiding the context in the order
+        const orderWithUpdateContext = {...order, context: input.context};
+        const orderStillInProgress = OrderUnion.match(orderWithUpdateContext, this.orderBehaviours);
         if (!orderStillInProgress) {
           this.orders.shift();
         }
@@ -55,32 +60,45 @@ export const OrderUnion = unionize({
   upgrade: {},
 }, {tag: "kind"});
 export type Order = UnionOf<typeof OrderUnion>;
-export type OrderMatchCases<ReturnValue> = Parameters<typeof OrderUnion.match>[1];
+export type OrderRecord = typeof OrderUnion._Record;
+
+// `OrderMatchAllCases` is enough to pass to `OrderUnion.match`. Can't be empty.
+// Merge `OrderMatchCases` into `OrderMatchAllCases` to extend/override match clauses.
+export type OrderMatchCases<ReturnValue> = OrderRecordCases<ReturnValue> & (OrderDefaultCase<ReturnValue> | {});
+export type OrderMatchAllCases<ReturnValue> = OrderRecordCases<ReturnValue> & OrderDefaultCase<ReturnValue>;
+type OrderRecordCases<ReturnValue> = { [T in keyof OrderRecord]?: (_: OrderRecord[T]) => ReturnValue };
+type OrderDefaultCase<ReturnValue> = { default: (_: Order) => ReturnValue };
 
 export interface ManoeuvreOrder {
   destination: Vector;
+  context?: IEntityUpdateContext;
 }
 
 export interface AttackOrder {
   target: IKillable;
+  context?: IEntityUpdateContext;
 }
 
 export interface PatrolOrder {
   location: Vector;
   range?: number;
+  context?: IEntityUpdateContext;
 }
 
 export interface GuardOrder {
   protectEntity: Entity;
+  context?: IEntityUpdateContext;
 }
 
 export interface ConstructStructureOrder {
   structureClass: any;
   position: Vector;
   metadata?: any;
+  context?: IEntityUpdateContext;
 }
 
 export interface ConstructVehicleOrder {
   vehicleClass: any;
   metadata?: any;
+  context?: IEntityUpdateContext;
 }

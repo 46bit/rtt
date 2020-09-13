@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { Player } from '../../rtt_engine/player';
+import { Player, Vector } from '../../rtt_engine';
 import { ShotgunTank, ShotgunProjectile } from '../../rtt_engine/entities';
 import { InstancedGeometryPresenter } from './lib';
 
@@ -29,8 +29,8 @@ export class ShotgunTankPresenter extends InstancedGeometryPresenter {
     this.player = player;
   }
 
-  getInstances(): {position: Vector, direction: number, player: Player}[] {
-    return this.player.units.vehicles.filter(v => v instanceof ShotgunTank);
+  getInstances(): ShotgunTank[] {
+    return this.player.units.vehicles.filter(v => v instanceof ShotgunTank) as ShotgunTank[];
   }
 }
 
@@ -57,7 +57,7 @@ export class ShotgunProjectilePresenter extends InstancedGeometryPresenter {
     this.player = player;
   }
 
-  getInstances(): {position: Vector, direction: number, player: Player}[] {
+  getInstances(): ShotgunProjectile[] {
     return this.player.turretProjectiles.filter(v => v instanceof ShotgunProjectile);
   }
 }

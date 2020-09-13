@@ -50,13 +50,13 @@ export class ExistingAI implements IAI {
     const opposingUnits = opponent.units.allKillableCollidableUnits();
     const opposingUnitCount = opposingUnits.length;
     if (opposingUnitCount > 0) {
-      for (let j in this.player.units.vehicles) {
-        if (this.player.units.vehicles[j].orders.length > 0) {
-          continue;
+      this.player.units.vehicles.forEach((vehicle, j) => {
+        if (vehicle.orders.length > 0) {
+          return;
         }
         const target = opposingUnits[j % opposingUnitCount];
         this.player.units.vehicles[j].orders[0] = rtt_engine.OrderUnion.attack({target});
-      }
+      });
     }
   }
 }
@@ -86,7 +86,7 @@ export class AttackNearestAI implements IAI {
     if (this.player.units.powerGenerators.length > 0) {
       const upgrading = this.player.units.powerGenerators.filter((p) => p.upgrading).length > 0;
       if (!upgrading) {
-        const cheapestUpgrade = _.minBy(this.player.units.powerGenerators, (p) => p.fullHealth);
+        const cheapestUpgrade = lodash.minBy(this.player.units.powerGenerators, (p) => p.fullHealth);
         cheapestUpgrade!.orders[0] = rtt_engine.OrderUnion.upgrade();
       }
     }
@@ -150,7 +150,7 @@ export class AttackNearestAI implements IAI {
     }
 
     const powerSourcesNearFactories = this.game.powerSources.filter((powerSource) => {
-      const nearestFactory = _.minBy(this.player.units.factories, (factory) => {
+      const nearestFactory = lodash.minBy(this.player.units.factories, (factory) => {
         return rtt_engine.Vector.distance(factory.position, powerSource.position);
       });
       if (nearestFactory == null) {
@@ -160,7 +160,7 @@ export class AttackNearestAI implements IAI {
     });
     const desiredPowerSources = powerSourcesNearFactories.filter((powerSource) => powerSource.structure == null);
     if (desiredPowerSources.length > 0) {
-      const nearestDesiredPowerSource = _.minBy(desiredPowerSources, (powerSource) => {
+      const nearestDesiredPowerSource = lodash.minBy(desiredPowerSources, (powerSource) => {
         return rtt_engine.Vector.distance(powerSource.position, this.player.units.commander!.position);
       });
       this.player.units.commander!.orders[0] = rtt_engine.OrderUnion.constructStructure({
@@ -172,7 +172,7 @@ export class AttackNearestAI implements IAI {
     }
 
     if (this.player.units.turrets.length == 0) {
-      const nearestFactory = _.minBy(this.player.units.factories, (factory) => {
+      const nearestFactory = lodash.minBy(this.player.units.factories, (factory) => {
         return rtt_engine.Vector.distance(this.player.units.commander!.position, factory.position);
       });
       if (rtt_engine.Vector.distance(this.player.units.commander!.position, nearestFactory!.position) < 50) {
@@ -188,11 +188,14 @@ export class AttackNearestAI implements IAI {
 
   updateVehicleAttacks() {
     const opposingUnits = this.opponents.map((p) => p.units.allKillableCollidableUnits()).flat();
+    if (opposingUnits.length == 0) {
+      return;
+    }
     for (let vehicle of this.player.units.vehicles) {
       if (vehicle.orders.length > 0 && vehicle.orders[0] != this.assignedOrders[vehicle.id]) {
         continue;
       }
-      let nearestOpposingUnit = lodash.minBy(opposingUnits, (u: rtt_engine.IKillable) => rtt_engine.Vector.distance(u.position, vehicle.position));
+      let nearestOpposingUnit = lodash.minBy(opposingUnits, (u: rtt_engine.IKillable) => rtt_engine.Vector.distance(u.position, vehicle.position))!;
       vehicle.orders[0] = rtt_engine.OrderUnion.attack({ target: nearestOpposingUnit });
       this.assignedOrders[vehicle.id] = vehicle.orders[0];
     }
@@ -219,7 +222,7 @@ export class ExpansionAI implements IAI {
     if (this.player.units.powerGenerators.length > 3) {
       const upgrading = this.player.units.powerGenerators.filter((p) => p.upgrading).length > 0;
       if (!upgrading) {
-        const cheapestUpgrade = _.minBy(this.player.units.powerGenerators, (p) => p.fullHealth);
+        const cheapestUpgrade = lodash.minBy(this.player.units.powerGenerators, (p) => p.fullHealth);
         cheapestUpgrade!.orders[0] = rtt_engine.OrderUnion.upgrade();
       }
     }
@@ -277,6 +280,9 @@ export class ExpansionAI implements IAI {
       return p.structure == null || (p.structure.player == this.player && !p.structure.built);
     });
     const opposingUnits = this.opponents.map((p) => p.units.allKillableCollidableUnits()).flat();
+    if (opposingUnits.length == 0) {
+      return;
+    }
 
     if (this.player.units.factories.length == 0 || this.player.storedEnergy > 500) {
       let factoryBuildingUnit;
@@ -288,9 +294,9 @@ export class ExpansionAI implements IAI {
           constructionUnits.push(this.player.units.commander);
         }
         constructionUnits.push(...this.player.units.engineers);
-        factoryBuildingUnit = _.maxBy(constructionUnits, (vehicle) => {
-          let nearestOpposingUnit = _.minBy(opposingUnits, (u) => rtt_engine.Vector.distance(u.position, vehicle.position));
-          let nearestFactory = _.minBy(this.player.units.factories, (f) => rtt_engine.Vector.distance(f.position, vehicle.position));
+        factoryBuildingUnit = lodash.maxBy(constructionUnits, (vehicle) => {
+          let nearestOpposingUnit = lodash.minBy(opposingUnits, (u) => rtt_engine.Vector.distance(u.position, vehicle.position));
+          let nearestFactory = lodash.minBy(this.player.units.factories, (f) => rtt_engine.Vector.distance(f.position, vehicle.position));
           if (!nearestOpposingUnit || !nearestFactory) {
             return 10000000000000;
           }
@@ -311,7 +317,7 @@ export class ExpansionAI implements IAI {
           continue;
         }
 
-        const nearestDesiredPowerSource = _.minBy(powerSourcesWeDontOwn, (powerSource) => {
+        const nearestDesiredPowerSource = lodash.minBy(powerSourcesWeDontOwn, (powerSource) => {
           return rtt_engine.Vector.distance(powerSource.position, engineer.position);
         });
         engineer.orders[0] = rtt_engine.OrderUnion.constructStructure({
@@ -330,7 +336,7 @@ export class ExpansionAI implements IAI {
         continue;
       }
 
-      let nearestOpposingUnit = lodash.minBy(opposingUnits, (u: rtt_engine.IKillable) => rtt_engine.Vector.distance(u.position, vehicle.position));
+      let nearestOpposingUnit = lodash.minBy(opposingUnits, (u: rtt_engine.IKillable) => rtt_engine.Vector.distance(u.position, vehicle.position))!;
       vehicle.orders[0] = rtt_engine.OrderUnion.attack({target: nearestOpposingUnit});
     }
   }

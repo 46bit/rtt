@@ -1,6 +1,6 @@
 import { Vector } from './vector';
 import { Game } from './game';
-import { Player, IColor } from './player';
+import { Player } from './player';
 import { PlayerUnits } from './player_units';
 import { PowerSource, Obstruction } from './entities';
 import { Commander } from './entities/commander';
@@ -13,7 +13,7 @@ export interface IGameConfig {
 
 export interface IPlayerConfig {
   name: string;
-  color: IColor;
+  color: any;
   commanderPosition: Vector;
 }
 

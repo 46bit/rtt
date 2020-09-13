@@ -42,12 +42,7 @@ let cfg = {
       {
         test: /\.ts/,
         use: [
-          {
-            loader: 'ts-loader',
-            options: {
-              reportFiles: [/(?<!\.test)\.ts/]
-            }
-          }
+          { loader: 'ts-loader' }
         ]
       }
     ]
