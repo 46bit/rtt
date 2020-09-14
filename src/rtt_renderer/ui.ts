@@ -1,5 +1,5 @@
 import { Game, Player } from '../rtt_engine';
-import { Order } from '../rtt_engine/entities/abilities';
+import { Order, OrderUnion } from '../rtt_engine/entities/abilities';
 import { Selection, Button } from './';
 
 type ScoreTableRow = {"nameCell": any, "energyCell": any, "incomeCell": any, "unitsCell": any};
@@ -205,21 +205,18 @@ export class UI {
 
     const orderKind = this.orderInProgress ? this.orderInProgress : "manoeuvre";
     const issuableOrders = this.selection.issuableOrders();
-    if (!issuableOrders.has(orderKind)) {
+    const entitiesThatCanReceiveOrder = issuableOrders.get(orderKind);
+    if (!entitiesThatCanReceiveOrder) {
       return;
     }
 
-    // FIXME: Support other types of orders
-    if (orderKind != "manoeuvre") {
-      return;
+    const worldPosition = this.selection.screenPositionToWorldPosition.convert(event.clientX, event.clientY)!;
+    switch (orderKind) {
+      case "manoeuvre":
+        entitiesThatCanReceiveOrder.forEach((entity, _) => {
+          entity.orders[0] = OrderUnion.manoeuvre({destination: worldPosition});
+        });
+        break;
     }
-
-    let worldPosition = this.selection.screenPositionToWorldPosition.convert(event.clientX, event.clientY)!;
-    issuableOrders.get(orderKind)!.forEach((entity, _) => {
-      entity.orders[0] = {
-        kind: orderKind,
-        destination: worldPosition,
-      };
-    });
   }
 }
