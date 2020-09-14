@@ -2,8 +2,10 @@ import { Vector } from '../../vector';
 import { Entity, IEntity } from '../lib/entity';
 import { ComposableConstructor } from '../lib/mixins';
 
+export type Pathfinder = (from: Vector, to: Vector) => Vector[] | null;
+
 export interface IMovableConfig {
-  velocity: number?;
+  velocity?: number;
   direction: number;
 }
 

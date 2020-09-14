@@ -1,4 +1,5 @@
 import { Game, Player } from '../rtt_engine';
+import { Order } from '../rtt_engine/entities/abilities';
 import { Selection, Button } from './';
 
 type ScoreTableRow = {"nameCell": any, "energyCell": any, "incomeCell": any, "unitsCell": any};
@@ -7,15 +8,18 @@ export class UI {
   game: Game;
   selection: Selection;
   sidebar: any;
+  viewport: any;
   scoreTableRows: {[playerName: string]: ScoreTableRow};
   playerTabs: {[name: string]: any};
   selectedUnitList: any;
   selectedUnits: {[name: string]: any};
+  orderInProgress: Order["kind"] | null;
 
-  constructor(game: Game, selection: Selection, sidebar: any) {
+  constructor(game: Game, selection: Selection, sidebar: any, viewport: any) {
     this.game = game;
     this.selection = selection;
     this.sidebar = sidebar;
+    this.viewport = viewport;
 
     this.scoreTableRows = {};
     const scoreTable = document.getElementsByClassName("player-scores")[0];
@@ -58,7 +62,7 @@ export class UI {
       if (this.selection.selectedPlayer && player == this.selection.selectedPlayer) {
         playerTab.className = "active";
       }
-      playerTab.addEventListener("mousedown", (e) => this.playerTabMouseDown(e));
+      playerTab.addEventListener("mousedown", (e: MouseEvent) => this.playerTabMouseDown(e));
 
       const bottomLine = document.createElement("div");
       bottomLine.className = "bottom-line";
@@ -70,6 +74,8 @@ export class UI {
 
     this.selectedUnitList = document.getElementsByClassName("player--selected-units")[0];
     this.selectedUnits = new Map();
+    this.orderInProgress = null;
+    this.viewport.addEventListener("mousedown", (e: MouseEvent) => this.viewportMouseDown(e));
   }
 
   update() {
@@ -101,9 +107,9 @@ export class UI {
       selectionEntityCounts.set(entityName, selectionEntityCounts.get(entityName) + 1);
     });
     if (selectionEntityCounts.size > 0) {
-      document.getElementsByClassName("player--selected-units-heading")[0].style.display = "block";
+      (document.getElementsByClassName("player--selected-units-heading")[0] as HTMLElement).style.display = "block";
     } else {
-      document.getElementsByClassName("player--selected-units-heading")[0].style.display = "none";
+      (document.getElementsByClassName("player--selected-units-heading")[0] as HTMLElement).style.display = "none";
     }
     selectionEntityCounts.forEach((entityCount, entityName) => {
       let element;
@@ -112,7 +118,7 @@ export class UI {
         element.dataset.entityName = entityName;
         element.style.cursor = "pointer";
         element.title = entityName;
-        element.addEventListener("mousedown", (e) => this.selectedUnitMouseDown(e), false);
+        element.addEventListener("mousedown", (e: MouseEvent) => this.selectedUnitMouseDown(e), false);
 
         const count = document.createElement("span");
         count.className = "count";
@@ -134,16 +140,39 @@ export class UI {
       }
       element.getElementsByClassName("count")[0].innerText = entityCount.toString();
     });
-    this.selectedUnits.forEach((element, entityName) => {
+    this.selectedUnits.forEach((element: HTMLElement, entityName: string) => {
       if (!selectionEntityCounts.has(entityName)) {
         this.selectedUnitList.removeChild(element);
         this.selectedUnits.delete(entityName);
       }
     });
+
+    const issuableOrders = this.selection.issuableOrders();
+    let panelEmpty = true;
+    const orderPanel = document.getElementsByClassName("player--order-panel")[0];
+    // FIXME: Start updating rather than recreating each update
+    orderPanel.innerHTML = "";
+    issuableOrders.forEach((entitiesThatCanTakeOrder, orderKind) => {
+      // FIXME: Enable more kinds of orders
+      if (orderKind != "manoeuvre") {
+        return;
+      }
+      panelEmpty = false;
+      const element = document.createElement("li");
+      const button = document.createElement("button");
+      button.innerText = orderKind;
+      button.dataset.orderKind = orderKind;
+      button.addEventListener("mousedown", (e) => this.orderMouseDown(e));
+      element.appendChild(button);
+      orderPanel.appendChild(element);
+    });
+    (document.getElementsByClassName("player--order-panel-heading")[0] as HTMLElement).style.display = panelEmpty ? "none" : "block";
   }
 
-  playerTabMouseDown(event: {currentTarget: any}) {
-    const playerName = event.currentTarget.dataset.playerName;
+  playerTabMouseDown(event: MouseEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    const playerName = (event.currentTarget! as HTMLElement).dataset.playerName;
     if (this.selection.selectedPlayer && this.selection.selectedPlayer.name == playerName) {
       this.selection.selectedPlayer = null;
     } else {
@@ -151,13 +180,46 @@ export class UI {
     }
   }
 
-  selectedUnitMouseDown(event: {currentTarget: any}) {
+  selectedUnitMouseDown(event: MouseEvent) {
     event.preventDefault();
     event.stopPropagation();
-    const clickedEntityName = event.currentTarget.dataset.entityName;
+    const clickedEntityName = (event.currentTarget! as HTMLElement).dataset.entityName;
     this.selection.selectedEntities = this.selection.selectedEntities.filter((entity) => {
       const entityName = entity.constructor.name;
       return event.button == Button.RightClick ? entityName != clickedEntityName : entityName == clickedEntityName;
+    });
+  }
+
+  orderMouseDown(event: MouseEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    const orderKind = (event.currentTarget! as HTMLElement).dataset.orderKind as Order["kind"];
+    this.orderInProgress = orderKind;
+  }
+
+  // FIXME: Ordering needs to be done better than this. Somehow.
+  viewportMouseDown(event: MouseEvent) {
+    if (event.button != Button.RightClick) {
+      return;
+    }
+
+    const orderKind = this.orderInProgress ? this.orderInProgress : "manoeuvre";
+    const issuableOrders = this.selection.issuableOrders();
+    if (!issuableOrders.has(orderKind)) {
+      return;
+    }
+
+    // FIXME: Support other types of orders
+    if (orderKind != "manoeuvre") {
+      return;
+    }
+
+    let worldPosition = this.selection.screenPositionToWorldPosition.convert(event.clientX, event.clientY)!;
+    issuableOrders.get(orderKind)!.forEach((entity, _) => {
+      entity.orders[0] = {
+        kind: orderKind,
+        destination: worldPosition,
+      };
     });
   }
 }

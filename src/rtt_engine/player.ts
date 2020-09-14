@@ -1,4 +1,4 @@
-import { PowerSource, TurretProjectile } from './entities/index';
+import { PowerSource, TurretProjectile, IEngineerable, IEntityUpdateContext } from './entities';
 import { PlayerUnits } from './player_units';
 import lodash from 'lodash';
 import * as THREE from 'three';
@@ -23,10 +23,10 @@ export class Player {
     return this.units.unitCount() === 0;
   }
 
-  public update(powerSources: readonly PowerSource[], otherPlayers: readonly Player[]) {
+  public update(powerSources: readonly PowerSource[], otherPlayers: readonly Player[], context: IEntityUpdateContext) {
     this.updateEnergy();
     const enemies = otherPlayers.map((p) => p.units.allKillableCollidableUnits()).flat();
-    this.units.update(enemies);
+    this.units.update(enemies, context);
     for (let turretProjectile of this.turretProjectiles) {
       turretProjectile.update();
     }
@@ -35,7 +35,7 @@ export class Player {
 
   public updateEnergy() {
     this.storedEnergy += this.units.energyOutput();
-    const drainingUnits = this.units.factories.concat(this.units.powerGenerators);
+    const drainingUnits = (this.units.factories as IEngineerable[]).concat(this.units.powerGenerators);
     if (this.units.commander != null) {
       drainingUnits.push(this.units.commander);
     }
@@ -48,9 +48,5 @@ export class Player {
       }
       this.storedEnergy -= desiredEnergy * proportionOfEnergyProvided;
     }
-  }
-
-  public draw() {
-    this.units.draw();
   }
 }

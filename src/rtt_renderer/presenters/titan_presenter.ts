@@ -82,7 +82,7 @@ export class TitanTurretPresenter extends InstancedRotateablePresenter {
     }
     let m = new THREE.Matrix4();
     for (let i = 0; i < instanceCount; i++) {
-      const instance = instances[i];
+      const instance = instances[i] as Titan;
       m.makeRotationZ(-Math.PI/2 - instance.turret2.rotation);
       m.setPosition(instance.position.x, instance.position.y, 0);
       this.instancedMesh.setMatrixAt(i, m);
@@ -113,7 +113,7 @@ export class TitanProjectilePresenter extends InstancedRotateablePresenter {
   }
 
   draw() {
-    const instances = this.instanceCallback(this.player).filter((i) => i.laserStopAfter != null);
+    const instances = this.instanceCallback(this.player).filter((i) => (i as Titan).laserStopAfter != null);
     const instanceCount = instances.length;
     if (this.instancedMesh != undefined && this.instancedMesh.count != instanceCount) {
       this.scene.remove(this.instancedMesh);
@@ -128,9 +128,9 @@ export class TitanProjectilePresenter extends InstancedRotateablePresenter {
     let m = new THREE.Matrix4();
     let s = new THREE.Vector3(0, 1, 1);
     for (let i = 0; i < instanceCount; i++) {
-      const instance = instances[i];
+      const instance = instances[i] as Titan;
       m.makeRotationZ(-Math.PI/2 - instance.turret2.rotation);
-      s.x = instance.laserStopAfter;
+      s.x = instance.laserStopAfter!;
       m.scale(s);
       m.setPosition(instance.position.x, instance.position.y, 0);
       this.instancedMesh.setMatrixAt(i, m);

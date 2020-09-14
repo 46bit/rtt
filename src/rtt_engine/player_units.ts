@@ -10,7 +10,10 @@ import {
   Turret,
   IKillable,
   ICollidable,
+  IConstructable,
+  IOwnable,
   IEntity,
+  IEntityUpdateContext,
 } from './entities';
 
 // FIXME: Do this based upon an `IUnit`?
@@ -27,7 +30,7 @@ export class PlayerUnits {
   public factories: Factory[];
   public powerGenerators: PowerGenerator[];
   public turrets: Turret[];
-  public constructions: {[id: string]: Unit};
+  public constructions: {[id: string]: IKillable & ICollidable & IConstructable & IOwnable};
 
   public constructor(unitCap: number | null) {
     this.unitCap = unitCap;
@@ -40,7 +43,7 @@ export class PlayerUnits {
     this.constructions = {};
   }
 
-  public allKillableCollidableUnits(): (IKillable & ICollidable)[] {
+  public allKillableCollidableUnits(): (IKillable & ICollidable & IOwnable)[] {
     let units = [];
     // Engineers are also in this.vehicles
     units.push(...this.vehicles);
@@ -72,43 +75,43 @@ export class PlayerUnits {
       + this.powerGenerators.reduce((sum, powerGenerator) => sum + powerGenerator.energyOutput, 0);
   }
 
-  public update(enemies: IEntity[]) {
+  public update(enemies: (IKillable & ICollidable)[], context: IEntityUpdateContext) {
     this.removeDeadUnits();
     if (this.commander != null) {
-      this.commander.update();
+      this.commander.update({context});
     }
     for (let powerGenerator of this.powerGenerators) {
-      powerGenerator.update();
+      powerGenerator.update({context});
     }
     for (let vehicle of this.vehicles) {
       switch (vehicle.constructor) {
         case Bot:
-          (vehicle as Bot).update();
+          (vehicle as Bot).update({context});
           break;
         case ShotgunTank:
-          (vehicle as ShotgunTank).update(enemies);
+          (vehicle as ShotgunTank).update({enemies, context});
           break;
         case ArtilleryTank:
-          (vehicle as ArtilleryTank).update(enemies);
+          (vehicle as ArtilleryTank).update({enemies, context});
           break;
         case Titan:
-          (vehicle as Titan).update(enemies);
+          (vehicle as Titan).update({enemies, context});
           break;
         case Engineer:
-          (vehicle as Engineer).update();
+          (vehicle as Engineer).update({context});
           break;
       }
     }
     for (const turret of this.turrets) {
-      turret.update(enemies);
+      turret.update({enemies, context});
     }
-    this.updateFactoriesAndConstructions();
+    this.updateFactoriesAndConstructions(context);
     this.removeDeadUnits();
   }
 
-  public updateFactoriesAndConstructions() {
+  public updateFactoriesAndConstructions(context: IEntityUpdateContext) {
     for (let factory of this.factories) {
-      factory.update();
+      factory.update({context});
       if (factory.construction != null) {
         this.constructions[factory.construction.id] = factory.construction;
       }
@@ -178,12 +181,5 @@ export class PlayerUnits {
     this.vehicles = this.vehicles.filter((vehicle) => vehicle.isAlive());
     this.engineers = this.engineers.filter((engineer) => engineer.isAlive());
     this.turrets = this.turrets.filter((turret) => turret.isAlive());
-  }
-
-  public draw() {
-    this.commander?.presenter?.draw();
-    for (let powerGenerator of this.powerGenerators) {
-      powerGenerator.presenter?.draw();
-    }
   }
 }

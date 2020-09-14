@@ -1,4 +1,4 @@
-import { PowerSource, Obstruction } from './entities';
+import { PowerSource, Obstruction, IEntityUpdateContext } from './entities';
 import { Player } from './player';
 
 export class Game {
@@ -20,19 +20,19 @@ export class Game {
     this.obstructions = obstructions;
   }
 
-  public update() {
+  public update(context: IEntityUpdateContext) {
     this.updateCounter += 1;
 
-    this.updatePlayers();
+    this.updatePlayers(context);
 
     if (!this.winner) {
       this.updateWinner();
     }
   }
 
-  public updatePlayers() {
+  public updatePlayers(context: IEntityUpdateContext) {
     this.players.forEach((player) => {
-      player.update(this.powerSources, this.players.filter((p) => p != player));
+      player.update(this.powerSources, this.players.filter((p) => p != player), context);
     });
   }
 
@@ -47,12 +47,6 @@ export class Game {
         this.winner = undefeatedPlayers[0].name;
         this.winTime = new Date();
         break;
-    }
-  }
-
-  public draw() {
-    for (let player of this.players) {
-      player.draw();
     }
   }
 }

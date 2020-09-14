@@ -1,7 +1,7 @@
 import { Player } from '../player';
 import { Vector } from '../vector';
-import { Engineerable } from './abilities';
-import { Vehicle } from './lib';
+import { Engineerable, ConstructStructureOrder } from './abilities';
+import { Vehicle, IEntityUpdateContext } from './lib';
 import { PowerGenerator, PowerSource } from './';
 
 export class Commander extends Engineerable(Vehicle) {
@@ -21,11 +21,11 @@ export class Commander extends Engineerable(Vehicle) {
       movementRate: 0.03,
       turnRate: 2.0 / 3.0,
       productionRange: 35.0,
+      orderBehaviours: {
+        constructStructure: (o: ConstructStructureOrder) => this.constructStructure(o),
+      },
     } as any);
     this.energyOutput = 5;
-    this.orderExecutionCallbacks['construct'] = (constructionOrder: any): boolean => {
-      return this.construct(constructionOrder);
-    };
     this.constructing = false;
   }
 
@@ -33,40 +33,37 @@ export class Commander extends Engineerable(Vehicle) {
     super.kill();
   }
 
-  update() {
-    super.update();
+  update(input: {context: IEntityUpdateContext}) {
+    super.update(input);
     if (this.construction != null && (this.construction.isBuilt() || this.construction.isDead())) {
       this.construction = null;
     }
     this.updateProduction();
-    this.updateOrders();
+    this.updateOrders(input);
     if (this.construction == null) {
       this.constructing = false;
     }
   }
 
   // FIXME: Deduplicate this code with what's on Engineer
-  construct(constructionOrder: { position: Vector, structureClass: any, extra?: any[] }): boolean {
+  constructStructure(constructionOrder: ConstructStructureOrder): boolean {
     if (Vector.subtract(this.position, constructionOrder.position).magnitude() > this.productionRange) {
-      this.manoeuvre({ destination: constructionOrder.position });
+      this.manoeuvre({ destination: constructionOrder.position, context: constructionOrder.context });
       return true;
-    }
-    if (constructionOrder.extra == null) {
-      constructionOrder.extra = [];
     }
     if (this.construction == null) {
       if (this.constructing) {
         this.constructing = false;
         return false;
       } else if (constructionOrder.structureClass == PowerGenerator) {
-        const powerSource: PowerSource = constructionOrder.extra[0];
+        const powerSource: PowerSource = constructionOrder.metadata;
         if (powerSource.structure == null) {
           this.constructing = true;
           this.construction = new constructionOrder.structureClass(
             constructionOrder.position,
             this.player,
             false,
-            ...constructionOrder.extra,
+            powerSource,
           );
         } else if (powerSource.structure.player == this.player && powerSource.structure.isUnderConstruction()) {
           this.constructing = true;
@@ -78,7 +75,6 @@ export class Commander extends Engineerable(Vehicle) {
           constructionOrder.position,
           this.player,
           false,
-          ...constructionOrder.extra,
         );
         return true;
       }

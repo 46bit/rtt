@@ -84,14 +84,14 @@ export class HealthinessPresenter {
       this.healthiness![i] = unit.healthiness();
     }
     this.instancedMesh!.instanceMatrix.needsUpdate = true;
-    this.instancedMesh!.geometry.attributes.healthiness.needsUpdate = true;
+    (this.instancedMesh!.geometry as THREE.BufferGeometry).attributes!.healthiness.needsUpdate = true;
   }
 
   dedraw() {
     if (this.instancedMesh) {
       this.scene.remove(this.instancedMesh);
       this.instancedMesh.geometry.dispose();
-      this.instancedMesh.material.dispose();
+      (this.instancedMesh.material as THREE.Material).dispose();
       this.instancedMesh = undefined;
     }
   }

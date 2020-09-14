@@ -18,7 +18,7 @@ export abstract class InstancedGeometryPresenter {
     this.attributes = {};
   }
 
-  abstract getInstances(): {position: Vector, direction: number, player: {color: THREE.Color}}[];
+  abstract getInstances(): {position: Vector, direction?: number, player: {color: THREE.Color} | null, turret?: {rotation: number}}[];
 
   predraw(instances: any[]) {
     const numberOfInstances = instances.length;
@@ -58,10 +58,16 @@ export abstract class InstancedGeometryPresenter {
 
     for (let i = 0; i < numberOfInstances; i++) {
       const instance = instances[i];
+      // FIXME: Do draw un-owned units?
+      if (!instance.player) {
+        continue;
+      }
       this.attributes.position[i*2] = instance.position.x;
       this.attributes.position[i*2 + 1] = instance.position.y;
       const facingDirection = instance.turret ? instance.turret!.rotation : instance.direction;
-      this.attributes.rotation[i] = Math.PI/2 + facingDirection;
+      if (facingDirection != null) {
+        this.attributes.rotation[i] = Math.PI/2 + facingDirection;
+      }
       this.attributes.playerColor[i*3] = instance.player.color.r;
       this.attributes.playerColor[i*3 + 1] = instance.player.color.g;
       this.attributes.playerColor[i*3 + 2] = instance.player.color.b;

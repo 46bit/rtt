@@ -1,5 +1,5 @@
 export class Vector {
-  public static from_magnitude_and_direction(magnitude, direction) {
+  public static from_magnitude_and_direction(magnitude: number, direction: number) {
     const x = magnitude * Math.sin(direction);
     const y = magnitude * Math.cos(direction);
     return new Vector(x, y);

@@ -1,5 +1,6 @@
 import { nanoid } from 'nanoid';
 import { Vector } from '../../vector';
+import { Pathfinder } from '../abilities';
 
 export interface IEntityConfig {
   position: Vector;
@@ -18,4 +19,8 @@ export class Entity {
     this.id = nanoid();
     this.position = cfg.position;
   }
+}
+
+export interface IEntityUpdateContext {
+  pathfinder: Pathfinder;
 }

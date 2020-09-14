@@ -1,6 +1,6 @@
 import { Player } from '../player';
 import { PowerSource } from './power_source';
-import { Structure } from './lib';
+import { Structure, IEntityUpdateContext } from './lib';
 import { Vector } from '../vector';
 
 export class PowerGenerator extends Structure {
@@ -21,15 +21,15 @@ export class PowerGenerator extends Structure {
       buildCost: 300,
       fullHealth: 60,
       health: built ? 60 : 0,
+      orderBehaviours: {
+        upgrade: (o: any) => this.upgrade(o),
+      },
     } as any);
     this.powerSource = powerSource;
     this.powerSource.structure = this;
     this.energyOutput = energyOutput;
     this.upgrading = false;
     this.energyProvided = 0;
-    this.orderExecutionCallbacks = {
-      'upgrade': (upgradeOrder) => this.upgrade(upgradeOrder),
-    };
   }
 
   kill() {
@@ -41,14 +41,14 @@ export class PowerGenerator extends Structure {
     return this.upgrading ? 10 : 0;
   }
 
-  update() {
+  update(input: {context: IEntityUpdateContext}) {
     if (this.dead) {
       return;
     }
-    this.updateOrders();
+    this.updateOrders(input);
   }
 
-  upgrade(upgradeOrder: {}): boolean {
+  upgrade(_: {}): boolean {
     if (this.upgrading == true) {
       if (this.health == this.fullHealth) {
         this.upgrading = false;

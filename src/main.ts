@@ -3,8 +3,24 @@ import * as rtt_engine from './rtt_engine';
 import * as rtt_renderer from './rtt_renderer';
 import { IAI, ExistingAI, AttackNearestAI, ExpansionAI } from './ai';
 
+declare global {
+  interface Window {
+    THREE: typeof THREE;
+    rttEngine: typeof rtt_engine;
+    rttRenderer: typeof rtt_renderer;
+    paused: boolean;
+    game: rtt_engine.Game;
+    renderer: rtt_renderer.Renderer;
+    selection: rtt_renderer.Selection;
+    navmesh: any;
+    obstacleBorderLessNavmesh: any;
+  }
+}
+
 window.THREE = THREE;
-window.rttPaused = false;
+window.rttEngine = rtt_engine;
+window.rttRenderer = rtt_renderer;
+window.paused = false;
 
 function mirrorFor4Players(worldSize: number, powerSources: rtt_engine.Vector[], obstructions: rtt_engine.Obstruction[]): [rtt_engine.Vector[], rtt_engine.Obstruction[]] {
   let newPowerSources = [];
@@ -92,25 +108,6 @@ function main() {
     worldSize: size,
     obstructions: obstructions,
     powerSources: powerSources,
-
-    //   new rtt_engine.Vector(size - edge, edge),
-    //   new rtt_engine.Vector(size - edge - spacing, edge),
-    //   new rtt_engine.Vector(size - edge - spacing, edge + spacing),
-    //   new rtt_engine.Vector(size - edge - spacing * 1.5, edge + spacing * 1.5),
-    //   new rtt_engine.Vector(size - edge, edge + spacing),
-
-    //   new rtt_engine.Vector(size - edge, size - edge - spacing),
-    //   new rtt_engine.Vector(size - edge - spacing, size - edge - spacing),
-    //   new rtt_engine.Vector(size - edge - spacing * 1.5, size - edge - spacing * 1.5),
-    //   new rtt_engine.Vector(size - edge - spacing, size - edge),
-    //   new rtt_engine.Vector(size - edge, size - edge),
-
-    //   new rtt_engine.Vector(edge + spacing, size - edge),
-    //   new rtt_engine.Vector(edge, size - edge),
-    //   new rtt_engine.Vector(edge, size - edge - spacing),
-    //   new rtt_engine.Vector(edge + spacing, size - edge - spacing),
-    //   new rtt_engine.Vector(edge + spacing * 1.5, size - edge - spacing * 1.5),
-    // ],
   };
   const config = {
     map,
@@ -137,19 +134,14 @@ function main() {
   const bounds = new rtt_engine.Bounds(0, map.worldSize, 0, map.worldSize);
 
   let game = rtt_engine.gameFromConfig(config);
-  const obstructionQuadtree = rtt_engine.IQuadrant.fromEntityCollisions(bounds, game.obstructions);
+  const obstructionQuadtree = rtt_engine.IQuadrant.fromEntityCollisions(bounds, game.obstructions as rtt_engine.ICollidable[]);
   window.game = game;
-  window.rtt_engine = rtt_engine;
-  window.rtt_renderer = rtt_renderer;
 
   let ais: IAI[] = game.players.map((player) => {
     const aiClass = Math.random() >= 0.3 ? AttackNearestAI : Math.random() > 0.5 ? ExistingAI : ExpansionAI;
     player.aiName = aiClass.name;
     return new aiClass(game, player, game.players.filter((p) => p != player));
   });
-
-  // FIXME: Remove after debugging
-  //return;
 
   let renderer = new rtt_renderer.Renderer(map.worldSize, window, document, rttViewport);
   renderer.animate(true);
@@ -160,7 +152,7 @@ function main() {
   window.selection = selection;
   let selectionPresenter = new rtt_renderer.SelectionPresenter(selection, renderer.gameCoordsGroup);
 
-  let ui = new rtt_renderer.UI(game, selection, document.getElementsByClassName("game--sidebar")[0]);
+  let ui = new rtt_renderer.UI(game, selection, rttSidebar, rttViewport);
 
   // The final parameter here is how closely the triangles should go to unpassable obstacles.
   // Small values will make pathfinding collide a lot; large values will create slightly
@@ -180,15 +172,17 @@ function main() {
   //let triangulatedMapPresenter = new rtt_renderer.TriangulatedMapPresenter(obstacleBorderLessTriangulatedMap, renderer.gameCoordsGroup);
   //triangulatedMapPresenter.predraw();
 
-  window.routeBetween = function(from, to) {
-    let navmeshRoute = navmesh.findPath([from.x, from.y], [to.x, to.y]);
-    if (!navmeshRoute || navmeshRoute.length == 0) {
-      navmeshRoute = obstacleBorderLessNavmesh.findPath([from.x, from.y], [to.x, to.y]);
-    }
-    if (!navmeshRoute || navmeshRoute.length == 0) {
-      return null;
-    }
-    return navmeshRoute.map((p) => new rtt_engine.Vector(p.x, p.y));
+  let context: rtt_engine.IEntityUpdateContext = {
+    pathfinder: function(from: rtt_engine.Vector, to: rtt_engine.Vector) {
+      let navmeshRoute = navmesh.findPath([from.x, from.y], [to.x, to.y]);
+      if (!navmeshRoute || navmeshRoute.length == 0) {
+        navmeshRoute = obstacleBorderLessNavmesh.findPath([from.x, from.y], [to.x, to.y]);
+      }
+      if (!navmeshRoute || navmeshRoute.length == 0) {
+        return null;
+      }
+      return navmeshRoute.map((p: {x: number, y: number}) => new rtt_engine.Vector(p.x, p.y));
+    },
   };
 
   let mapPresenter = new rtt_renderer.MapPresenter(map, renderer.gameCoordsGroup);
@@ -271,7 +265,7 @@ function main() {
   }, false);
 
   setInterval(() => {
-    if (window.rttPaused) {
+    if (window.paused) {
       return;
     }
 
@@ -309,7 +303,7 @@ function main() {
         const unit: rtt_engine.IKillable = unitsAndProjectiles.filter((u: rtt_engine.IKillable) => u.id == unitId)[0];
         let unitCollisions = collisions[unitId];
         if (unit instanceof rtt_engine.Projectile) {
-          unitCollisions = unitCollisions.filter((u) => !(u instanceof rtt_engine.Projectile));
+          unitCollisions = unitCollisions.filter((u: rtt_engine.IKillable) => !(u instanceof rtt_engine.Projectile));
         }
         const numberOfCollidingUnits = unitCollisions.length;
         if (numberOfCollidingUnits == 0) {
@@ -324,7 +318,7 @@ function main() {
         }
       }
 
-      game.update();
+      game.update(context);
 
       const units = livingPlayers.map((p) => p.units.allKillableCollidableUnits()).flat();
       const obstructionCollisions = obstructionQuadtree.getCollisions(units);
@@ -334,13 +328,12 @@ function main() {
           continue;
         }
         for (let obstruction of obstructionCollisions[unitId]) {
-          obstruction.collide(unitOrProjectile);
+          (obstruction as rtt_engine.Obstruction).collide(unitOrProjectile);
         }
       }
     });
 
     rtt_renderer.time("update rendering", () => {
-      game.draw();
       mapPresenter.draw();
       obstructionPresenter.draw();
       powerSourcePresenter.draw();

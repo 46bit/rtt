@@ -1,7 +1,7 @@
 import { Player } from '../player';
 import { Vector } from '../vector';
-import { Vehicle, IEntity, Projectile, VehicleTurret } from './lib';
-import { IKillable } from './abilities';
+import { Vehicle, IEntity, Projectile, VehicleTurret, IEntityUpdateContext } from './lib';
+import { AttackOrder } from './abilities';
 import lodash from 'lodash';
 
 export const SHOTGUN_RANGE = 80;
@@ -30,14 +30,14 @@ export class ShotgunTank extends Vehicle {
     this.turret.rotation = this.direction;
   }
 
-  update(enemies: IEntity[]) {
+  update(input: {enemies: IEntity[], context: IEntityUpdateContext}) {
     if (this.dead) {
       return;
     }
-    super.update();
+    super.update(input);
     this.updateCounter++;
 
-    const angleToFireProjectile = this.angleToNearestEnemy(enemies);
+    const angleToFireProjectile = this.angleToNearestEnemy(input.enemies);
     if (angleToFireProjectile == null) {
       this.turret.update(this.direction);
       return;
@@ -65,13 +65,13 @@ export class ShotgunTank extends Vehicle {
     return [offset.angle(), offset.magnitude()];
   }
 
-  protected attack(attackOrder: { target: IEntity & IKillable }): boolean {
+  protected attack(attackOrder: AttackOrder): boolean {
     if (attackOrder.target.dead) {
       return false;
     }
     const distance = Vector.subtract(this.position, attackOrder.target.position).magnitude();
     if (distance > SHOTGUN_RANGE) {
-      this.manoeuvre({ destination: attackOrder.target.position });
+      this.manoeuvre({ destination: attackOrder.target.position, context: attackOrder.context });
     }
     return true;
   }

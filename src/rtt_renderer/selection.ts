@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import { Game, Player, Vector, IQuadrant, ICollidable } from '../rtt_engine';
-import { Entity, Projectile } from '../rtt_engine/entities/lib';
+import { Game, Player, Vector, IQuadrant, ICollidable, IOrderable, IOwnable, IKillable, Ownable } from '../rtt_engine';
+import { Entity, SolidEntity, Projectile } from '../rtt_engine/entities/lib';
 
 export type IClickEvent = {clientX: number; clientY: number; button: Button};
 
@@ -17,7 +17,7 @@ export class Selection {
   selectionEnd?: Vector;
   selectionCentre?: Vector;
   selectionRadius?: number;
-  selectedEntities: Entity[];
+  selectedEntities: (IOwnable & ICollidable)[];
   target?: Vector | Entity;
   selectedPlayer: Player | null;
 
@@ -43,22 +43,6 @@ export class Selection {
       this.selectionRadius = undefined;
       this.selectedEntities = [];
       this.target = undefined;
-    } else if (event.button == Button.RightClick && this.selectedEntities.length > 0) {
-      // FIXME: See if anything is at the current location
-      // FIXME: Move selected entities to attack the entity being right clicked, or move to the location,
-      // or build at this location if it's a commander?
-      // FIXME: Just record this info on the class, then figure out how to process the info outside
-      // this class?
-      this.target = worldPosition;
-      this.selectedEntities.forEach((entity) => {
-        // FIXME: There needs to be a better way to check for abilities than checking for fields…
-        if (entity.orders && entity.velocity) {
-          entity.orders[0] = {
-            kind: 'manoeuvre',
-            destination: worldPosition,
-          };
-        }
-      })
     }
   }
 
@@ -79,7 +63,7 @@ export class Selection {
     );
   }
 
-  mouseup(event: IClickEvent, quadtree: IQuadrant<ICollidable>) {
+  mouseup(event: IClickEvent, quadtree: IQuadrant<ICollidable & IOwnable>) {
     if (!this.selectionInProgress || event.button != Button.LeftClick) {
       return;
     }
@@ -88,24 +72,60 @@ export class Selection {
 
     this.selectionInProgress = false;
     // FIXME: Try to cut down on some of this allocation?
-    this.selectedEntities = quadtree.getCollisionsFor({
-      collisionRadius: this.selectionRadius,
-      position: this.selectionCentre,
-      player: null,
-    }).filter((entity) => !(entity instanceof Projectile));
+    this.selectedEntities = quadtree.getCollisionsFor(new SelectionEntity(
+      this.selectionCentre!,
+      this.selectionRadius!,
+    )).filter((entity) => !(entity instanceof Projectile));
     if (this.selectedPlayer) {
       this.selectedEntities = this.selectedEntities.filter((e) => e.player == this.selectedPlayer);
     }
+  }
+
+  issuableOrders(): Map<string, IOrderable[]> {
+    const entitiesByOrderKinds = new Map();
+    this.selectedEntities.forEach((entity) => {
+      if (!entityIsOrderable(entity)) {
+        return;
+      }
+      for (let orderKind of entity.supportedKindsOfOrders()) {
+        if (entitiesByOrderKinds.has(orderKind)) {
+          entitiesByOrderKinds.get(orderKind).push(entity);
+        } else {
+          entitiesByOrderKinds.set(orderKind, [entity]);
+        }
+      }
+    });
+    return entitiesByOrderKinds;
   }
 
   update() {
     // FIXME: `this.selectedEntities` is a list, filter out instead of creating holes in it!
     for (let id in this.selectedEntities) {
       const entity = this.selectedEntities[id];
-      if (entity.dead) {
-        delete (this.selectedEntities[id])
+      if (entityIsKillable(entity) && entity.dead) {
+        delete(this.selectedEntities[id]);
       }
     }
+  }
+}
+
+function entityIsOrderable(entity: Entity | IOrderable): entity is IOrderable {
+  return (entity as IOrderable).supportedKindsOfOrders !== undefined;
+}
+
+function entityIsKillable(entity: Entity | IKillable): entity is IKillable {
+  return (entity as IKillable).damage !== undefined;
+}
+
+class SelectionEntity extends Ownable(SolidEntity) {
+  constructor(position: Vector, selectionRadius: number) {
+    super({
+      position,
+      collisionRadius: selectionRadius,
+      player: null,
+      health: 1,
+      fullHealth: 1,
+    });
   }
 }
 

@@ -6,7 +6,8 @@
     "target": "es6",
     "lib": [
       "es6",
-      "dom"
+      "dom",
+      "es2019"
     ],
     "sourceMap": true,
     "inlineSources": true,
@@ -18,9 +19,11 @@
     "pretty": true,
     "allowJs": true,
     "importHelpers": true,
-    "alwaysStrict": true
+    "alwaysStrict": true,
+    "forceConsistentCasingInFileNames": true
   },
   "include": [
+    "src/*.ts",
     "src/**/*.ts"
   ],
   "exclude": [
