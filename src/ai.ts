@@ -206,13 +206,13 @@ export class ExpansionAI implements IAI {
   game: rtt_engine.Game;
   player: rtt_engine.Player;
   opponents: rtt_engine.Player[];
-  assignedOrders: {[id: string]: rtt_engine.Order};
+  powerSourceEngineers: Map<rtt_engine.PowerSource, rtt_engine.Engineer[]>;
 
   constructor(game: rtt_engine.Game, player: rtt_engine.Player, opponents: rtt_engine.Player[]) {
     this.game = game;
     this.player = player;
     this.opponents = opponents;
-    this.assignedOrders = {};
+    this.powerSourceEngineers = new Map();
   }
 
   update() {
@@ -276,6 +276,7 @@ export class ExpansionAI implements IAI {
     // FUTURE IMPROVEMTN: Also, have every engineer go to the nearest capturable power source that doesn't already have
     // an engineer on the way. Any engineers left without orders should go to the nearest capturable power source.
 
+    const powerSourcesWeOwn = this.player.units.powerGenerators.map((g) => g.powerSource);
     const powerSourcesWeDontOwn = this.game.powerSources.filter((p) => {
       return p.structure == null || (p.structure.player == this.player && !p.structure.built);
     });
@@ -283,6 +284,13 @@ export class ExpansionAI implements IAI {
     if (opposingUnits.length == 0) {
       return;
     }
+
+    for (let powerSourceWeOwn of powerSourcesWeOwn) {
+      this.powerSourceEngineers.delete(powerSourceWeOwn);
+    }
+    this.powerSourceEngineers.forEach((engineers, powerSource) => {
+      this.powerSourceEngineers.set(powerSource, engineers.filter((e) => e.isAlive()));
+    });
 
     if (this.player.units.factories.length == 0 || this.player.storedEnergy > 500) {
       let factoryBuildingUnit;
@@ -318,13 +326,19 @@ export class ExpansionAI implements IAI {
         }
 
         const nearestDesiredPowerSource = lodash.minBy(powerSourcesWeDontOwn, (powerSource) => {
-          return rtt_engine.Vector.distance(powerSource.position, engineer.position);
+          const mult = powerSourcesWeOwn.length < 3 ? 0 : (this.powerSourceEngineers.get(powerSource)?.length ?? 0);
+          return rtt_engine.Vector.distance(powerSource.position, engineer.position) * (mult + 1);
         });
         engineer.orders[0] = rtt_engine.OrderUnion.constructStructure({
           structureClass: rtt_engine.PowerGenerator,
           position: nearestDesiredPowerSource!.position,
-          metadata: nearestDesiredPowerSource,
+          metadata: nearestDesiredPowerSource!,
         });
+        const pre = this.powerSourceEngineers.get(nearestDesiredPowerSource!) ?? [];
+        this.powerSourceEngineers.set(
+          nearestDesiredPowerSource!,
+          pre.concat(engineer),
+        );
       }
     }
 
