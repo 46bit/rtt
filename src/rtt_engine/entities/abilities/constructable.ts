@@ -1,8 +1,7 @@
-import { Entity } from '../lib/entity';
-import { IKillable, Killable } from './killable';
-import { ComposableConstructor } from '../lib/mixins';
+import { IEntity } from '../lib/entity';
+import { IKillable, IKillableConfig, newKillable, repair } from './killable';
 
-export interface IConstructableConfig {
+export interface IConstructableConfig extends IKillableConfig {
   built: boolean;
   buildCost: number;
   constructableByMobileUnits: boolean;
@@ -11,45 +10,34 @@ export interface IConstructableConfig {
 export interface IConstructable extends IKillable {
   buildCost: number;
   built: boolean;
-
-  isBuilt(): boolean;
-  isUnderConstruction(): boolean;
-  buildCostPerHealth(): number;
-  repair(amount: number): void;
+  constructableByMobileUnits: boolean;
 }
 
-export function Constructable<T extends new(o: any) => any>(base: T) {
-  class Constructable extends Killable(base as new(o: any) => Entity) implements IConstructable {
-    public buildCost: number;
-    public built: boolean;
-    public constructableByMobileUnits: boolean;
+export function newConstructable<E extends IEntity>(value: E, cfg: IConstructableConfig): E & IConstructable {
+  return {
+    ...newKillable(value, cfg),
+    buildCost: cfg.buildCost,
+    built: cfg.built,
+    constructableByMobileUnits: cfg.constructableByMobileUnits,
+  };
+}
 
-    constructor(cfg: IConstructableConfig) {
-      super(cfg);
-      this.buildCost = cfg.buildCost;
-      this.built = cfg.built;
-      this.constructableByMobileUnits = cfg.constructableByMobileUnits;
-    }
+export function isBuilt(value: IConstructable): boolean {
+  return value.built;
+}
 
-    public isBuilt() {
-      return this.built;
-    }
+export function isUnderConstruction(value: IConstructable): boolean {
+  return !value.dead && !value.built;
+}
 
-    public isUnderConstruction() {
-      return !this.dead && !this.built;
-    }
+export function buildCostPerHealth(value: IConstructable): number {
+  return (value.buildCost ?? value.fullHealth * 10) / value.fullHealth;
+}
 
-    public buildCostPerHealth() {
-      return (this.buildCost ?? this.fullHealth * 10) / this.fullHealth;
-    }
-
-    public repair(amount: number) {
-      super.repair(amount);
-      if (!this.dead && !this.built) {
-        this.built = (this.health === this.fullHealth);
-      }
-    }
+export function build(value: IConstructable, amount: number): IConstructable {
+  repair(value, amount);
+  if (!value.dead && !value.built) {
+    value.built = (value.health === value.fullHealth);
   }
-
-  return Constructable as ComposableConstructor<typeof Constructable, T>;
+  return value;
 }

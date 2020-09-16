@@ -1,5 +1,4 @@
 export * from './entity';
-export * from './mixins';
 export * from './physics';
 export * from './point_of_interest';
 export * from './projectile';

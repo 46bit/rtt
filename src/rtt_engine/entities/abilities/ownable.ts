@@ -1,39 +1,27 @@
 import { Player } from '../../player';
-import { IEntity, Entity } from '../lib/entity';
-import { ComposableConstructor } from '../lib/mixins';
+import { IEntityConfig, IEntity } from '../lib/entity';
 
-export interface IOwnableConfig {
+export interface IOwnableConfig extends IEntityConfig {
   player: Player | null;
 }
 
 export interface IOwnable extends IEntity {
   player: Player | null;
-  capture(player: Player | null): void;
-  isOccupied(): boolean;
-  isOwner(player: Player | null): boolean;
 }
 
-export function Ownable<T extends new(o: any) => any>(base: T) {
-  class Ownable extends (base as new(o: any) => Entity) implements IOwnable {
-    public player: Player | null;
+export function newOwnable<E extends IEntity>(value: E, cfg: IOwnableConfig): E & IOwnable {
+  return { ...value, player: cfg.player };
+}
 
-    constructor(cfg: IOwnableConfig) {
-      super(cfg);
-      this.player = cfg.player;
-    }
+export function captureOwnable<E extends IOwnable>(value: E, player: Player | null): E {
+  value.player = player;
+  return value;
+}
 
-    public capture(player: Player | null) {
-      this.player = player;
-    }
+export function ownableIsOccupied(value: IOwnable): boolean {
+  return (value.player !== null);
+}
 
-    public isOccupied() {
-      return (this.player !== null);
-    }
-
-    public isOwner(player: Player | null) {
-      return (this.player === player);
-    }
-  }
-
-  return Ownable as ComposableConstructor<typeof Ownable, T>;
+export function playerOwnsOwnable(value: IOwnable, player: Player | null): boolean {
+  return value.player === player;
 }

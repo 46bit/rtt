@@ -1,10 +1,9 @@
 import { Vector } from '../../vector';
-import { Entity, IEntity } from '../lib/entity';
-import { ComposableConstructor } from '../lib/mixins';
+import { IEntityConfig, IEntity } from '../lib/entity';
 
 export type Pathfinder = (from: Vector, to: Vector) => Vector[] | null;
 
-export interface IMovableConfig {
+export interface IMovableConfig extends IEntityConfig {
   velocity?: number;
   direction: number;
 }
@@ -14,31 +13,24 @@ export interface IMovable extends IEntity {
   direction: number;
 }
 
-export function Movable<T extends new(o: any) => any>(base: T) {
-  class Movable extends (base as new(o: any) => Entity) implements IMovable {
-    // FIXME: Store velocity as a Vector instead?
-    public velocity: number;
-    public direction: number;
+export function newMovable<E extends IEntity>(value: E, cfg: IMovableConfig): E & IMovable {
+  return {
+    ...value,
+    velocity: cfg.velocity ?? 0,
+    direction: cfg.direction,
+  };
+}
 
-    constructor(cfg: IMovableConfig) {
-      super(cfg);
-      this.velocity = cfg.velocity ?? 0;
-      this.direction = cfg.direction == null ? 0 : cfg.direction;
-    }
+export function updatePosition<E extends IMovable>(value: E, multiplier = 1): E {
+  const movement = Vector.from_magnitude_and_direction(value.velocity * multiplier, value.direction);
+  value.position = Vector.add(value.position, movement);
+  return value;
+}
 
-    public updatePosition(multiplier = 1) {
-      const movement = Vector.from_magnitude_and_direction(this.velocity * multiplier, this.direction);
-      this.position = Vector.add(this.position, movement);
-    }
+export function isGoingSouth(value: IMovable): boolean {
+  return Math.abs(value.direction) < Math.PI / 2;
+}
 
-    public isGoingSouth() {
-      return Math.abs(this.direction) < Math.PI / 2;
-    }
-
-    public isGoingEast() {
-      return this.direction > 0;
-    }
-  }
-
-  return Movable as ComposableConstructor<typeof Movable, T>;
+export function isGoingEast(value: IMovable): boolean {
+  return value.direction > 0;
 }

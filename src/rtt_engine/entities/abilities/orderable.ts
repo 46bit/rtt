@@ -1,53 +1,45 @@
 import lodash from 'lodash';
 import { unionize, ofType, UnionOf } from 'unionize';
 import { Vector } from '../../vector';
-import { IEntity, Entity, IEntityUpdateContext } from '../lib/entity';
+import { IEntityConfig, IEntity, IEntityUpdateContext } from '../lib/entity';
 import { IKillable } from './killable';
-import { ComposableConstructor } from '../lib/mixins';
 
-export interface IOrderableConfig {
+export interface IOrderableConfig extends IEntityConfig {
   orderBehaviours?: OrderMatchCases<boolean>;
 }
 
 export interface IOrderable extends IEntity {
   orders: Order[];
   orderBehaviours: OrderMatchAllCases<boolean>;
-  supportedKindsOfOrders(): string[];
 }
 
-export function Orderable<T extends new(o: any) => any>(base: T) {
-  class Orderable extends (base as new(o: any) => Entity) {
-    public orders: Order[];
-    public orderBehaviours: OrderMatchAllCases<boolean>;
+export function newOrderable<E extends IEntity>(value: E, cfg: IOrderableConfig): E & IOrderable {
+  return {
+    ...value,
+    orders: [],
+    orderBehaviours: {
+      default: (_) => false,
+      ...cfg.orderBehaviours,
+    },
+  };
+}
 
-    constructor(cfg: IOrderableConfig) {
-      super(cfg);
-      this.orders = [];
-      this.orderBehaviours = {
-        default: (_) => false,
-        ...cfg.orderBehaviours,
-      };
-    }
-
-    updateOrders(input: {context: IEntityUpdateContext}) {
-      const order = this.orders[0];
-      if (order) {
-        // FIXME: Add support for arbitrary extra arguments to unionize, and then use that
-        // instead of hiding the context in the order
-        const orderWithUpdateContext = {...order, context: input.context};
-        const orderStillInProgress = OrderUnion.match(orderWithUpdateContext, this.orderBehaviours);
-        if (!orderStillInProgress) {
-          this.orders.shift();
-        }
-      }
-    }
-
-    supportedKindsOfOrders(): string[] {
-      return lodash.keys(this.orderBehaviours);
+export function updateOrders<E extends IOrderable>(value: E, input: {context: IEntityUpdateContext}): E {
+  const order = value.orders[0];
+  if (order) {
+    // FIXME: Add support for arbitrary extra arguments to unionize, and then use that
+    // instead of hiding the context in the order
+    const orderWithUpdateContext = {...order, context: input.context};
+    const orderStillInProgress = OrderUnion.match(orderWithUpdateContext, value.orderBehaviours);
+    if (!orderStillInProgress) {
+      value.orders.shift();
     }
   }
+  return value;
+}
 
-  return Orderable as ComposableConstructor<typeof Orderable, T>;
+export function supportedKindsOfOrders(value: IOrderable): string[] {
+  return lodash.keys(value.orderBehaviours);
 }
 
 export const OrderUnion = unionize({
@@ -86,7 +78,7 @@ export interface PatrolOrder {
 }
 
 export interface GuardOrder {
-  protectEntity: Entity;
+  protectEntity: IEntity;
   context?: IEntityUpdateContext;
 }
 

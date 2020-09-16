@@ -11,14 +11,11 @@ export interface IEntity {
   position: Vector;
 }
 
-export class Entity {
-  public id: string;
-  public position: Vector;
-
-  constructor(cfg: IEntityConfig) {
-    this.id = nanoid();
-    this.position = cfg.position;
-  }
+export function newEntity(cfg: IEntityConfig): IEntity {
+  return {
+    id: nanoid(),
+    position: cfg.position,
+  };
 }
 
 export interface IEntityUpdateContext {

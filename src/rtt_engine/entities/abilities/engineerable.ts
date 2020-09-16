@@ -1,68 +1,61 @@
 import { Vector } from '../../vector';
-import { IEntity, Entity } from '../lib/entity';
-import { IConstructable, IKillable, ICollidable, IOwnable } from './';
-import { ComposableConstructor } from '../lib/mixins';
+import { IEntityConfig, IEntity } from '../lib/entity';
+import { healthiness, repair, isDead } from './killable';
+import { IConstructable, isBuilt, buildCostPerHealth } from './constructable';
 
-export interface IEngineerableConfig {
+export interface IEngineerableConfig extends IEntityConfig {
   productionRange: number;
 }
 
 export interface IEngineerable extends IEntity {
+  productionRange: number;
   energyProvided: number;
-
-  energyConsumption(): number;
+  construction: IConstructable | null;
 }
 
-export function Engineerable<T extends new(o: any) => any>(base: T) {
-  class Engineerable extends (base as new(o: any) => Entity) implements IEngineerable {
-    // FIXME: Store velocity as a Vector instead?
-    public productionRange: number;
-    public energyProvided: number;
-    public construction: (IConstructable & IKillable & ICollidable & IOwnable) | null;
+export function newEngineerable<E extends IEntity>(value: E, cfg: IEngineerableConfig): E & IEngineerable {
+  return {
+    ...value,
+    productionRange: cfg.productionRange,
+    energyProvided: 0,
+    construction: null,
+  };
+}
 
-    constructor(cfg: IEngineerableConfig) {
-      super(cfg);
-      this.productionRange = cfg.productionRange ?? 0;
-      this.energyProvided = 0;
-      this.construction = null;
-    }
+export function isProducing(value: IEngineerable): boolean {
+  return value.construction !== null;
+}
 
-    public isProducing() {
-      return this.construction !== null;
-    }
+export function productionProgress(value: IEngineerable): number {
+   return healthiness(value.construction!);
+}
 
-    public productionProgress() {
-       return this.construction!.healthiness();
-    }
+export function energyConsumption(value: IEngineerable): number {
+  return isProducing(value) ? 20 : 0;
+}
 
-    public energyConsumption() {
-      return this.isProducing() ? 20 : 0;
-    }
+export function isWithinProductionRange(value: IEngineerable, target: Vector): boolean {
+  return Vector.subtract(value.position, target).magnitude() <= value.productionRange;
+}
 
-    public isWithinProductionRange(target: Vector) {
-      return Vector.subtract(this.position, target).magnitude() <= this.productionRange;
-    }
-
-    public updateProduction() {
-      if (this.construction == null) {
-        return;
-      }
-
-      if (this.construction!.isDead()) {
-        this.construction = null;
-        return;
-      }
-
-      if (this.construction!.isBuilt()) {
-        return;
-      }
-
-      if (this.isWithinProductionRange(this.construction!.position)) {
-        const healthIncrease = this.energyProvided / this.construction!.buildCostPerHealth();
-        this.construction!.repair(healthIncrease);
-      }
-    }
+export function updateProduction<E extends IEngineerable>(value: E): E {
+  if (value.construction == null) {
+    return value;
   }
 
-  return Engineerable as ComposableConstructor<typeof Engineerable, T>;
+  if (isDead(value.construction!)) {
+    value.construction = null;
+    return value;
+  }
+
+  if (isBuilt(value.construction!)) {
+    return value;
+  }
+
+  if (isWithinProductionRange(value, value.construction!.position)) {
+    const healthIncrease = value.energyProvided / buildCostPerHealth(value.construction!);
+    repair(value.construction!, healthIncrease);
+  }
+
+  return value;
 }
