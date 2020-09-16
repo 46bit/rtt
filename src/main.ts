@@ -381,7 +381,7 @@ function main() {
         turretProjectilePresenter.draw();
       }
 
-      ui.update();
+      ui.update(quadtree);
     });
   }, 1000 / 30);
 }

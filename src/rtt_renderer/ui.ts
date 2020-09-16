@@ -1,6 +1,6 @@
-import { Game, Player } from '../rtt_engine';
+import { Game, Player, Vector, IOrderable, IQuadrant, ICollidable, IKillable, Entity } from '../rtt_engine';
 import { Order, OrderUnion } from '../rtt_engine/entities/abilities';
-import { Selection, Button } from './';
+import { Selection, SelectionEntity, Button } from './';
 
 type ScoreTableRow = {"nameCell": any, "energyCell": any, "incomeCell": any, "unitsCell": any};
 
@@ -14,6 +14,7 @@ export class UI {
   selectedUnitList: any;
   selectedUnits: {[name: string]: any};
   orderInProgress: Order["kind"] | null;
+  quadtree?: IQuadrant<ICollidable>;
 
   constructor(game: Game, selection: Selection, sidebar: any, viewport: any) {
     this.game = game;
@@ -78,7 +79,9 @@ export class UI {
     this.viewport.addEventListener("mousedown", (e: MouseEvent) => this.viewportMouseDown(e));
   }
 
-  update() {
+  update(quadtree: IQuadrant<ICollidable>) {
+    this.quadtree = quadtree;
+
     this.game.players.forEach((player) => {
       if (player.isDefeated()) {
         this.scoreTableRows[player.name].nameCell.style.color = "grey";
@@ -154,7 +157,7 @@ export class UI {
     orderPanel.innerHTML = "";
     issuableOrders.forEach((entitiesThatCanTakeOrder, orderKind) => {
       // FIXME: Enable more kinds of orders
-      if (orderKind != "manoeuvre") {
+      if (orderKind in ["manoeuvre", "attack"]) {
         return;
       }
       panelEmpty = false;
@@ -205,18 +208,42 @@ export class UI {
 
     const orderKind = this.orderInProgress ? this.orderInProgress : "manoeuvre";
     const issuableOrders = this.selection.issuableOrders();
-    const entitiesThatCanReceiveOrder = issuableOrders.get(orderKind);
-    if (!entitiesThatCanReceiveOrder) {
+    const orderableEntities = issuableOrders.get(orderKind);
+    if (!orderableEntities) {
       return;
     }
 
     const worldPosition = this.selection.screenPositionToWorldPosition.convert(event.clientX, event.clientY)!;
     switch (orderKind) {
       case "manoeuvre":
-        entitiesThatCanReceiveOrder.forEach((entity, _) => {
-          entity.orders[0] = OrderUnion.manoeuvre({destination: worldPosition});
-        });
+        this.issueOrder(orderableEntities, OrderUnion.manoeuvre({destination: worldPosition}));
+        break;
+      case "attack":
+        const targets = this.quadtree!.getCollisionsFor(new SelectionEntity(worldPosition, 1));
+        let firstKillableTarget = null;
+        for (let target of targets) {
+          if (entityIsKillable(target)) {
+            firstKillableTarget = target;
+            break;
+          }
+        }
+        if (firstKillableTarget) {
+          this.issueOrder(orderableEntities, OrderUnion.attack({target: firstKillableTarget}));
+        } else {
+          this.issueOrder(issuableOrders.get("manoeuvre"), OrderUnion.manoeuvre({destination: worldPosition}));
+        }
         break;
     }
   }
+
+  issueOrder(entities: IOrderable[] | undefined, order: Order) {
+    entities?.forEach((entity, _) => {
+      entity.orders[0] = order;
+    });
+  }
+}
+
+// FIXME: Move these entity ability type assertions somewhere sensible
+function entityIsKillable(entity: Entity | IKillable): entity is IKillable {
+  return (entity as IKillable).damage !== undefined;
 }

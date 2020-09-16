@@ -18,7 +18,6 @@ export class Selection {
   selectionCentre?: Vector;
   selectionRadius?: number;
   selectedEntities: (IOwnable & ICollidable)[];
-  target?: Vector | Entity;
   selectedPlayer: Player | null;
 
   constructor(game: Game, screenPositionToWorldPosition: ScreenPositionToWorldPosition) {
@@ -42,7 +41,6 @@ export class Selection {
       this.selectionCentre = undefined;
       this.selectionRadius = undefined;
       this.selectedEntities = [];
-      this.target = undefined;
     }
   }
 
@@ -117,7 +115,7 @@ function entityIsKillable(entity: Entity | IKillable): entity is IKillable {
   return (entity as IKillable).damage !== undefined;
 }
 
-class SelectionEntity extends Ownable(SolidEntity) {
+export class SelectionEntity extends Ownable(SolidEntity) {
   constructor(position: Vector, selectionRadius: number) {
     super({
       position,
