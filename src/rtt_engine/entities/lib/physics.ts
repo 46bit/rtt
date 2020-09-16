@@ -1,63 +1,65 @@
 import { Vector } from '../../vector';
 
-export class Physics {
-  public mass: number;
-  public power: number;
-  public frictionCoefficient: number;
-  public dragCoefficient: number;
-  public dragArea: number;
-  public airMassDensity: number;
-  public rollingResistanceCoefficient: number;
+export interface IPhysics {
+  mass: number;
+  power: number;
+  frictionCoefficient: number;
+  dragCoefficient: number;
+  dragArea: number;
+  airMassDensity: number;
+  rollingResistanceCoefficient: number;
   // This one isn't well-founded at all. We might want to model dynamics–angular momentum.
-  public turnCoefficient: number;
+  turnCoefficient: number;
+}
 
-  // FIXME: Refactor as `interface Physics` and `class DefaultPhysics`
-  constructor() {
-    this.mass = 1.0;
-    this.power = 5.0;
-    this.frictionCoefficient = 1.0;
-    this.dragCoefficient = 0.03;
-    this.dragArea = 1.0;
+// FIXME: Change this to a global const, and precompute a lot of the functions further down?
+export function newPhysics(): IPhysics {
+  return {
+    mass: 1.0,
+    power: 5.0,
+    frictionCoefficient: 1.0,
+    dragCoefficient: 0.03,
+    dragArea: 1.0,
     // Air mass density seems to be closer to 1.2, but that gave severe results
-    this.airMassDensity = 0.5;
-    this.rollingResistanceCoefficient = 0.1;
-    this.turnCoefficient = 2500.0; // 3500.0
-  }
+    airMassDensity: 0.5,
+    rollingResistanceCoefficient: 0.1,
+    turnCoefficient: 2500.0,
+  };
+}
 
-  public normalForce() {
-    return this.mass * 9.81;
-  }
+export function normalForce(value: IPhysics) {
+  return value.mass * 9.81;
+}
 
-  public grip() {
-    return this.normalForce() * this.frictionCoefficient;
-  }
+export function grip(value: IPhysics) {
+  return normalForce(value) * value.frictionCoefficient;
+}
 
-  public momentum(velocity: number) {
-    return this.mass * velocity;
-  }
+export function momentum(value: IPhysics, velocity: number) {
+  return value.mass * velocity;
+}
 
-  public airResistance(velocity: number) {
-    return 0.5 * this.airMassDensity * Math.pow(velocity, 2) * this.dragCoefficient * this.dragArea;
-  }
+export function airResistance(value: IPhysics, velocity: number) {
+  return 0.5 * value.airMassDensity * Math.pow(velocity, 2) * value.dragCoefficient * value.dragArea;
+}
 
-  public rollingResistance() {
-    return this.rollingResistanceCoefficient * this.normalForce();
-  }
+export function rollingResistance(value: IPhysics) {
+  return value.rollingResistanceCoefficient * normalForce(value);
+}
 
-  public rollingResistanceForces(velocity: number, angularVelocity: number) {
-    const speed = Math.abs(velocity) + Math.abs(angularVelocity);
-    if (speed === 0) {
-      return new Vector(0, 0);
-    }
-    const perUnit = this.rollingResistance() / speed;
-    return new Vector(velocity * perUnit, angularVelocity * perUnit);
+export function rollingResistanceForces(value: IPhysics, velocity: number, angularVelocity: number) {
+  const speed = Math.abs(velocity) + Math.abs(angularVelocity);
+  if (speed === 0) {
+    return new Vector(0, 0);
   }
+  const perUnit = rollingResistance(value) / speed;
+  return new Vector(velocity * perUnit, angularVelocity * perUnit);
+}
 
-  public maxAccelerationForce() {
-    return Math.min(this.power, this.grip());
-  }
+export function maxAccelerationForce(value: IPhysics) {
+  return Math.min(value.power, grip(value));
+}
 
-  public turningAngle() {
-    return Math.PI / this.turnCoefficient;
-  }
+export function turningAngle(value: IPhysics) {
+    return Math.PI / value.turnCoefficient;
 }

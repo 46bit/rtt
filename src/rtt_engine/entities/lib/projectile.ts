@@ -1,28 +1,39 @@
-import { IMovableConfig, IOwnableConfig, Movable, Ownable } from '../abilities';
-import { ISolidEntityConfig, SolidEntity } from './solid_entity';
-import { Vector } from '../../vector';
+import {
+  IMovable,
+  IMovableConfig,
+  newMovable,
+  IOwnable,
+  IOwnableConfig,
+  newOwnable,
+  kill,
+  updatePosition,
+} from '../abilities';
+import { ISolidEntityConfig, ISolidEntity, newSolidEntity } from './solid_entity';
 
-export interface IProjectileConfig extends ISolidEntityConfig, IOwnableConfig, IMovableConfig {
+export interface IProjectileConfig extends ISolidEntityConfig, IMovableConfig, IOwnableConfig {
   lifetime: number;
 }
 
-export class Projectile extends Ownable(Movable(SolidEntity)) {
+export interface IProjectile extends ISolidEntity, IMovable, IOwnable {
   lifetime: number;
+}
 
-  constructor(cfg: IProjectileConfig) {
-    super(cfg);
-    this.lifetime = cfg.lifetime;
-  }
+export function newProjectile(cfg: IProjectileConfig): IProjectile {
+  return {
+    ...newOwnable(newMovable(newSolidEntity(cfg), cfg), cfg),
+    lifetime: cfg.lifetime,
+  };
+}
 
-  public update() {
-    if (this.dead) {
-      return;
-    }
-    if (this.lifetime <= 0) {
-      this.kill();
-      return;
-    }
-    this.lifetime--;
-    this.updatePosition();
+export function updateProjectile<E extends IProjectile>(value: E): E {
+  if (value.dead) {
+    return value;
   }
+  if (value.lifetime <= 0) {
+    kill(value);
+    return value;
+  }
+  value.lifetime--;
+  updatePosition(value);
+  return value;
 }

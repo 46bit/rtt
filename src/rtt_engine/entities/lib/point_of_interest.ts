@@ -1,13 +1,15 @@
-import { Collidable, ICollidableConfig } from '../abilities/collidable';
-import { Entity, IEntityConfig } from './entity';
+import { ICollidableConfig, ICollidable, newCollidable } from '../abilities/collidable';
+import { IEntityConfig, IEntity, newEntity } from './entity';
 
-export interface IPointOfInterestConfig extends ICollidableConfig, IEntityConfig {}
+export type IPointOfInterestConfig = ICollidableConfig;
 
-export class PointOfInterest<S> extends Collidable(Entity) {
-  public structure: S | null;
+export interface IPointOfInterest<S> extends ICollidable {
+  structure: S | null;
+}
 
-  constructor(cfg: IPointOfInterestConfig) {
-    super(cfg);
-    this.structure = null;
-  }
+export function newPointOfInterest<S>(cfg: IPointOfInterestConfig): IPointOfInterest<S> {
+  return {
+    ...newCollidable(newEntity(cfg), cfg),
+    structure: null,
+  };
 }

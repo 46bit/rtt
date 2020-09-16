@@ -1,13 +1,20 @@
 import {
-  Constructable,
+  IConstructable,
   IConstructableConfig,
-  Orderable,
+  newConstructable,
+  IOrderable,
   IOrderableConfig,
-  Ownable,
+  newOrderable,
+  IOwnable,
   IOwnableConfig,
+  newOwnable,
 } from '../abilities';
-import { SolidEntity, ISolidEntityConfig } from './solid_entity';
+import { ISolidEntityConfig, ISolidEntity, newSolidEntity } from './solid_entity';
 
-export interface IUnitConfig extends ISolidEntityConfig, IConstructableConfig, IOrderableConfig, IOwnableConfig { }
+export type IUnitConfig = ISolidEntityConfig & IConstructableConfig & IOrderableConfig & IOwnableConfig;
 
-export class Unit extends Constructable(Orderable(Ownable(SolidEntity))) { }
+export type IUnit = ISolidEntity & IConstructable & IOrderable & IOwnable;
+
+export function newUnit(cfg: IUnitConfig): IUnit {
+  return newOwnable(newOrderable(newConstructable(newSolidEntity(cfg), cfg), cfg), cfg);
+}

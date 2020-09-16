@@ -1,22 +1,22 @@
 import {
-  Collidable,
-  Constructable,
-  ICollidableConfig,
-  IConstructableConfig,
   IManoeuverableConfig,
-  IOwnableConfig,
-  IOrderableConfig,
-  Manoeuvrable,
-  Ownable,
-  Orderable,
+  IManoeuverable,
+  newManoeuverable,
   IKillable,
   ManoeuvreOrder,
   AttackOrder,
   PatrolOrder,
   GuardOrder,
+  applyDragForces,
+  updateOrders,
+  updateDirection,
+  updatePosition,
+  updateVelocity,
+  shouldTurnLeftToReach,
+  shouldTurnRightToReach,
 } from '../abilities';
-import { Unit, IUnitConfig } from './unit';
-import { Entity, IEntityUpdateContext } from './entity';
+import { IUnitConfig, IUnit, newUnit } from './unit';
+import { IEntity, IEntityUpdateContext } from './entity';
 import { Vector } from '../../vector';
 
 export interface IVehicleConfig extends IUnitConfig, IManoeuverableConfig {
@@ -24,104 +24,102 @@ export interface IVehicleConfig extends IUnitConfig, IManoeuverableConfig {
   turnRate: number;
 }
 
-export class Vehicle extends Manoeuvrable(Unit) {
-  public movementRate: number;
-  public turnRate: number;
-  public route: Vector[] | null;
-  public routeTo: Vector | null;
+export interface IVehicle extends IUnit, IManoeuverable {
+  movementRate: number;
+  turnRate: number;
+  route: Vector[] | null;
+  routeTo: Vector | null;
+}
 
-  constructor(cfg: IVehicleConfig) {
-    cfg.constructableByMobileUnits = false;
-    cfg.orderBehaviours = {
-      manoeuvre: (o) => this.manoeuvre(o),
-      attack: (o) => this.attack(o),
-      patrol: (o) => this.patrol(o),
-      guard: (o) => this.guard(o),
-      ...cfg.orderBehaviours,
-    };
-    super(cfg);
-    this.movementRate = cfg.movementRate;
-    this.turnRate = cfg.turnRate;
-    this.route = null;
-    this.routeTo = null;
+export function newVehicle(cfg: IVehicleConfig): IVehicle {
+  // FIXME: Feels weird to not pass these down to the abilities, yet also weird to define config
+  // in two places
+  cfg.constructableByMobileUnits = false;
+  cfg.orderBehaviours = {
+    manoeuvre: (o) => this.manoeuvre(o),
+    attack: (o) => this.attack(o),
+    patrol: (o) => this.patrol(o),
+    ...cfg.orderBehaviours,
+  };
+  return {
+    ...newManoeuverable(newUnit(cfg), cfg),
+    movementRate: cfg.movementRate,
+    turnRate: cfg.turnRate,
+    route: null,
+    routeTo: null,
+  };
+}
+
+export function updateVehicle<E extends IVehicle>(value: E, input: {context: IEntityUpdateContext}): E {
+  if (value.dead) {
+    return value;
+  }
+  // FIXME: Drag should be applied after acceleration, but based on the previous velocity?
+  applyDragForces(value);
+  updateOrders(value, input);
+  updateDirection(value, value.turnRate);
+  updatePosition(value, value.movementRate);
+  return value;
+}
+
+export function vehicleManoeuvre<E extends IVehicle>(value: E, manoeuvreOrder: ManoeuvreOrder): boolean {
+  const distanceToDestination = Vector.subtract(value.position, manoeuvreOrder.destination).magnitude();
+  if (distanceToDestination < 10) {
+    value.routeTo = null;
+    return false;
   }
 
-  public update(input: {context: IEntityUpdateContext}) {
-    if (this.dead) {
-      return;
-    }
-    // FIXME: Drag should be applied after acceleration, but based on the previous velocity?
-    this.applyDragForces();
-    this.updateOrders(input);
-    this.updateDirection(this.turnRate);
-    this.updatePosition(this.movementRate);
+  if (!value.routeTo || !value.route || value.route.length == 0 || !value.routeTo.equals(manoeuvreOrder.destination) || Math.random() < 0.1) {
+    // Find route
+    value.routeTo = manoeuvreOrder.destination;
+    value.route = manoeuvreOrder.context!.pathfinder(value.position, value.routeTo);
   }
 
-  protected manoeuvre(manoeuvreOrder: ManoeuvreOrder): boolean {
-    const distanceToDestination = Vector.subtract(this.position, manoeuvreOrder.destination).magnitude();
-    if (distanceToDestination < 10) {
-      this.routeTo = null;
+  if (!value.route || value.route.length == 0) {
+    value.routeTo = null;
+    return false;
+  }
+
+  let nextRouteDestination = value.route[0];
+  let distanceToNextRouteDestination = Vector.subtract(value.position, nextRouteDestination).magnitude();
+  while (distanceToNextRouteDestination < 5) {
+    value.route.shift();
+    if (value.route.length == 0) {
+      value.routeTo = null;
       return false;
     }
-
-    if (!this.routeTo || !this.route || this.route.length == 0 || !this.routeTo.equals(manoeuvreOrder.destination) || Math.random() < 0.1) {
-      // Find route
-      this.routeTo = manoeuvreOrder.destination;
-      this.route = manoeuvreOrder.context!.pathfinder(this.position, this.routeTo);
-      //console.log(this.route);
-      //this.route?.shift();
-    }
-
-    if (!this.route || this.route.length == 0) {
-      this.routeTo = null;
-      return false;
-    }
-
-    let nextRouteDestination = this.route[0];
-    let distanceToNextRouteDestination = Vector.subtract(this.position, nextRouteDestination).magnitude();
-    while (distanceToNextRouteDestination < 5) {
-      this.route.shift();
-      if (this.route.length == 0) {
-        this.routeTo = null;
-        return false;
-      }
-      nextRouteDestination = this.route[0];
-      distanceToNextRouteDestination = Vector.subtract(this.position, nextRouteDestination).magnitude();
-    }
-
-    if (this.shouldTurnLeftToReach(nextRouteDestination) && Math.random() > 0.2) {
-      this.updateVelocity(-this.physics.turningAngle());
-    } else if (this.shouldTurnRightToReach(nextRouteDestination) && Math.random() > 0.2) {
-      this.updateVelocity(this.physics.turningAngle());
-    } else {
-      this.updateVelocity(0);
-    }
-    return true;
+    nextRouteDestination = value.route[0];
+    distanceToNextRouteDestination = Vector.subtract(value.position, nextRouteDestination).magnitude();
   }
 
-  protected attack(attackOrder: AttackOrder): boolean {
-    if (attackOrder.target.dead) {
-      return false;
-    }
-    this.manoeuvre({ destination: attackOrder.target.position, context: attackOrder.context });
-    return true;
+  if (shouldTurnLeftToReach(value, nextRouteDestination) && Math.random() > 0.2) {
+    updateVelocity(value, -value.physics.turningAngle());
+  } else if (shouldTurnRightToReach(value, nextRouteDestination) && Math.random() > 0.2) {
+    updateVelocity(value, value.physics.turningAngle());
+  } else {
+    updateVelocity(value, 0);
   }
+  return true;
+}
 
-  protected patrol(patrolOrder: PatrolOrder): boolean {
-    if (patrolOrder.range === undefined) {
-      patrolOrder.range = this.collisionRadius;
-    }
-    const distanceToLocation = Vector.subtract(this.position, patrolOrder.location).magnitude();
-    if (distanceToLocation <= patrolOrder.range) {
-      // FIXME: Circle the location
-      this.manoeuvre({ destination: patrolOrder.location, context: patrolOrder.context });
-    } else {
-      this.manoeuvre({ destination: patrolOrder.location, context: patrolOrder.context });
-    }
-    return true;
+export function vehicleAttack<E extends IVehicle>(value: E, attackOrder: AttackOrder): boolean {
+  if (attackOrder.target.dead) {
+    return false;
   }
+  vehicleManoeuvre(value, { destination: attackOrder.target.position, context: attackOrder.context });
+  return true;
+}
 
-  protected guard(guardOrder: GuardOrder): boolean {
-    throw new Error("guarding units not yet implemented. requires knowing position of enemy units…")
+export function vehiclePatrol<E extends IVehicle>(value: E, patrolOrder: PatrolOrder): boolean {
+  if (patrolOrder.range === undefined) {
+    patrolOrder.range = value.collisionRadius;
   }
+  const distanceToLocation = Vector.subtract(value.position, patrolOrder.location).magnitude();
+  if (distanceToLocation <= patrolOrder.range) {
+    // FIXME: Circle the location
+    vehicleManoeuvre(value, { destination: patrolOrder.location, context: patrolOrder.context });
+  } else {
+    vehicleManoeuvre(value, { destination: patrolOrder.location, context: patrolOrder.context });
+  }
+  return true;
 }

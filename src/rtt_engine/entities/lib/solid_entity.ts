@@ -1,11 +1,17 @@
 import {
-  Collidable,
   ICollidableConfig,
-  Killable,
+  ICollidable,
+  newCollidable,
   IKillableConfig,
+  IKillable,
+  newKillable,
 } from '../abilities';
-import { Entity } from './entity';
+import { IEntityConfig, IEntity, newEntity } from './entity';
 
-export interface ISolidEntityConfig extends ICollidableConfig, IKillableConfig { }
+export type ISolidEntityConfig = IEntityConfig & ICollidableConfig & IKillableConfig;
 
-export class SolidEntity extends Collidable(Killable(Entity)) { }
+export type ISolidEntity = ICollidable & IKillable;
+
+export function newSolidEntity(cfg: ISolidEntityConfig): ISolidEntity {
+  return newCollidable(newKillable(newEntity(cfg), cfg), cfg);
+}

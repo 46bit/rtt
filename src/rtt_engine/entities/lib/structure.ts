@@ -1,5 +1,5 @@
-import { Unit, IUnitConfig } from './unit';
+import { IUnit, IUnitConfig } from './unit';
 
-export interface IStructureConfig extends IUnitConfig {}
+export type IStructureConfig = IUnitConfig;
 
-export class Structure extends Unit {}
+export type IStructure = IUnit;
