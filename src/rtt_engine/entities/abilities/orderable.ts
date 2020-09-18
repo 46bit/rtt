@@ -1,27 +1,25 @@
 import lodash from 'lodash';
 import { unionize, ofType, UnionOf } from 'unionize';
 import { Vector } from '../../vector';
-import { IEntityConfig, IEntity, IEntityUpdateContext } from '../lib/entity';
-import { IKillable } from './killable';
+import { IKillableConfig, IKillable, newKillable } from './killable';
+import { IEntity, IEntityUpdateContext, newEntity } from '../lib/entity';
+import { UnitMetadata, KindsOfUnitsWithAbility } from '../lib/poc';
 
-export interface IOrderableConfig extends IEntityConfig {
-  orderBehaviours?: OrderMatchCases<boolean>;
+export interface IOrderableConfig extends IKillableConfig {
+  orderBehaviours: OrderMatchCases<boolean>;
 }
 
-export interface IOrderable extends IEntity {
+export type OrderableUnits = KindsOfUnitsWithAbility<IOrderableConfig>;
+
+export interface IOrderable extends IKillable {
+  kind: OrderableUnits;
   orders: Order[];
-  orderBehaviours: OrderMatchAllCases<boolean>;
 }
 
-export function newOrderable<E extends IEntity>(value: E, cfg: IOrderableConfig): E & IOrderable {
-  return {
-    ...value,
-    orders: [],
-    orderBehaviours: {
-      default: (_) => false,
-      ...cfg.orderBehaviours,
-    },
-  };
+export type FieldsOfIOrderable = Omit<IOrderable, "kind">;
+
+export function newOrderable<K extends OrderableUnits, E extends IEntity<K>>(value: E): E & FieldsOfIOrderable {
+  return {...newKillable(value), orders: []};
 }
 
 export function updateOrders<E extends IOrderable>(value: E, input: {context: IEntityUpdateContext}): E {
@@ -30,7 +28,7 @@ export function updateOrders<E extends IOrderable>(value: E, input: {context: IE
     // FIXME: Add support for arbitrary extra arguments to unionize, and then use that
     // instead of hiding the context in the order
     const orderWithUpdateContext = {...order, context: input.context};
-    const orderStillInProgress = OrderUnion.match(orderWithUpdateContext, value.orderBehaviours);
+    const orderStillInProgress = OrderUnion.match(orderWithUpdateContext, UnitMetadata[value.kind].orderBehaviours);
     if (!orderStillInProgress) {
       value.orders.shift();
     }
@@ -39,7 +37,7 @@ export function updateOrders<E extends IOrderable>(value: E, input: {context: IE
 }
 
 export function supportedKindsOfOrders(value: IOrderable): string[] {
-  return lodash.keys(value.orderBehaviours);
+  return lodash.keys(UnitMetadata[value.kind].orderBehaviours);
 }
 
 export const OrderUnion = unionize({

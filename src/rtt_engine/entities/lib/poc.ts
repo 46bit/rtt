@@ -42,6 +42,9 @@ export const UnitMetadata = {
     turnRate: 5.0 / 3.0,
     productionRange: 25.0,
     constructableByMobileUnits: true,
+    orderBehaviours: {
+      default: (_: any) => false,
+    },
   },
   commander: {
     collisionRadius: 8,

@@ -1,16 +1,21 @@
 import { Player } from '../../player';
-import { IEntityConfig, IEntity } from '../lib/entity';
+import { IEntity } from '../lib/entity';
+import { UnitMetadata, KindsOfUnitsWithAbility } from '../lib/poc';
 
-export interface IOwnableConfig extends IEntityConfig {
+export interface IOwnableConfig {
   player: Player | null;
 }
 
-export interface IOwnable extends IEntity {
+export type KindsOfUnitsThatAreOwnable = KindsOfUnitsWithAbility<IOwnableConfig>;
+
+export interface IOwnable extends IEntity<KindsOfUnitsThatAreOwnable> {
   player: Player | null;
 }
 
-export function newOwnable<E extends IEntity>(value: E, cfg: IOwnableConfig): E & IOwnable {
-  return { ...value, player: cfg.player };
+export type FieldsOfIOwnable = Omit<IOwnable, "kind">;
+
+export function newOwnable<K extends KindsOfUnitsThatAreOwnable, E extends IEntity<K>>(value: E, player: Player | null): E & FieldsOfIOwnable {
+  return {...value, player};
 }
 
 export function captureOwnable<E extends IOwnable>(value: E, player: Player | null): E {
