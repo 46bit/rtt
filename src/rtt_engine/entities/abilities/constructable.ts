@@ -1,14 +1,13 @@
-import { IEntity, newEntity } from '../lib/entity';
+import { IEntity } from '../lib/entity';
 import { IKillable, IKillableConfig, KindsOfUnitsThatAreKillable, newKillable, repair } from './killable';
 import { UnitMetadata, KindsOfUnitsWithAbility } from '../lib/poc';
-import { Vector } from '../../vector';
 
 export interface IConstructableConfig extends IKillableConfig {
   buildCost: number;
   constructableByMobileUnits: boolean;
 }
 
-export type KindsOfUnitsThatAreConstructable = KindsOfUnitsWithAbility<IConstructableConfig>;
+export type ConstructableUnits = KindsOfUnitsWithAbility<IConstructableConfig>;
 
 export interface IConstructable extends IKillable {
   built: boolean;
@@ -16,22 +15,22 @@ export interface IConstructable extends IKillable {
 
 export type FieldsOfIConstructable = Omit<IConstructable, "kind">;
 
-export function newConstructable<K extends KindsOfUnitsThatAreConstructable, E extends IEntity<K>>(value: E): E & FieldsOfIConstructable {
+export function newConstructable<K extends ConstructableUnits, E extends IEntity<K>>(value: E): E & FieldsOfIConstructable {
   return {
     ...newKillable(value),
     built: false,
   };
 }
 
-export function isBuilt(value: IConstructable<KindsOfUnitsThatAreConstructable>): boolean {
+export function isBuilt(value: IConstructable): boolean {
   return value.built;
 }
 
-export function isUnderConstruction(value: IConstructable<KindsOfUnitsThatAreConstructable>): boolean {
+export function isUnderConstruction(value: IConstructable): boolean {
   return !value.dead && !value.built;
 }
 
-export function buildCostPerHealth(value: IConstructable<KindsOfUnitsThatAreConstructable>): number {
+export function buildCostPerHealth(value: IConstructable): number {
   return (UnitMetadata[value.kind].buildCost ?? UnitMetadata[value.kind].fullHealth * 10) / UnitMetadata[value.kind].fullHealth;
 }
 
@@ -42,6 +41,3 @@ export function build(value: IConstructable, amount: number): IConstructable {
   }
   return value;
 }
-
-const turret = newConstructable(newEntity({kind: "turret", position: new Vector(5, 5)}));
-type A = typeof turret;

@@ -33,7 +33,7 @@ export function kill<E extends IKillable>(value: E): E {
 }
 
 export function repair<E extends IKillable>(value: E, amount: number): E {
-  value.health = Math.min(value.health + amount, value.fullHealth);
+  value.health = Math.min(value.health + amount, UnitMetadata[value.kind].fullHealth);
   return value;
 }
 
@@ -54,9 +54,9 @@ export function isAlive(value: IKillable): boolean {
 }
 
 export function isDamaged(value: IKillable): boolean {
-  return value.health < value.fullHealth;
+  return value.health < UnitMetadata[value.kind].fullHealth;
 }
 
 export function healthiness(value: IKillable): number {
-  return value.health / value.fullHealth;;
+  return value.health / UnitMetadata[value.kind].fullHealth;
 }

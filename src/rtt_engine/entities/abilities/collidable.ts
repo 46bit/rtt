@@ -1,16 +1,17 @@
 import { Vector } from '../../vector';
-import { IEntityConfig, IEntity } from '../lib/entity';
+import { IEntity } from '../lib/entity';
+import { UnitMetadata, KindsOfUnitsWithAbility } from '../lib/poc';
 
-export interface ICollidableConfig extends IEntityConfig {
+export interface ICollidableConfig {
   collisionRadius: number;
 }
 
-export interface ICollidable extends IEntity {
-  collisionRadius: number;
-}
+export type KindsOfUnitsThatAreCollidable = KindsOfUnitsWithAbility<ICollidableConfig>;
+
+export type ICollidable = IEntity<KindsOfUnitsThatAreCollidable>;
 
 export function isColliding(one: ICollidable, two: ICollidable, within = 0): boolean {
-  const combinedCollisionRadius = one.collisionRadius + two.collisionRadius + within;
+  const combinedCollisionRadius = UnitMetadata[one.kind].collisionRadius + UnitMetadata[two.kind].collisionRadius + within;
   const distanceBetween = Vector.subtract(one.position, two.position).magnitude();
   return distanceBetween < combinedCollisionRadius;
 }
