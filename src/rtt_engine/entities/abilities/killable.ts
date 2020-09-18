@@ -1,22 +1,24 @@
-import { IEntityConfig, IEntity } from '../lib/entity';
+import { IEntity } from '../lib/entity';
+import { UnitMetadata, KindsOfUnitsWithAbility } from '../lib/poc';
 
-export interface IKillableConfig extends IEntityConfig {
+export interface IKillableConfig {
   fullHealth: number;
-  health: number;
 }
 
-export interface IKillable extends IEntity {
-  fullHealth: number;
+export type KindsOfUnitsThatAreKillable = KindsOfUnitsWithAbility<IKillableConfig>;
+
+export interface IKillable<K extends KindsOfUnitsThatAreKillable> extends IEntity<K> {
   health: number;
   dead: boolean;
   orders?: any[];
 }
 
-export function newKillable<E extends IEntity>(value: E, cfg: IKillableConfig): E & IKillable {
+export type FieldsOfIKillable<K extends KindsOfUnitsThatAreKillable> = Omit<IKillable<K>, "kind">;
+
+export function newKillable<K extends KindsOfUnitsThatAreKillable, E extends IEntity<K>>(value: E): E & FieldsOfIKillable<K> {
   return {
     ...value,
-    fullHealth: cfg.fullHealth,
-    health: cfg.health,
+    health: UnitMetadata[value.kind].fullHealth,
     dead: false,
   };
 }

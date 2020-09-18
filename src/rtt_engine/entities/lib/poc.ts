@@ -1,5 +1,6 @@
 import lodash from 'lodash';
 import { unionize, ofType, UnionOf } from 'unionize';
+import { Vector } from '../../vector';
 
 export const UnitUnion = unionize({
   artilleryTank: ofType<IArtilleryTank>(),
@@ -9,14 +10,21 @@ export const UnitUnion = unionize({
   factory: ofType<IFactory>(),
   powerGenerator: ofType<IPowerGenerator>(),
   shotgunTank: ofType<IShotgunTank>(),
-  Titan: ofType<ITitan>(),
-  Turret: ofType<ITurret>(),
+  titan: ofType<ITitan>(),
+  turret: ofType<ITurret>(),
 }, {tag: "kind"});
 export type Unit = UnionOf<typeof UnitUnion>;
 export type UnitRecord = typeof UnitUnion._Record;
 
-type MetadataForUnits = {[kind in keyof UnitRecord]: {[key: string]: any}};
-export const UnitMetadata: MetadataForUnits = {
+export type KindsOfUnits = keyof MetadataForUnits;
+export type KindsOfUnitsWithAbility<AbilityConfig> =
+  ({
+    [P in KindsOfUnits]:
+    MetadataForUnits[P] extends AbilityConfig ? P : never
+  })[KindsOfUnits];
+
+export type MetadataForUnits = typeof UnitMetadata;
+export const UnitMetadata = {
   artilleryTank: {
     collisionRadius: 9,
     buildCost: 500,
@@ -30,8 +38,10 @@ export const UnitMetadata: MetadataForUnits = {
     buildCost: 70,
     fullHealth: 10,
     movementRate: 0.15,
+    position: new Vector(5, 5),
     turnRate: 5.0 / 3.0,
     productionRange: 25.0,
+    constructableByMobileUnits: true,
   },
   commander: {
     collisionRadius: 8,
