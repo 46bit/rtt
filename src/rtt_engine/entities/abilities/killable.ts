@@ -7,15 +7,15 @@ export interface IKillableConfig {
 
 export type KindsOfUnitsThatAreKillable = KindsOfUnitsWithAbility<IKillableConfig>;
 
-export interface IKillable<K extends KindsOfUnitsThatAreKillable> extends IEntity<K> {
+export interface IKillable extends IEntity<KindsOfUnitsThatAreKillable> {
   health: number;
   dead: boolean;
   orders?: any[];
 }
 
-export type FieldsOfIKillable<K extends KindsOfUnitsThatAreKillable> = Omit<IKillable<K>, "kind">;
+export type FieldsOfIKillable = Omit<IKillable, "kind">;
 
-export function newKillable<K extends KindsOfUnitsThatAreKillable, E extends IEntity<K>>(value: E): E & FieldsOfIKillable<K> {
+export function newKillable<K extends KindsOfUnitsThatAreKillable, E extends IEntity<K>>(value: E): E & FieldsOfIKillable {
   return {
     ...value,
     health: UnitMetadata[value.kind].fullHealth,

@@ -10,13 +10,13 @@ export interface IConstructableConfig extends IKillableConfig {
 
 export type KindsOfUnitsThatAreConstructable = KindsOfUnitsWithAbility<IConstructableConfig>;
 
-export interface IConstructable<K extends KindsOfUnitsThatAreConstructable> extends IKillable<K> {
+export interface IConstructable extends IKillable {
   built: boolean;
 }
 
-export type FieldsOfIConstructable<K extends KindsOfUnitsThatAreConstructable> = Omit<IConstructable<K>, "kind">;
+export type FieldsOfIConstructable = Omit<IConstructable, "kind">;
 
-export function newConstructable<K extends KindsOfUnitsThatAreConstructable, E extends IEntity<K>>(value: E): E & FieldsOfIConstructable<K> {
+export function newConstructable<K extends KindsOfUnitsThatAreConstructable, E extends IEntity<K>>(value: E): E & FieldsOfIConstructable {
   return {
     ...newKillable(value),
     built: false,
@@ -44,3 +44,4 @@ export function build(value: IConstructable, amount: number): IConstructable {
 }
 
 const turret = newConstructable(newEntity({kind: "turret", position: new Vector(5, 5)}));
+type A = typeof turret;
