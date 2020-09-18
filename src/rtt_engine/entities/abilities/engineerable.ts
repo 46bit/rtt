@@ -1,22 +1,25 @@
 import { Vector } from '../../vector';
-import { IEntityConfig, IEntity } from '../lib/entity';
+import { IEntity } from '../lib/entity';
+import { UnitMetadata, KindsOfUnitsWithAbility } from '../lib/poc';
 import { healthiness, repair, isDead } from './killable';
 import { IConstructable, isBuilt, buildCostPerHealth } from './constructable';
 
-export interface IEngineerableConfig extends IEntityConfig {
+export interface IEngineerableConfig {
   productionRange: number;
 }
 
-export interface IEngineerable extends IEntity {
-  productionRange: number;
+export type KindsOfUnitsThatAreEngineers = KindsOfUnitsWithAbility<IEngineerableConfig>;
+
+export interface IEngineerable extends IEntity<KindsOfUnitsThatAreEngineers> {
   energyProvided: number;
   construction: IConstructable | null;
 }
 
-export function newEngineerable<E extends IEntity>(value: E, cfg: IEngineerableConfig): E & IEngineerable {
+export type FieldsOfIEngineerable = Omit<IEngineerable, "kind">;
+
+export function newEngineerable<K extends KindsOfUnitsThatAreEngineers, E extends IEntity<K>>(value: E): E & FieldsOfIEngineerable {
   return {
     ...value,
-    productionRange: cfg.productionRange,
     energyProvided: 0,
     construction: null,
   };
@@ -35,7 +38,7 @@ export function energyConsumption(value: IEngineerable): number {
 }
 
 export function isWithinProductionRange(value: IEngineerable, target: Vector): boolean {
-  return Vector.subtract(value.position, target).magnitude() <= value.productionRange;
+  return Vector.subtract(value.position, target).magnitude() <= UnitMetadata[value.kind].productionRange;
 }
 
 export function updateProduction<E extends IEngineerable>(value: E): E {
