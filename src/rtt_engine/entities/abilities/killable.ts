@@ -5,17 +5,17 @@ export interface IKillableConfig {
   fullHealth: number;
 }
 
-export type KindsOfUnitsThatAreKillable = KindsOfUnitsWithAbility<IKillableConfig>;
+export type KillableUnits = KindsOfUnitsWithAbility<IKillableConfig>;
 
-export interface IKillable extends IEntity<KindsOfUnitsThatAreKillable> {
+export interface IKillable<K extends KillableUnits> extends IEntity<K> {
   health: number;
   dead: boolean;
   orders?: any[];
 }
 
-export type FieldsOfIKillable = Omit<IKillable, "kind">;
+export type Killable = IKillable<KillableUnits>;
 
-export function newKillable<K extends KindsOfUnitsThatAreKillable, E extends IEntity<K>>(value: E): E & FieldsOfIKillable {
+export function newKillable<E extends IEntity<KillableUnits>>(value: E): IKillable<KillableUnits> {
   return {
     ...value,
     health: UnitMetadata[value.kind].fullHealth,
@@ -23,7 +23,7 @@ export function newKillable<K extends KindsOfUnitsThatAreKillable, E extends IEn
   };
 }
 
-export function kill<E extends IKillable>(value: E): E {
+export function kill<E extends Killable>(value: E): E {
   value.dead = true;
   value.health = 0;
   if (value.orders) {
@@ -32,12 +32,12 @@ export function kill<E extends IKillable>(value: E): E {
   return value;
 }
 
-export function repair<E extends IKillable>(value: E, amount: number): E {
+export function repair<E extends Killable>(value: E, amount: number): E {
   value.health = Math.min(value.health + amount, UnitMetadata[value.kind].fullHealth);
   return value;
 }
 
-export function damage<E extends IKillable>(value: E, amount: number): E {
+export function damage<E extends Killable>(value: E, amount: number): E {
   value.health = Math.max(value.health - amount, 0);
   if (value.health <= 0) {
     value = kill(value);
@@ -45,18 +45,18 @@ export function damage<E extends IKillable>(value: E, amount: number): E {
   return value;
 }
 
-export function isDead(value: IKillable): boolean {
+export function isDead(value: Killable): boolean {
   return value.dead;
 }
 
-export function isAlive(value: IKillable): boolean {
+export function isAlive(value: Killable): boolean {
   return !value.dead;
 }
 
-export function isDamaged(value: IKillable): boolean {
+export function isDamaged(value: Killable): boolean {
   return value.health < UnitMetadata[value.kind].fullHealth;
 }
 
-export function healthiness(value: IKillable): number {
+export function healthiness(value: Killable): number {
   return value.health / UnitMetadata[value.kind].fullHealth;
 }
