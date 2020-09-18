@@ -7,6 +7,7 @@ export interface IEntityConfig {
 }
 
 export interface IEntity {
+  kind: string;
   id: string;
   position: Vector;
 }

@@ -1,45 +1,52 @@
 import { Player } from '../player';
 import { PowerSource } from './power_source';
-import { Structure, IEntityUpdateContext } from './lib';
+import { IStructure, IStructureConfig, IEntityUpdateContext, newStructure } from './lib';
 import { Vector } from '../vector';
 
-export class PowerGenerator extends Structure {
-  public powerSource: PowerSource;
-  public energyOutput: number;
-  public upgrading: boolean;
-  public energyProvided: number;
+export interface IPowerGeneratorConfig {
+  player: Player;
+  built: boolean;
+  powerSource: IPowerSource;
+  energyOutput?: number;
+}
 
-  constructor(position: Vector, player: Player, built: boolean, powerSource: PowerSource, energyOutput = 1) {
-    if (powerSource.position != position) {
-      throw new Error("trying to build a power generator at a different location to the power source.")
-    }
-    super({
-      position: position,
-      collisionRadius: 8,
-      player,
-      built,
-      buildCost: 300,
-      fullHealth: 60,
-      health: built ? 60 : 0,
-      orderBehaviours: {
-        upgrade: (o: any) => this.upgrade(o),
-      },
-    } as any);
-    this.powerSource = powerSource;
-    this.powerSource.structure = this;
-    this.energyOutput = energyOutput;
-    this.upgrading = false;
-    this.energyProvided = 0;
-  }
+export interface IPowerGenerator extends IStructure {
+  powerSource: IPowerSource;
+  energyOutput: number;
+  upgrading: boolean;
+  energyProvided: number;
+}
 
-  kill() {
-    super.kill();
-    this.powerSource.structure = null;
-  }
+export function newPowerGenerator(cfg: IPowerGeneratorConfig): IPowerGenerator {
+  const structureCfg = {
+    position: cfg.powerSource.position,
+    collisionRadius: 8,
+    player: cfg.player,
+    built: cfg.built,
+    buildCost: 300,
+    fullHealth: 60,
+    health: cfg.built ? 60 : 0,
+    orderBehaviours: {
+      upgrade: (o: any) => this.upgrade(o),
+    },
+  };
+  return {
+    ...newStructure(structureCfg),
+    powerSource: cfg.powerSource,
+    energyOutput: cfg.energyOutput ?? 1,
+    upgrading: false,
+    energyProvided: 0,
+  };
+}
 
-  energyConsumption() {
-    return this.upgrading ? 10 : 0;
-  }
+// kill() {
+//   super.kill();
+//   this.powerSource.structure = null;
+// }
+
+export function energyConsumption(value: IPowerGenerator): number {
+  return value.upgrading ? 10 : 0;
+}
 
   update(input: {context: IEntityUpdateContext}) {
     if (this.dead) {

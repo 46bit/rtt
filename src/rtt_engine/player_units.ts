@@ -13,6 +13,7 @@ import {
   IConstructable,
   IOwnable,
   IEntity,
+  IUnit,
   IEntityUpdateContext,
 } from './entities';
 
@@ -24,46 +25,17 @@ type Vehicle = Bot | ArtilleryTank | ShotgunTank | Titan | Engineer;
 
 export class PlayerUnits {
   public unitCap: number | null;
-  public commander: Commander | null;
-  public vehicles: Vehicle[];
-  public engineers: Engineer[];
-  public factories: Factory[];
-  public powerGenerators: PowerGenerator[];
-  public turrets: Turret[];
-  public constructions: {[id: string]: IKillable & ICollidable & IConstructable & IOwnable};
+  public unitsByKind: Map<string, IUnit[]>;
+  public constructionsById: Map<string, IUnit>;
 
   public constructor(unitCap: number | null) {
     this.unitCap = unitCap;
-    this.commander = null;
-    this.vehicles = [];
-    this.engineers = [];
-    this.factories = [];
-    this.powerGenerators = [];
-    this.turrets = [];
-    this.constructions = {};
-  }
-
-  public allKillableCollidableUnits(): (IKillable & ICollidable & IOwnable)[] {
-    let units = [];
-    // Engineers are also in this.vehicles
-    units.push(...this.vehicles);
-    units.push(...this.factories);
-    units.push(...this.powerGenerators);
-    units.push(...this.turrets);
-    units.push(...Object.values(this.constructions));
-    if (this.commander != null) {
-      units.push(this.commander);
-    }
-    return units;
+    this.unitsByKind = new Map();
+    this.constructionsById = new Map();
   }
 
   public unitCount() {
-    return (this.commander ? 1 : 0)
-      + this.vehicles.length
-      + this.factories.length
-      + this.powerGenerators.length
-      + this.turrets.length
-      + Object.keys(this.constructions).length;
+    return this.unitsByKind.size;
   }
 
   public isAtUnitCap() {
@@ -71,8 +43,10 @@ export class PlayerUnits {
   }
 
   public energyOutput() {
-    return (this.commander ? this.commander.energyOutput : 0)
-      + this.powerGenerators.reduce((sum, powerGenerator) => sum + powerGenerator.energyOutput, 0);
+    let output = 0;
+    output += this.unitsByKind.get("commander").reduce((sum, com) => sum + com.energyOutput, 0);
+    output += this.unitsByKind.get("powerGenerator").reduce((sum, powerGen) => sum + powerGen.energyOutput, 0);
+    return output;
   }
 
   public update(enemies: (IKillable & ICollidable)[], context: IEntityUpdateContext) {
