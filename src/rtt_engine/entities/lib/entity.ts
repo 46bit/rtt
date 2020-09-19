@@ -3,16 +3,17 @@ import { Vector } from '../../vector';
 import { Pathfinder } from '../abilities';
 import { KindsOfUnits } from '../lib/poc';
 
-export interface IEntity<K extends KindsOfUnits> {
+export interface IEntityMetadata {}
+export interface IEntityState {
+  kind: any;
   id: string;
-  kind: K;
   position: Vector;
 }
 
-export function newEntity<K extends KindsOfUnits>(cfg: {kind: K, position: Vector}): IEntity<K> {
+export function newEntity<K>(cfg: {kind: K, position: Vector}): IEntityState {
   return {
-    id: nanoid(),
     kind: cfg.kind,
+    id: nanoid(),
     position: cfg.position,
   };
 }
