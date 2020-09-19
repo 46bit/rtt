@@ -1,7 +1,6 @@
 export * from './entity';
 export * from './physics';
 export * from './poc';
-export * from './point_of_interest';
 export * from './projectile';
 export * from './solid_entity';
 export * from './structure';

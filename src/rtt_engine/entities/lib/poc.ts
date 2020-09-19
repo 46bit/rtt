@@ -40,6 +40,11 @@ export const UnitMetadata = {
     fullHealth: 50,
     movementRate: 0.04,
     turnRate: 4.0 / 3.0,
+    physics: newPhysics(),
+    constructableByMobileUnits: false,
+    orderBehaviours: {
+      default: (_: any) => false,
+    },
     firingRate: 75,
   },
   bot: {
@@ -49,7 +54,7 @@ export const UnitMetadata = {
     movementRate: 0.15,
     turnRate: 5.0 / 3.0,
     physics: newPhysics(),
-    constructableByMobileUnits: true,
+    constructableByMobileUnits: false,
     orderBehaviours: {
       default: (_: any) => false,
     },
@@ -109,8 +114,13 @@ export const UnitMetadata = {
     fullHealth: 35,
     movementRate: 0.07,
     turnRate: 4.0 / 3.0,
+    physics: newPhysics(),
+    constructableByMobileUnits: false,
     firingRate: 40,
     turretInput: [0.08, 1, 0.8],
+    orderBehaviours: {
+      default: (_: any) => false,
+    },
   },
   titan: {
     collisionRadius: 12,

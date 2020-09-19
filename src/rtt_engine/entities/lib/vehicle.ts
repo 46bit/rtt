@@ -20,7 +20,7 @@ export interface IVehicleState extends VehicleAbilities {
 }
 
 export type IVehicleStateFields = Omit<IVehicleState, "kind">;
-function newVehicle<K extends VehicleUnits>(kind: K, position: Vector, player: Player | null): IVehicleStateFields {
+export function newVehicle<K extends VehicleUnits>(kind: K, position: Vector, player: Player | null): IVehicleStateFields {
   return {
     ...newUnit(kind, position, player),
     ...abilities.newMovable(kind),
