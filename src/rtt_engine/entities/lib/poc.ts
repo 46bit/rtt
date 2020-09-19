@@ -85,6 +85,13 @@ export const UnitMetadata = {
     collisionRadius: 8,
     buildCost: 300,
     fullHealth: 60,
+    constructableByMobileUnits: true,
+    orderBehaviours: {
+      default: (_: any) => false,
+    },
+  },
+  powerSource: {
+    collisionRadius: 7.0,
   },
   shotgunProjectile: {
     collisionRadius: 3,

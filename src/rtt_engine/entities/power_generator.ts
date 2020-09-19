@@ -1,77 +1,55 @@
-import { Player } from '../player';
-import { PowerSource } from './power_source';
-import { IStructure, IStructureConfig, IEntityUpdateContext, newStructure } from './lib';
-import { Vector } from '../vector';
+import { Vector, Player } from '../';
+import * as abilities from './abilities';
+import { UnitMetadata } from './lib';
+import { IStructureState, IPowerSourceState, newStructure } from './';
 
-export interface IPowerGeneratorConfig {
-  player: Player;
-  built: boolean;
-  powerSource: IPowerSource;
-  energyOutput?: number;
-}
+export type PowerGeneratorAbilities = IStructureState;
 
-export interface IPowerGenerator extends IStructure {
-  powerSource: IPowerSource;
+export interface IPowerGeneratorState extends PowerGeneratorAbilities {
+  kind: "powerGenerator";
+  powerSource: IPowerSourceState;
   energyOutput: number;
   upgrading: boolean;
   energyProvided: number;
 }
 
-export function newPowerGenerator(cfg: IPowerGeneratorConfig): IPowerGenerator {
-  const structureCfg = {
-    position: cfg.powerSource.position,
-    collisionRadius: 8,
-    player: cfg.player,
-    built: cfg.built,
-    buildCost: 300,
-    fullHealth: 60,
-    health: cfg.built ? 60 : 0,
-    orderBehaviours: {
-      upgrade: (o: any) => this.upgrade(o),
-    },
-  };
+export function newPowerGenerator(powerSource: IPowerSourceState, player: Player | null): IPowerGeneratorState {
+  const kind = "powerGenerator";
   return {
-    ...newStructure(structureCfg),
-    powerSource: cfg.powerSource,
-    energyOutput: cfg.energyOutput ?? 1,
+    kind,
+    ...newStructure(kind, powerSource.position, player),
+    powerSource: powerSource,
+    energyOutput: 1,
     upgrading: false,
     energyProvided: 0,
   };
 }
 
-// kill() {
-//   super.kill();
-//   this.powerSource.structure = null;
-// }
+export function killPowerGenerator(value: IPowerGeneratorState) {
+  value.powerSource.structure = null;
+  value.dead = true;
+}
 
-export function energyConsumption(value: IPowerGenerator): number {
+export function energyConsumption(value: IPowerGeneratorState): number {
   return value.upgrading ? 10 : 0;
 }
 
-  update(input: {context: IEntityUpdateContext}) {
-    if (this.dead) {
-      return;
-    }
-    this.updateOrders(input);
-  }
-
-  upgrade(_: {}): boolean {
-    if (this.upgrading == true) {
-      if (this.health == this.fullHealth) {
-        this.upgrading = false;
-        this.energyOutput *= 2;
-        return false;
-      } else {
-        this.repair(this.energyProvided / this.buildCostPerHealth());
-      }
+export function upgrade(value: IPowerGeneratorState): boolean {
+  if (value.upgrading == true) {
+    if (value.health == UnitMetadata[value.kind].fullHealth) {
+      value.upgrading = false;
+      value.energyOutput *= 2;
+      return false;
     } else {
-      if (this.energyOutput >= 16) {
-        return false;
-      }
-      this.upgrading = true;
-      this.fullHealth *= 2;
-      this.buildCost *= 4;
+      abilities.repair(value, value.energyProvided / abilities.buildCostPerHealth(value));
     }
-    return true;
+  } else {
+    if (value.energyOutput >= 16) {
+      return false;
+    }
+    value.upgrading = true;
+    value.fullHealth *= 2;
+    value.buildCost *= 4;
   }
+  return true;
 }

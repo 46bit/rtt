@@ -12,9 +12,12 @@ export type UnitAbilities =
   & abilities.IOrderableState
   & abilities.IConstructableState;
 
-export interface IUnitState extends UnitAbilities { }
+export interface IUnitState extends UnitAbilities {
+  kind: UnitUnits;
+}
 
-function newUnit(kind: UnitUnits, position: Vector, player: Player | null): IUnitState {
+export type IUnitStateFields = Omit<IUnitState, "kind">;
+export function newUnit<K extends UnitUnits>(kind: K, position: Vector, player: Player | null): IUnitStateFields {
   return {
     ...newSolidEntity(kind, position, player),
     ...abilities.newOrderable(kind),

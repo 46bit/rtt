@@ -1,12 +1,19 @@
-import { Vector } from '../vector';
-import { PowerGenerator } from './power_generator';
-import { PointOfInterest } from './lib/point_of_interest';
+import { Vector } from '../';
+import * as abilities from './abilities';
+import { IEntityMetadata, IEntityState, IPowerGeneratorState, newEntity } from './';
 
-export class PowerSource extends PointOfInterest<PowerGenerator> {
-    constructor(position: Vector) {
-        super({
-            position,
-            collisionRadius: 7.0,
-        })
-    }
+export type IPowerSourceMetadata = IEntityMetadata & abilities.ICollidableMetadata;
+export type PowerSourceAbilities = IEntityState & abilities.ICollidableState;
+
+export interface IPowerSourceState extends PowerSourceAbilities {
+  kind: "powerSource";
+  structure: IPowerGeneratorState | null;
+}
+
+export function newPowerSource(position: Vector): IPowerSourceState {
+  const kind = "powerSource";
+  return {
+    ...newEntity({kind, position}),
+    structure: null,
+  };
 }
