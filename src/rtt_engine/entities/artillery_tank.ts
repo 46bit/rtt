@@ -68,19 +68,3 @@ export class ArtilleryTank extends Vehicle {
     return true;
   }
 }
-
-export class ArtilleryProjectile extends Projectile {
-  constructor(position: Vector, player: Player, direction: number) {
-    super({
-      player,
-      position,
-      direction,
-      velocity: 1.8,
-      lifetime: ARTILLERY_RANGE / 1.8,
-      collisionRadius: 5,
-      health: 18,
-      fullHealth: 18,
-    })
-  }
-}
-

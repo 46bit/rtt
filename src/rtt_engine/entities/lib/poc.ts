@@ -2,6 +2,7 @@ import lodash from 'lodash';
 import { unionize, ofType, UnionOf } from 'unionize';
 import { Vector } from '../../vector';
 import { newPhysics } from './physics';
+import { ARTILLERY_RANGE, SHOTGUN_RANGE, TURRET_RANGE } from '../';
 
 export const UnitUnion = unionize({
   artilleryTank: ofType<IArtilleryTank>(),
@@ -26,6 +27,13 @@ export type KindsOfUnitsWithAbility<AbilityConfig> =
 
 export type MetadataForUnits = typeof UnitMetadata;
 export const UnitMetadata = {
+  artilleryProjectile: {
+    collisionRadius: 5,
+    movementRate: 1.0,
+    velocity: 1.8,
+    fullHealth: 18,
+    lifetime: ARTILLERY_RANGE / 1.8,
+  },
   artilleryTank: {
     collisionRadius: 9,
     buildCost: 500,
@@ -78,6 +86,16 @@ export const UnitMetadata = {
     buildCost: 300,
     fullHealth: 60,
   },
+  shotgunProjectile: {
+    collisionRadius: 3,
+    movementRate: 1.0,
+    velocity: 6.5,
+    // FIXME: Change `lifetime` to a `projectileRange` parameter, and
+    // fix `SHOTGUN_RANGE` because it's actually not being divided by
+    // the velocity here
+    lifetime: SHOTGUN_RANGE / 5,
+    fullHealth: 2.5,
+  },
   shotgunTank: {
     collisionRadius: 8,
     buildCost: 400,
@@ -101,6 +119,13 @@ export const UnitMetadata = {
     fullHealth: 60,
     constructableByMobileUnits: true,
     firingRate: 5,
+  },
+  turretProjectile: {
+    collisionRadius: 4,
+    movementRate: 1.0,
+    velocity: 3.5,
+    lifetime: TURRET_RANGE / 3.5,
+    fullHealth: 7,
   },
 };
 

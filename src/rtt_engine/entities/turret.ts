@@ -53,18 +53,3 @@ export class Turret extends Structure {
     return offset.angle();
   }
 }
-
-export class TurretProjectile extends Projectile {
-  constructor(position: Vector, player: Player, direction: number) {
-    super({
-      player,
-      position,
-      direction,
-      velocity: 3.5,
-      lifetime: TURRET_RANGE / 3.5,
-      collisionRadius: 4,
-      health: 7,
-      fullHealth: 7,
-    })
-  }
-}

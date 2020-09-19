@@ -1,20 +1,23 @@
-import {
-  IConstructable,
-  IConstructableConfig,
-  newConstructable,
-  IOrderable,
-  IOrderableConfig,
-  newOrderable,
-  IOwnable,
-  IOwnableConfig,
-  newOwnable,
-} from '../abilities';
-import { ISolidEntityConfig, ISolidEntity, newSolidEntity } from './solid_entity';
+import { Vector, Player } from '../../';
+import * as abilities from '../abilities';
+import { KindsOfUnitsWithAbility, ISolidEntityMetadata, SolidEntityAbilities, newSolidEntity } from './';
 
-export type IUnitConfig = ISolidEntityConfig & IConstructableConfig & IOrderableConfig & IOwnableConfig;
+export type UnitUnits = KindsOfUnitsWithAbility<IUnitMetadata>;
+export type IUnitMetadata =
+  ISolidEntityMetadata
+  & abilities.IOrderableMetadata
+  & abilities.IConstructableMetadata;
+export type UnitAbilities =
+  SolidEntityAbilities
+  & abilities.IOrderableState
+  & abilities.IConstructableState;
 
-export type IUnit = ISolidEntity & IConstructable & IOrderable & IOwnable;
+export interface IUnitState extends UnitAbilities { }
 
-export function newUnit(cfg: IUnitConfig): IUnit {
-  return newOwnable(newOrderable(newConstructable(newSolidEntity(cfg), cfg), cfg), cfg);
+function newUnit(kind: UnitUnits, position: Vector, player: Player | null): IUnitState {
+  return {
+    ...newSolidEntity(kind, position, player),
+    ...abilities.newOrderable(kind),
+    ...abilities.newConstructable(kind),
+  };
 }

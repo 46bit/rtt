@@ -76,18 +76,3 @@ export class ShotgunTank extends Vehicle {
     return true;
   }
 }
-
-export class ShotgunProjectile extends Projectile {
-  constructor(position: Vector, player: Player, direction: number) {
-    super({
-      player,
-      position,
-      direction,
-      velocity: 6.5,
-      lifetime: SHOTGUN_RANGE / 5,
-      collisionRadius: 3,
-      health: 2.5,
-      fullHealth: 2.5,
-    })
-  }
-}

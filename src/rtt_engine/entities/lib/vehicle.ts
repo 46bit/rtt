@@ -16,8 +16,26 @@ import {
   shouldTurnRightToReach,
 } from '../abilities';
 import { IUnitConfig, IUnit, newUnit } from './unit';
-import { IEntity, IEntityUpdateContext } from './entity';
+import { IEntityState, IEntityMetadata,, IEntityUpdateContext } from './entity';
 import { Vector } from '../../vector';
+
+
+type UnitStateAbilities = IOwnableState & IOrderableState & IConstructableState & IKillable & ICollidableState & IEntityState;
+type VehicleStateAbilities = IPathable & ISteerableState & IMovableState & UnitStateAbilities;
+export interface IVehicleState extends VehicleStateAbilities { }
+function newVehicle(kind: K, position: Vector): IVehicleState {
+  return {
+    ...newEntity({kind: kind, position}),
+    ...newKillable(kind),
+    ...newConstructable(kind),
+    ...newOrderable(kind),
+    ...newOwnable(kind, null),
+    ...newMovable(kind),
+    ...newSteerable(kind),
+  };
+}
+
+
 
 export interface IVehicleConfig extends IUnitConfig, IManoeuverableConfig {
   movementRate: number;

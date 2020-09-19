@@ -1,39 +1,40 @@
-import {
-  IMovable,
-  IMovableConfig,
-  newMovable,
-  IOwnable,
-  IOwnableConfig,
-  newOwnable,
-  kill,
-  updatePosition,
-} from '../abilities';
-import { ISolidEntityConfig, ISolidEntity, newSolidEntity } from './solid_entity';
+import { Vector, Player } from '../../';
+import * as abilities from '../abilities';
+import { UnitMetadata, KindsOfUnitsWithAbility, ISolidEntityMetadata, SolidEntityAbilities, newSolidEntity } from './';
 
-export interface IProjectileConfig extends ISolidEntityConfig, IMovableConfig, IOwnableConfig {
-  lifetime: number;
+export type ProjectileUnits = KindsOfUnitsWithAbility<IProjectileMetadata>;
+export type IProjectileMetadata =
+  ISolidEntityMetadata
+  & abilities.IMovableMetadata
+  & {lifetime: number, velocity: number};
+export type ProjectileAbilities =
+  SolidEntityAbilities
+  & abilities.IMovableState;
+
+export interface IProjectileState extends ProjectileAbilities {
+  remainingLifetime: number;
 }
 
-export interface IProjectile extends ISolidEntity, IMovable, IOwnable {
-  lifetime: number;
-}
-
-export function newProjectile(cfg: IProjectileConfig): IProjectile {
+export function newProjectile(kind: ProjectileUnits, position: Vector, direction: number, player: Player | null): IProjectileState {
   return {
-    ...newOwnable(newMovable(newSolidEntity(cfg), cfg), cfg),
-    lifetime: cfg.lifetime,
+    ...newSolidEntity(kind, position, player),
+    ...abilities.newMovable(kind, {
+      direction,
+      velocity: UnitMetadata[kind].velocity,
+    }),
+    remainingLifetime: UnitMetadata[kind].lifetime,
   };
 }
 
-export function updateProjectile<E extends IProjectile>(value: E): E {
+export function updateProjectile<T extends IProjectileState>(value: T): T {
   if (value.dead) {
     return value;
   }
-  if (value.lifetime <= 0) {
-    kill(value);
+  if (value.remainingLifetime <= 0) {
+    abilities.kill(value);
     return value;
   }
-  value.lifetime--;
-  updatePosition(value);
+  value.remainingLifetime--;
+  abilities.updatePosition(value);
   return value;
 }

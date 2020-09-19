@@ -1,17 +1,25 @@
-import {
-  ICollidableConfig,
-  ICollidable,
-  newCollidable,
-  IKillableConfig,
-  IKillable,
-  newKillable,
-} from '../abilities';
-import { IEntityConfig, IEntity, newEntity } from './entity';
+import { Vector, Player } from '../../';
+import * as abilities from '../abilities';
+import { KindsOfUnitsWithAbility, IEntityMetadata, IEntityState, newEntity } from './';
 
-export type ISolidEntityConfig = IEntityConfig & ICollidableConfig & IKillableConfig;
+export type SolidEntityUnits = KindsOfUnitsWithAbility<ISolidEntityMetadata>;
+export type ISolidEntityMetadata =
+  IEntityMetadata
+  & abilities.IOwnableMetadata
+  & abilities.IKillableMetadata
+  & abilities.ICollidableMetadata;
+export type SolidEntityAbilities =
+  IEntityState
+  & abilities.IOwnableState
+  & abilities.IKillableState
+  & abilities.ICollidableState;
 
-export type ISolidEntity = ICollidable & IKillable;
+export interface ISolidEntityState extends SolidEntityAbilities { }
 
-export function newSolidEntity(cfg: ISolidEntityConfig): ISolidEntity {
-  return newCollidable(newKillable(newEntity(cfg), cfg), cfg);
+export function newSolidEntity(kind: SolidEntityUnits, position: Vector, player: Player | null): ISolidEntityState {
+  return {
+    ...newEntity({kind: kind, position}),
+    ...abilities.newOwnable(kind, player),
+    ...abilities.newKillable(kind),
+  };
 }

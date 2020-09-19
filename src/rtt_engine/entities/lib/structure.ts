@@ -1,5 +1,5 @@
-import { IUnit, IUnitConfig } from './unit';
+import { IUnitMetadata, IUnitState } from './';
 
-export type IStructureConfig = IUnitConfig;
+export type IStructureMetadata = IUnitMetadata;
 
-export type IStructure = IUnit;
+export type IStructureState = IUnitState;
