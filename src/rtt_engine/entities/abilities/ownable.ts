@@ -1,32 +1,29 @@
 import { Player } from '../../player';
-import { IEntity } from '../lib/entity';
+import { IEntityMetadata, IEntityState } from '../lib/entity';
 import { UnitMetadata, KindsOfUnitsWithAbility } from '../lib/poc';
 
-export interface IOwnableConfig {
+export type OwnableUnits = KindsOfUnitsWithAbility<IOwnableMetadata>;
+export interface IOwnableMetadata extends IEntityMetadata { }
+
+export interface IOwnableState extends IEntityState {
+  kind: OwnableUnits;
   player: Player | null;
 }
 
-export type KindsOfUnitsThatAreOwnable = KindsOfUnitsWithAbility<IOwnableConfig>;
-
-export interface IOwnable extends IEntity<KindsOfUnitsThatAreOwnable> {
-  player: Player | null;
+export type IOwnableEntityFields = Omit<IOwnableState, keyof IEntityState>;
+export function newOwnable<K extends OwnableUnits>(kind: K, player: Player | null): IOwnableEntityFields {
+  return {player};
 }
 
-export type FieldsOfIOwnable = Omit<IOwnable, "kind">;
-
-export function newOwnable<K extends KindsOfUnitsThatAreOwnable, E extends IEntity<K>>(value: E, player: Player | null): E & FieldsOfIOwnable {
-  return {...value, player};
-}
-
-export function captureOwnable<E extends IOwnable>(value: E, player: Player | null): E {
+export function captureOwnable<T extends IOwnableState>(value: T, player: Player | null): T {
   value.player = player;
   return value;
 }
 
-export function ownableIsOccupied(value: IOwnable): boolean {
+export function ownableIsOccupied(value: IOwnableState): boolean {
   return (value.player !== null);
 }
 
-export function playerOwnsOwnable(value: IOwnable, player: Player | null): boolean {
+export function playerOwnsOwnable(value: IOwnableState, player: Player | null): boolean {
   return value.player === player;
 }

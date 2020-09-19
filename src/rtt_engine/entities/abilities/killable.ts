@@ -1,8 +1,8 @@
-import { IEntityState } from '../lib/entity';
+import { IEntityMetadata, IEntityState } from '../lib/entity';
 import { UnitMetadata, KindsOfUnitsWithAbility } from '../lib/poc';
 
 export type KillableUnits = KindsOfUnitsWithAbility<IKillableMetadata>;
-export interface IKillableMetadata {
+export interface IKillableMetadata extends IEntityMetadata {
   fullHealth: number;
 }
 

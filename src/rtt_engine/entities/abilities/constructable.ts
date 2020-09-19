@@ -44,7 +44,9 @@ export function build<T extends IConstructableState>(value: T, amount: number): 
 // Testing for type errors
 import { Vector } from '../../vector';
 import { IOrderableState, OrderableUnits, newOrderable, updateOrders } from './orderable';
-type BotStateAbilities = IOrderableState & IConstructableState & IKillableState & IEntityState;
+import { IOwnableState, OwnableUnits, newOwnable, captureOwnable } from './ownable';
+import { ICollidableState, CollidableUnits, isColliding } from './collidable';
+type BotStateAbilities = ICollidableState & IOwnableState & IOrderableState & IConstructableState & IKillableState & IEntityState;
 interface BotState extends BotStateAbilities {}
 function newBot(position: Vector): BotState {
   return {
@@ -52,6 +54,7 @@ function newBot(position: Vector): BotState {
     ...newKillable("bot"),
     ...newConstructable("bot"),
     ...newOrderable("bot"),
+    ...newOwnable("bot", null),
   };
 }
 
@@ -60,3 +63,5 @@ const built: boolean = isBuilt(bot);
 const t = build(bot, 10);
 const t2 = updateOrders(bot, {context: {pathfinder: (a: any, b: any) => null}});
 const k = kill(bot);
+const capB = captureOwnable(bot, null);
+const b = isColliding(bot, bot);
