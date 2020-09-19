@@ -16,4 +16,3 @@ export function isColliding(one: ICollidableState, two: ICollidableState, within
   const distanceBetween = Vector.subtract(one.position, two.position).magnitude();
   return distanceBetween < combinedCollisionRadius;
 }
-

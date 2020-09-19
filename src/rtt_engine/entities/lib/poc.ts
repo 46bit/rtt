@@ -1,6 +1,7 @@
 import lodash from 'lodash';
 import { unionize, ofType, UnionOf } from 'unionize';
 import { Vector } from '../../vector';
+import { newPhysics } from './physics';
 
 export const UnitUnion = unionize({
   artilleryTank: ofType<IArtilleryTank>(),
@@ -40,6 +41,7 @@ export const UnitMetadata = {
     movementRate: 0.15,
     position: new Vector(5, 5),
     turnRate: 5.0 / 3.0,
+    physics: newPhysics(),
     productionRange: 25.0,
     constructableByMobileUnits: true,
     orderBehaviours: {

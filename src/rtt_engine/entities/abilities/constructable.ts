@@ -46,7 +46,9 @@ import { Vector } from '../../vector';
 import { IOrderableState, OrderableUnits, newOrderable, updateOrders } from './orderable';
 import { IOwnableState, OwnableUnits, newOwnable, captureOwnable } from './ownable';
 import { ICollidableState, CollidableUnits, isColliding } from './collidable';
-type BotStateAbilities = ICollidableState & IOwnableState & IOrderableState & IConstructableState & IKillableState & IEntityState;
+import { IMovableState, MovableUnits, newMovable, updatePosition } from './movable';
+import { ISteerableState, SteerableUnits, newSteerable, updateDirection } from './steerable';
+type BotStateAbilities = ISteerableState & IMovableState & ICollidableState & IOwnableState & IOrderableState & IConstructableState & IKillableState & IEntityState;
 interface BotState extends BotStateAbilities {}
 function newBot(position: Vector): BotState {
   return {
@@ -55,6 +57,8 @@ function newBot(position: Vector): BotState {
     ...newConstructable("bot"),
     ...newOrderable("bot"),
     ...newOwnable("bot", null),
+    ...newMovable("bot"),
+    ...newSteerable("bot"),
   };
 }
 
@@ -65,3 +69,6 @@ const t2 = updateOrders(bot, {context: {pathfinder: (a: any, b: any) => null}});
 const k = kill(bot);
 const capB = captureOwnable(bot, null);
 const b = isColliding(bot, bot);
+bot.velocity += 10;
+const m = updatePosition(bot);
+const f = updateDirection(bot);

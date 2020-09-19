@@ -1,36 +1,39 @@
 import { Vector } from '../../vector';
-import { IEntityConfig, IEntity } from '../lib/entity';
+import { IEntityMetadata, IEntityState } from '../lib/entity';
+import { UnitMetadata, KindsOfUnitsWithAbility } from '../lib/poc';
 
 export type Pathfinder = (from: Vector, to: Vector) => Vector[] | null;
 
-export interface IMovableConfig extends IEntityConfig {
-  velocity?: number;
-  direction: number;
+export type MovableUnits = KindsOfUnitsWithAbility<IMovableMetadata>;
+export interface IMovableMetadata extends IEntityMetadata {
+  movementRate: number;
 }
 
-export interface IMovable extends IEntity {
+export interface IMovableState extends IEntityState {
+  kind: MovableUnits;
   velocity: number;
   direction: number;
 }
 
-export function newMovable<E extends IEntity>(value: E, cfg: IMovableConfig): E & IMovable {
+export type IMovableEntityFields = Omit<IMovableState, keyof IEntityState>;
+export function newMovable<K extends MovableUnits>(kind: K, cfg?: {velocity?: number, direction?: number}): IMovableEntityFields {
   return {
-    ...value,
-    velocity: cfg.velocity ?? 0,
-    direction: cfg.direction,
+    velocity: cfg?.velocity ?? 0,
+    direction: cfg?.direction ?? 0,
   };
 }
 
-export function updatePosition<E extends IMovable>(value: E, multiplier = 1): E {
-  const movement = Vector.from_magnitude_and_direction(value.velocity * multiplier, value.direction);
-  value.position = Vector.add(value.position, movement);
+export function updatePosition<T extends IMovableState>(value: T): T {
+  const speed = value.velocity * UnitMetadata[value.kind].movementRate;
+  const velocityVector = Vector.from_magnitude_and_direction(speed, value.direction);
+  value.position = Vector.add(value.position, velocityVector);
   return value;
 }
 
-export function isGoingSouth(value: IMovable): boolean {
+export function isGoingSouth(value: IMovableState): boolean {
   return Math.abs(value.direction) < Math.PI / 2;
 }
 
-export function isGoingEast(value: IMovable): boolean {
+export function isGoingEast(value: IMovableState): boolean {
   return value.direction > 0;
 }
