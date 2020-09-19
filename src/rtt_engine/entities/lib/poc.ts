@@ -55,6 +55,9 @@ export const UnitMetadata = {
     turnRate: 2.0 / 3.0,
     productionRange: 35.0,
     energyOutput: 5,
+    orderBehaviours: {
+      default: (_: any) => false,
+    },
   },
   engineer: {
     collisionRadius: 6,

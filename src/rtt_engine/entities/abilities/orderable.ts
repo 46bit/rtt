@@ -1,28 +1,26 @@
 import lodash from 'lodash';
 import { unionize, ofType, UnionOf } from 'unionize';
 import { Vector } from '../../vector';
-import { IKillableConfig, IKillable, newKillable } from './killable';
-import { IEntity, IEntityUpdateContext, newEntity } from '../lib/entity';
+import { IKillableMetadata, IKillableState, newKillable } from './killable';
+import { IEntityState, IEntityUpdateContext, newEntity } from '../lib/entity';
 import { UnitMetadata, KindsOfUnitsWithAbility } from '../lib/poc';
 
-export interface IOrderableConfig extends IKillableConfig {
+export type OrderableUnits = KindsOfUnitsWithAbility<IOrderableMetadata>;
+export interface IOrderableMetadata extends IKillableMetadata {
   orderBehaviours: OrderMatchCases<boolean>;
 }
 
-export type OrderableUnits = KindsOfUnitsWithAbility<IOrderableConfig>;
-
-export interface IOrderable extends IKillable {
+export interface IOrderableState extends IKillableState {
   kind: OrderableUnits;
   orders: Order[];
 }
 
-export type FieldsOfIOrderable = Omit<IOrderable, "kind">;
-
-export function newOrderable<K extends OrderableUnits, E extends IEntity<K>>(value: E): E & FieldsOfIOrderable {
-  return {...newKillable(value), orders: []};
+export type IOrderableEntityFields = Omit<IOrderableState, Exclude<keyof IKillableState, "orders">>;
+export function newOrderable<K extends OrderableUnits>(value: K): IOrderableEntityFields {
+  return {orders: []};
 }
 
-export function updateOrders<E extends IOrderable>(value: E, input: {context: IEntityUpdateContext}): E {
+export function updateOrders<T extends IOrderableState>(value: T, input: {context: IEntityUpdateContext}): T {
   const order = value.orders[0];
   if (order) {
     // FIXME: Add support for arbitrary extra arguments to unionize, and then use that
@@ -36,7 +34,7 @@ export function updateOrders<E extends IOrderable>(value: E, input: {context: IE
   return value;
 }
 
-export function supportedKindsOfOrders(value: IOrderable): string[] {
+export function supportedKindsOfOrders(value: IOrderableState): string[] {
   return lodash.keys(UnitMetadata[value.kind].orderBehaviours);
 }
 
@@ -65,7 +63,7 @@ export interface ManoeuvreOrder {
 }
 
 export interface AttackOrder {
-  target: IKillable;
+  target: IKillableState;
   context?: IEntityUpdateContext;
 }
 
@@ -76,7 +74,7 @@ export interface PatrolOrder {
 }
 
 export interface GuardOrder {
-  protectEntity: IEntity;
+  protectEntity: IEntityState;
   context?: IEntityUpdateContext;
 }
 
