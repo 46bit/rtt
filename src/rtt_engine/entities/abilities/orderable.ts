@@ -15,8 +15,8 @@ export interface IOrderableState extends IKillableState {
   orders: Order[];
 }
 
-export type IOrderableEntityFields = Omit<IOrderableState, Exclude<keyof IKillableState, "orders">>;
-export function newOrderable<K extends OrderableUnits>(value: K): IOrderableEntityFields {
+export type IOrderableStateFields = Omit<IOrderableState, Exclude<keyof IKillableState, "orders">>;
+export function newOrderable<K extends OrderableUnits>(value: K): IOrderableStateFields {
   return {orders: []};
 }
 

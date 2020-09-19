@@ -39,10 +39,8 @@ export const UnitMetadata = {
     buildCost: 70,
     fullHealth: 10,
     movementRate: 0.15,
-    position: new Vector(5, 5),
     turnRate: 5.0 / 3.0,
     physics: newPhysics(),
-    productionRange: 25.0,
     constructableByMobileUnits: true,
     orderBehaviours: {
       default: (_: any) => false,
@@ -55,6 +53,7 @@ export const UnitMetadata = {
     health: 1000,
     movementRate: 0.03,
     turnRate: 2.0 / 3.0,
+    physics: newPhysics(),
     productionRange: 35.0,
     energyOutput: 5,
     orderBehaviours: {

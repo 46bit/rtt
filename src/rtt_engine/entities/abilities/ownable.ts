@@ -10,8 +10,8 @@ export interface IOwnableState extends IEntityState {
   player: Player | null;
 }
 
-export type IOwnableEntityFields = Omit<IOwnableState, keyof IEntityState>;
-export function newOwnable<K extends OwnableUnits>(kind: K, player: Player | null): IOwnableEntityFields {
+export type IOwnableStateFields = Omit<IOwnableState, keyof IEntityState>;
+export function newOwnable<K extends OwnableUnits>(kind: K, player: Player | null): IOwnableStateFields {
   return {player};
 }
 

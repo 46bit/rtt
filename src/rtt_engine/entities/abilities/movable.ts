@@ -15,8 +15,8 @@ export interface IMovableState extends IEntityState {
   direction: number;
 }
 
-export type IMovableEntityFields = Omit<IMovableState, keyof IEntityState>;
-export function newMovable<K extends MovableUnits>(kind: K, cfg?: {velocity?: number, direction?: number}): IMovableEntityFields {
+export type IMovableStateFields = Omit<IMovableState, keyof IEntityState>;
+export function newMovable<K extends MovableUnits>(kind: K, cfg?: {velocity?: number, direction?: number}): IMovableStateFields {
   return {
     velocity: cfg?.velocity ?? 0,
     direction: cfg?.direction ?? 0,

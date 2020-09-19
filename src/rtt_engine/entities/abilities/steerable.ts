@@ -15,8 +15,8 @@ export interface ISteerableState extends IMovableState {
   angularVelocity: number;
 }
 
-export type ISteerableEntityFields = Omit<ISteerableState, keyof IMovableState>;
-export function newSteerable<K extends SteerableUnits>(kind: K, cfg?: {angularVelocity?: number}): ISteerableEntityFields {
+export type ISteerableStateFields = Omit<ISteerableState, keyof IMovableState>;
+export function newSteerable<K extends SteerableUnits>(kind: K, cfg?: {angularVelocity?: number}): ISteerableStateFields {
   return { angularVelocity: cfg?.angularVelocity ?? 0 };
 }
 

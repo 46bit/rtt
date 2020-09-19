@@ -13,8 +13,8 @@ export interface IKillableState extends IEntityState {
   orders?: any[];
 }
 
-export type IKillableEntityFields = Omit<IKillableState, keyof IEntityState>;
-export function newKillable<K extends KillableUnits>(kind: K): IKillableEntityFields {
+export type IKillableStateFields = Omit<IKillableState, keyof IEntityState>;
+export function newKillable<K extends KillableUnits>(kind: K): IKillableStateFields {
   return {
     health: UnitMetadata[kind].fullHealth,
     dead: false,

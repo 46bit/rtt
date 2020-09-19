@@ -13,8 +13,8 @@ export interface IConstructableState extends IKillableState {
   built: boolean;
 }
 
-export type IConstructableEntityFields = Omit<IConstructableState, keyof IKillableState>;
-export function newConstructable<K extends ConstructableUnits>(kind: K): IConstructableEntityFields {
+export type IConstructableStateFields = Omit<IConstructableState, keyof IKillableState>;
+export function newConstructable<K extends ConstructableUnits>(kind: K): IConstructableStateFields {
   return {built: false};
 }
 
@@ -48,6 +48,7 @@ import { IOwnableState, OwnableUnits, newOwnable, captureOwnable } from './ownab
 import { ICollidableState, CollidableUnits, isColliding } from './collidable';
 import { IMovableState, MovableUnits, newMovable, updatePosition } from './movable';
 import { ISteerableState, SteerableUnits, newSteerable, updateDirection } from './steerable';
+import { IEngineerState, EngineerUnits, newEngineer, isWithinProductionRange } from './engineer';
 type BotStateAbilities = ISteerableState & IMovableState & ICollidableState & IOwnableState & IOrderableState & IConstructableState & IKillableState & IEntityState;
 interface BotState extends BotStateAbilities {}
 function newBot(position: Vector): BotState {
@@ -61,7 +62,6 @@ function newBot(position: Vector): BotState {
     ...newSteerable("bot"),
   };
 }
-
 const bot = newBot(new Vector(5, 5));
 const built: boolean = isBuilt(bot);
 const t = build(bot, 10);
@@ -72,3 +72,26 @@ const b = isColliding(bot, bot);
 bot.velocity += 10;
 const m = updatePosition(bot);
 const f = updateDirection(bot);
+
+type ComStateAbilities = IEngineerState & ISteerableState & IMovableState & ICollidableState & IOwnableState & IOrderableState & IKillableState & IEntityState;
+interface ComState extends ComStateAbilities {}
+function newCom(position: Vector): ComState {
+  return {
+    ...newEntity({kind: "commander", position}),
+    ...newKillable("commander"),
+    ...newOrderable("commander"),
+    ...newOwnable("commander", null),
+    ...newMovable("commander"),
+    ...newSteerable("commander"),
+    ...newEngineer("commander"),
+  };
+}
+const com = newCom(new Vector(5, 5));
+const comt2 = updateOrders(com, {context: {pathfinder: (a: any, b: any) => null}});
+const comk = kill(com);
+const comcapB = captureOwnable(com, null);
+const comb = isColliding(com, com);
+com.velocity += 10;
+const comm = updatePosition(com);
+const comf = updateDirection(com);
+const comis = isWithinProductionRange(com, new Vector(10, 10));
