@@ -1,6 +1,6 @@
 import { Player, Vector } from '../';
 import * as abilities from './abilities';
-import { IVehicleMetadata, IVehicleState, newVehicle } from './';
+import { UnitMetadata, IEntityState, Pathfinder, IVehicleMetadata, IVehicleState, newVehicle, vehicleOrderBehaviours } from './';
 
 export type IBotMetadata = IVehicleMetadata;
 
@@ -15,3 +15,15 @@ export function newBot(position: Vector, player: Player | null): IBotState {
     ...newVehicle(kind, position, player),
   };
 }
+
+export function updateBot(value: IBotState, ctx: {pathfinder: Pathfinder}) {
+  if (!value.dead) {
+    abilities.updateOrders(value, ctx);
+    abilities.updateMovement(value, ctx.pathfinder);
+  }
+  return value;
+}
+
+export const botOrderBehaviours: abilities.OrderMatchAllCases<IBotState, boolean> = {
+  ...vehicleOrderBehaviours
+};

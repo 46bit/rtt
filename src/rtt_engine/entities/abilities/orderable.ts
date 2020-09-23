@@ -7,7 +7,7 @@ import { UnitMetadata, KindsOfUnitsWithAbility } from '../lib/poc';
 
 export type OrderableUnits = KindsOfUnitsWithAbility<IOrderableMetadata>;
 export interface IOrderableMetadata extends IKillableMetadata {
-  orderBehaviours: OrderMatchCases<boolean>;
+  orderBehaviours: OrderMatchCases<any, boolean>;
 }
 
 export interface IOrderableState extends IKillableState {
@@ -20,13 +20,23 @@ export function newOrderable<K extends OrderableUnits>(value: K): IOrderableStat
   return {orders: []};
 }
 
-export function updateOrders<T extends IOrderableState>(value: T, input: {context: IEntityUpdateContext}): T {
+export function updateOrders<T extends IOrderableState>(value: T, context: IEntityUpdateContext): T {
   const order = value.orders[0];
   if (order) {
     // FIXME: Add support for arbitrary extra arguments to unionize, and then use that
     // instead of hiding the context in the order
-    const orderWithUpdateContext = {...order, context: input.context};
-    const orderStillInProgress = OrderUnion.match(orderWithUpdateContext, UnitMetadata[value.kind].orderBehaviours);
+    const orderWithUpdateContext = {...order, context};
+    const orderBehaviours = UnitMetadata[value.kind].orderBehaviours;
+    // FIXME: Stop doing this! It breaks `default`. Just import all of `unionize` and tweak it.
+    const orderStillInProgress = OrderUnion.match(orderWithUpdateContext, {
+      manoeuvre: (o) => orderBehaviours.manoeuvre!(value, o),
+      attack: (o) => orderBehaviours.attack!(value, o),
+      patrol: (o) => orderBehaviours.patrol!(value, o),
+      guard: (o) => orderBehaviours.guard!(value, o),
+      constructStructure: (o) => orderBehaviours.constructStructure!(value, o),
+      constructVehicle: (o) => orderBehaviours.constructVehicle!(value, o),
+      upgrade: (o) => orderBehaviours.upgrade!(value, o),
+    });
     if (!orderStillInProgress) {
       value.orders.shift();
     }
@@ -52,10 +62,10 @@ export type OrderRecord = typeof OrderUnion._Record;
 
 // `OrderMatchAllCases` is enough to pass to `OrderUnion.match`. Can't be empty.
 // Merge `OrderMatchCases` into `OrderMatchAllCases` to extend/override match clauses.
-export type OrderMatchCases<ReturnValue> = OrderRecordCases<ReturnValue> & (OrderDefaultCase<ReturnValue> | {});
-export type OrderMatchAllCases<ReturnValue> = OrderRecordCases<ReturnValue> & OrderDefaultCase<ReturnValue>;
-type OrderRecordCases<ReturnValue> = { [T in keyof OrderRecord]?: (_: OrderRecord[T]) => ReturnValue };
-type OrderDefaultCase<ReturnValue> = { default: (_: Order) => ReturnValue };
+export type OrderMatchCases<T, ReturnValue> = OrderRecordCases<T, ReturnValue> & (OrderDefaultCase<T, ReturnValue> | {});
+export type OrderMatchAllCases<T, ReturnValue> = OrderRecordCases<T, ReturnValue> & OrderDefaultCase<T, ReturnValue>;
+type OrderRecordCases<T, ReturnValue> = { [O in keyof OrderRecord]?: (value: T, order: OrderRecord[O]) => ReturnValue };
+type OrderDefaultCase<T, ReturnValue> = { default: (value: T, order: Order) => ReturnValue };
 
 export interface ManoeuvreOrder {
   destination: Vector;

@@ -1,20 +1,36 @@
 import lodash from 'lodash';
 import { unionize, ofType, UnionOf } from 'unionize';
 import { Vector } from '../../vector';
-import { newPhysics } from './physics';
-import { ARTILLERY_RANGE, SHOTGUN_RANGE, TURRET_RANGE } from '../';
+import { newPhysics, vehicleOrderBehaviours } from './';
+import { IOrderableMetadata } from '../abilities';
+import {
+  ARTILLERY_RANGE,
+  SHOTGUN_RANGE,
+  TURRET_RANGE,
+  IBotState,
+  botOrderBehaviours,
+  IArtilleryTankState,
+  artilleryTankOrderBehaviours,
+  //ICommanderState,
+  IEngineerState,
+  //IFactoryState,
+  IPowerGeneratorState,
+  IShotgunTankState,
+  //ITitanState,
+  //ITurretState,
+ } from '../';
 
 export const UnitUnion = unionize({
-  artilleryTank: ofType<IArtilleryTank>(),
-  bot: ofType<IBot>(),
-  commander: ofType<ICommander>(),
-  engineer: ofType<IEngineer>(),
-  factory: ofType<IFactory>(),
-  powerGenerator: ofType<IPowerGenerator>(),
-  shotgunTank: ofType<IShotgunTank>(),
-  titan: ofType<ITitan>(),
-  turret: ofType<ITurret>(),
-}, {tag: "kind"});
+  artilleryTank: ofType<IArtilleryTankState>(),
+  bot: ofType<IBotState>(),
+  //commander: ofType<ICommanderState>(),
+  engineer: ofType<IEngineerState>(),
+  //factory: ofType<IFactoryState>(),
+  powerGenerator: ofType<IPowerGeneratorState>(),
+  shotgunTank: ofType<IShotgunTankState>(),
+  //titan: ofType<ITitanState>(),
+  //turret: ofType<ITurretState>(),
+}, {tag: "kind", value: "payload"});
 export type Unit = UnionOf<typeof UnitUnion>;
 export type UnitRecord = typeof UnitUnion._Record;
 
@@ -42,9 +58,7 @@ export const UnitMetadata = {
     turnRate: 4.0 / 3.0,
     physics: newPhysics(),
     constructableByMobileUnits: false,
-    orderBehaviours: {
-      default: (_: any) => false,
-    },
+    orderBehaviours: artilleryTankOrderBehaviours,
     firingRate: 75,
   },
   bot: {
@@ -55,9 +69,7 @@ export const UnitMetadata = {
     turnRate: 5.0 / 3.0,
     physics: newPhysics(),
     constructableByMobileUnits: false,
-    orderBehaviours: {
-      default: (_: any) => false,
-    },
+    orderBehaviours: botOrderBehaviours,
   },
   commander: {
     collisionRadius: 8,
@@ -119,7 +131,7 @@ export const UnitMetadata = {
     firingRate: 40,
     turretInput: [0.08, 1, 0.8],
     orderBehaviours: {
-      default: (_: any) => false,
+      default: (_: any, _: any) => false,
     },
   },
   titan: {
@@ -145,39 +157,3 @@ export const UnitMetadata = {
     fullHealth: 7,
   },
 };
-
-interface IArtilleryTank {
-
-}
-
-interface IBot {
-
-}
-
-interface ICommander {
-
-}
-
-interface IEngineer {
-
-}
-
-interface IFactory {
-
-}
-
-interface IPowerGenerator {
-
-}
-
-interface IShotgunTank {
-
-}
-
-interface ITitan {
-
-}
-
-interface ITurret {
-
-}

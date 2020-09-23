@@ -1,6 +1,7 @@
+import lodash from 'lodash';
 import { Player, Vector } from '../';
 import * as abilities from './abilities';
-import { IVehicleMetadata, IVehicleState, newVehicle } from './';
+import { UnitMetadata, IVehicleMetadata, IVehicleState, newVehicle, vehicleOrderBehaviours } from './';
 
 export const ARTILLERY_RANGE = 210;
 
@@ -18,34 +19,10 @@ export function newArtilleryTank(position: Vector, player: Player | null): IArti
   };
 }
 
-// import { Player } from '../player';
-// import { Vector } from '../vector';
-// import { Vehicle, IEntity, Projectile, IEntityUpdateContext } from './lib';
-// import { AttackOrder } from './abilities';
-// import lodash from 'lodash';
-
-// export const ARTILLERY_RANGE = 210;
-
-// export class ArtilleryTank extends Vehicle {
-//   firingRate: number;
-//   updateCounter: number;
-
-//   constructor(position: Vector, direction: number, player: Player, built: boolean) {
-//     super({
-//       position,
-//       direction,
-//       collisionRadius: 9,
-//       built,
-//       buildCost: 500,
-//       player,
-//       fullHealth: 50,
-//       health: built ? 50 : 0,
-//       movementRate: 0.04,
-//       turnRate: 4.0 / 3.0,
-//     } as any);
-//     this.firingRate = 75;
-//     this.updateCounter = 0;
-//   }
+export const artilleryTankOrderBehaviours: abilities.OrderMatchAllCases<IArtilleryTankState, boolean> = {
+  ...vehicleOrderBehaviours,
+  attack: artilleryTankAttack,
+};
 
 //   update(input: {enemies: IEntity[], context: IEntityUpdateContext}) {
 //     if (this.dead) {
@@ -77,14 +54,16 @@ export function newArtilleryTank(position: Vector, player: Player | null): IArti
 //     return offset.angle();
 //   }
 
-//   protected attack(attackOrder: AttackOrder): boolean {
-//     if (attackOrder.target.dead) {
-//       return false;
-//     }
-//     const distance = Vector.subtract(this.position, attackOrder.target.position).magnitude();
-//     if (distance > ARTILLERY_RANGE) {
-//       this.manoeuvre({ destination: attackOrder.target.position, context: attackOrder.context });
-//     }
-//     return true;
-//   }
-// }
+export function artilleryTankAttack(value: IArtilleryTankState, attackOrder: abilities.AttackOrder): boolean {
+  if (attackOrder.target.dead) {
+    return false;
+  }
+  const distance = Vector.subtract(value.position, attackOrder.target.position).magnitude();
+  if (distance > ARTILLERY_RANGE) {
+    UnitMetadata[value.kind].orderBehaviours.manoeuvre!(value, {
+      destination: attackOrder.target.position,
+      context: attackOrder.context,
+    });
+  }
+  return true;
+}

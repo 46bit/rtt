@@ -1,96 +1,78 @@
 import { Player, Vector } from '../';
 import * as abilities from './abilities';
-import { IVehicleMetadata, IVehicleState, newVehicle } from './';
+import { UnitMetadata, IEntityState, Pathfinder, newProjectile, VehicleTurret, IVehicleMetadata, IVehicleState, newVehicle } from './';
 
 export const SHOTGUN_RANGE = 80;
 
-export type IShotgunTankMetadata = IVehicleMetadata;
+export interface IShotgunTankMetadata extends IVehicleMetadata {
+  firingRate: number;
+}
 
 export interface IShotgunTankState extends IVehicleState {
   kind: "shotgunTank";
+  updateCounter: number;
+  turret: VehicleTurret;
 }
 
 export function newShotgunTank(position: Vector, player: Player | null): IShotgunTankState {
   const kind = "shotgunTank";
+  const turret = new VehicleTurret(...UnitMetadata[kind].turretInput);
   return {
     kind,
+    turret,
+    updateCounter: 0,
     ...newVehicle(kind, position, player),
   };
 }
 
-// import { Player } from '../player';
-// import { Vector } from '../vector';
-// import { Vehicle, IEntity, Projectile, VehicleTurret, IEntityUpdateContext } from './lib';
-// import { AttackOrder } from './abilities';
-// import lodash from 'lodash';
+export function updateShotgunTank(value: IShotgunTankState, ctx: {pathfinder: Pathfinder, nearbyEnemies: IEntityState[]}) {
+  if (value.dead) {
+    return value;
+  }
 
-// export class ShotgunTank extends Vehicle {
-//   firingRate: number;
-//   updateCounter: number;
-//   turret: VehicleTurret;
+  abilities.updateOrders(value, ctx);
+  abilities.updateMovement(value, ctx.pathfinder);
 
-//   constructor(position: Vector, direction: number, player: Player, built: boolean) {
-//     super({
-//       position,
-//       direction,
-//       collisionRadius: 8,
-//       built,
-//       buildCost: 400,
-//       player,
-//       fullHealth: 35,
-//       health: built ? 35 : 0,
-//       movementRate: 0.07,
-//       turnRate: 4.0 / 3.0,
-//     } as any);
-//     this.firingRate = 40;
-//     this.updateCounter = 0;
-//     this.turret = new VehicleTurret(0.08, 1, 0.8);
-//     this.turret.rotation = this.direction;
-//   }
+  value.updateCounter++;
+  const angleToFireProjectile = angleToNearestEnemy(value, ctx.nearbyEnemies);
+  if (angleToFireProjectile == null) {
+    value.turret.update(value.direction);
+    return value;
+  }
+  value.turret.updateTowards(0, angleToFireProjectile[0]);
 
-//   update(input: {enemies: IEntity[], context: IEntityUpdateContext}) {
-//     if (this.dead) {
-//       return;
-//     }
-//     super.update(input);
-//     this.updateCounter++;
+  if (value.updateCounter >= UnitMetadata[value.kind].firingRate && angleToFireProjectile[1] <= SHOTGUN_RANGE * 1.2) {
+    for (let projectileOffsetAngle = -4.8; projectileOffsetAngle <= 4.8; projectileOffsetAngle += 2.4) {
+      const projectileAngle = value.turret.rotation + projectileOffsetAngle*Math.PI/180;
+      const projectile = newProjectile("shotgunProjectile", value.position, projectileAngle, value.player);
+      // FIXME: It's clear that player isn't optional. Make it mandatory on most things?
+      value.player!.turretProjectiles.push(projectile);
+    }
+    value.updateCounter = 0;
+  }
 
-//     const angleToFireProjectile = this.angleToNearestEnemy(input.enemies);
-//     if (angleToFireProjectile == null) {
-//       this.turret.update(this.direction);
-//       return;
-//     }
-//     this.turret.updateTowards(0, angleToFireProjectile[0]);
+  return value;
+}
 
-//     if (this.updateCounter >= this.firingRate && angleToFireProjectile[1] <= SHOTGUN_RANGE * 1.2) {
-//       for (let projectileOffsetAngle = -4.8; projectileOffsetAngle <= 4.8; projectileOffsetAngle += 2.4) {
-//         const projectile = new ShotgunProjectile(this.position, this.player!, this.turret.rotation + projectileOffsetAngle*Math.PI/180);
-//         this.player!.turretProjectiles.push(projectile);
-//       }
-//       this.updateCounter = 0;
-//     }
-//   }
+export function angleToNearestEnemy(value: IShotgunTankState, enemies: IEntityState[]): [number, number] | null {
+  const nearestEnemy = lodash.minBy(enemies, (e) => Vector.subtract(value.position, e.position).magnitude());
+  if (nearestEnemy == null) {
+    return null;
+  }
+  const offset = Vector.subtract(nearestEnemy.position, value.position);
+  if (offset.magnitude() > SHOTGUN_RANGE * 2) {
+    return null;
+  }
+  return [offset.angle(), offset.magnitude()];
+}
 
-//   protected angleToNearestEnemy(enemies: IEntity[]): [number, number] | null {
-//     const nearestEnemy = lodash.minBy(enemies, (e) => Vector.subtract(this.position, e.position).magnitude());
-//     if (nearestEnemy == null) {
-//       return null;
-//     }
-//     const offset = Vector.subtract(nearestEnemy.position, this.position);
-//     if (offset.magnitude() > SHOTGUN_RANGE * 2) {
-//       return null;
-//     }
-//     return [offset.angle(), offset.magnitude()];
-//   }
-
-//   protected attack(attackOrder: AttackOrder): boolean {
-//     if (attackOrder.target.dead) {
-//       return false;
-//     }
-//     const distance = Vector.subtract(this.position, attackOrder.target.position).magnitude();
-//     if (distance > SHOTGUN_RANGE) {
-//       this.manoeuvre({ destination: attackOrder.target.position, context: attackOrder.context });
-//     }
-//     return true;
-//   }
-// }
+export function attack(value: IShotgunTankState, attackOrder: AttackOrder): boolean {
+  if (attackOrder.target.dead) {
+    return false;
+  }
+  const distance = Vector.subtract(value.position, attackOrder.target.position).magnitude();
+  if (distance > SHOTGUN_RANGE) {
+    value.destination = attackOrder.target.position;
+  }
+  return true;
+}
