@@ -1,3 +1,4 @@
+import lodash from 'lodash';
 import { Player, Vector } from '../';
 import * as abilities from './abilities';
 import { UnitMetadata, IEntityState, Pathfinder, newProjectile, VehicleTurret, IVehicleMetadata, IVehicleState, newVehicle } from './';
@@ -66,7 +67,7 @@ export function angleToNearestEnemy(value: IShotgunTankState, enemies: IEntitySt
   return [offset.angle(), offset.magnitude()];
 }
 
-export function attack(value: IShotgunTankState, attackOrder: AttackOrder): boolean {
+export function attack(value: IShotgunTankState, attackOrder: abilities.AttackOrder): boolean {
   if (attackOrder.target.dead) {
     return false;
   }

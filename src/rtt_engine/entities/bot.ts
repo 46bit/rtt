@@ -1,10 +1,13 @@
 import { Player, Vector } from '../';
 import * as abilities from './abilities';
-import { UnitMetadata, IEntityState, Pathfinder, IVehicleMetadata, IVehicleState, newVehicle, vehicleOrderBehaviours } from './';
+import { UnitMetadata, IEntityState, Pathfinder, IVehicleMetadata, VehicleAbilities, IVehicleState, newVehicle, vehicleOrderBehaviours } from './';
 
-export type IBotMetadata = IVehicleMetadata;
+export interface IBotMetadata extends IVehicleMetadata {}
 
-export interface IBotState extends IVehicleState {
+// For unclear reasons, anything other than extending a separately-defined type
+// transform results in having to cast `IBotState` (e.g., to `as IKillable`)
+export type BotAbilities = Omit<VehicleAbilities, "">;
+export interface IBotState extends BotAbilities {
   kind: "bot";
 }
 
@@ -24,6 +27,4 @@ export function updateBot(value: IBotState, ctx: {pathfinder: Pathfinder}) {
   return value;
 }
 
-export const botOrderBehaviours: abilities.OrderMatchAllCases<IBotState, boolean> = {
-  ...vehicleOrderBehaviours
-};
+export const botOrderBehaviours = vehicleOrderBehaviours as abilities.OrderMatchAllCases<IBotState, boolean>;
