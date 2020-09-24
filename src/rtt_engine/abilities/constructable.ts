@@ -1,18 +1,7 @@
 import { ComposableConstructor, IEntity, EntityMetadata, EntitiesWithMetadata, Model } from '../lib';
 import { IKillableMetadata, IKillableEntity, KillableModel } from '.';
 
-class A {
-  a: string;
-  constructor(a: string) {
-    this.a = a;
-  }
-}
 
-const As = {
-  one: new A("one"),
-  two: new A("two"),
-  three: new A("three"),
-};
 
 export interface IConstructableMetadata extends IKillableMetadata {
   buildCost: number;
