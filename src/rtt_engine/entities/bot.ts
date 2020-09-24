@@ -1,30 +1,18 @@
-import { Player, Vector } from '../';
-import * as abilities from './abilities';
-import { UnitMetadata, IEntityState, Pathfinder, IVehicleMetadata, VehicleAbilities, IVehicleState, newVehicle, vehicleOrderBehaviours } from './';
+import { newPhysics } from '.';
+import * as abilities from '../abilities';
 
-export interface IBotMetadata extends IVehicleMetadata {}
+export const IBotKind = "bot";
 
-// For unclear reasons, anything other than extending a separately-defined type
-// transform results in having to cast `IBotState` (e.g., to `as IKillable`)
-export type BotAbilities = Omit<VehicleAbilities, "">;
-export interface IBotState extends BotAbilities {
-  kind: "bot";
+export interface IBot extends abilities.IKillableEntity {
+  kind: typeof IBotKind;
 }
 
-export function newBot(position: Vector, player: Player | null): IBotState {
-  const kind = "bot";
-  return {
-    kind,
-    ...newVehicle(kind, position, player),
-  };
-}
-
-export function updateBot(value: IBotState, ctx: {pathfinder: Pathfinder}) {
-  if (!value.dead) {
-    abilities.updateOrders(value, ctx);
-    abilities.updateMovement(value, ctx.pathfinder);
-  }
-  return value;
-}
-
-export const botOrderBehaviours = vehicleOrderBehaviours as abilities.OrderMatchAllCases<IBotState, boolean>;
+export const BotMetadata = {
+  collisionRadius: 5,
+  buildCost: 70,
+  constructableByMobileUnits: false,
+  fullHealth: 10,
+  movementRate: 0.15,
+  turnRate: 5.0 / 3.0,
+  physics: newPhysics(),
+};

@@ -58,7 +58,6 @@ export const UnitMetadata = {
     turnRate: 4.0 / 3.0,
     physics: newPhysics(),
     constructableByMobileUnits: false,
-    orderBehaviours: artilleryTankOrderBehaviours,
     firingRate: 75,
   },
   bot: {
@@ -69,7 +68,6 @@ export const UnitMetadata = {
     turnRate: 5.0 / 3.0,
     physics: newPhysics(),
     constructableByMobileUnits: false,
-    orderBehaviours: botOrderBehaviours,
   },
   commander: {
     collisionRadius: 8,

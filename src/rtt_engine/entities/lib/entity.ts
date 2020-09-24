@@ -20,4 +20,5 @@ export function newEntity<K>(cfg: {kind: K, position: Vector}): IEntityState {
 
 export interface IEntityUpdateContext {
   pathfinder: Pathfinder;
+  nearbyEnemies: IEntity[];
 }
