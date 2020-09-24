@@ -5,7 +5,6 @@ export interface IKillableMetadata {
 }
 
 export interface IKillableEntity extends IEntity {
-  kind: EntitiesWithMetadata<IKillableMetadata>;
   health: number;
   dead: boolean;
   orders?: any[];

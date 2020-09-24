@@ -1,6 +1,19 @@
 import { ComposableConstructor, IEntity, EntityMetadata, EntitiesWithMetadata, Model } from '../lib';
 import { IKillableMetadata, IKillableEntity, KillableModel } from '.';
 
+class A {
+  a: string;
+  constructor(a: string) {
+    this.a = a;
+  }
+}
+
+const As = {
+  one: new A("one"),
+  two: new A("two"),
+  three: new A("three"),
+};
+
 export interface IConstructableMetadata extends IKillableMetadata {
   buildCost: number;
   constructableByMobileUnits: boolean;
@@ -11,7 +24,7 @@ export interface IConstructableEntity extends IKillableEntity {
   built: boolean;
 }
 
-export function ConstructableModel<E extends IConstructableEntity, T extends new(o: any) => {}>(base: T) {
+export function ConstructableModel<E extends IConstructableEntity, T extends new(o: any) => IConstructableMetadata>(base: T) {
   class Constructable extends KillableModel(base as new(o: any) => {}) {
     buildCostPerHealth(entity: E): number {
       const buildCost = EntityMetadata[entity.kind].buildCost ?? EntityMetadata[entity.kind].fullHealth * 10;
