@@ -50,7 +50,7 @@ export function newObstruction(cfg: IObstructionConfig): IObstruction {
   };
 }
 
-export function obstructionContains(value: IObstruction, colliderPosition: Vector, collideCollisionRadius: number }): boolean {
+export function obstructionContains(value: IObstruction, colliderPosition: Vector, collideCollisionRadius: number): boolean {
   const contained = (
     colliderPosition.x + collideCollisionRadius > value.left
     && colliderPosition.x - collideCollisionRadius <= value.right
