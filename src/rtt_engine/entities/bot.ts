@@ -1,5 +1,4 @@
-import { newPhysics } from '.';
-import { IConstructableVehicleEntity } from '../lib';
+import { IConstructableVehicleEntity, newPhysics } from '../lib';
 import * as abilities from '../abilities';
 
 export interface IBot extends IConstructableVehicleEntity {

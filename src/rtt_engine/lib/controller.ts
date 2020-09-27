@@ -42,5 +42,7 @@ export type ControllersType = {[K in EntityKinds]: Controller<IEntity & {kind: K
 const EveryEntityHasAController = Controllers as ControllersType;
 
 export abstract class Controller<E extends IEntity> {
+  // FIXME: Find a way to make this abstract again--abstract broke when
+  // giving commander's controller as extending `abilities.EngineerModel(VehicleModel)`
   abstract updateEntities(entities: E[], ctx: abilities.IEntityUpdateContext): E[];
 }

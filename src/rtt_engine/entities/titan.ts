@@ -1,6 +1,5 @@
-import { IVehicleTurret, newPhysics } from '.';
 import * as abilities from '../abilities';
-import { IConstructableVehicleEntity, IProjectileEntity } from '../lib';
+import { IConstructableVehicleEntity, IProjectileEntity, IVehicleTurret, newPhysics } from '../lib';
 
 export const TITAN_RANGE = 150;
 
@@ -19,7 +18,12 @@ export const TitanMetadata = {
   movementRate: 0.03,
   turnRate: 1 / 3,
   physics: newPhysics(),
-  turretInput: [0.05, 1, 0.8, 0],
+  turretInput: {
+    turnRate: 0.05,
+    force: 1,
+    friction: 0.8,
+    tolerance: 0,
+  },
 };
 
 export interface ITitanProjectile extends IProjectileEntity {

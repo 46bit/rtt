@@ -1,7 +1,7 @@
 import lodash from 'lodash';
 import { Player, Vector } from '..';
 import * as abilities from '../abilities';
-import { VehicleController, EntityMetadata, IEntity, ProjectileController, Models } from '../lib';
+import { VehicleController, EntityMetadata, IEntity, ProjectileController, Models, updateVehicleTurret, updateTurretTowards } from '../lib';
 import { SHOTGUN_RANGE, IShotgunTank, ShotgunTankMetadata, IShotgunTankProjectile } from '../entities';
 
 export class ShotgunTankController extends VehicleController<IShotgunTank> {
@@ -23,10 +23,10 @@ export class ShotgunTankController extends VehicleController<IShotgunTank> {
 
     const angleToFireProjectile = angleToNearestEnemy(entity, ctx.nearbyEnemies);
     if (angleToFireProjectile == null) {
-      value.turret.update(entity.direction);
+      updateVehicleTurret(entity.turret, entity.direction);
       return;
     }
-    Models["shotgunTank"].updateTurretTowards(entity, 0, angleToFireProjectile[0]);
+    updateTurretTowards(entity.turret, 0, angleToFireProjectile[0]);
 
     if (entity.updateCounter >= this.entityMetadata.firingRate && angleToFireProjectile[1] <= this.entityMetadata.firingRange * 1.2) {
       for (let projectileOffsetAngle = -4.8; projectileOffsetAngle <= 4.8; projectileOffsetAngle += 2.4) {

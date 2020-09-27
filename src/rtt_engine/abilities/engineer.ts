@@ -1,6 +1,6 @@
 import { Vector } from '..';
 import { IConstructableEntity } from '.';
-import { ComposableConstructor, IEntity, EntityMetadata, EntitiesWithMetadata, Models } from '../lib';
+import { ComposableConstructor, IEntity, EntityMetadata, EntitiesWithMetadata, Entities, EntitiesWithState, Models } from '../lib';
 
 export interface IEngineerMetadata {
   productionRange: number;
@@ -9,7 +9,7 @@ export interface IEngineerMetadata {
 export interface IEngineerEntity extends IEntity {
   kind: EntitiesWithMetadata<IEngineerMetadata>;
   energyProvided: number;
-  construction?: IConstructableEntity;
+  construction?: Entities[EntitiesWithState<IConstructableEntity>];
 }
 
 export function EngineerModel<E extends IEngineerEntity, T extends new(o: any) => {}>(base: T) {
@@ -19,7 +19,10 @@ export function EngineerModel<E extends IEngineerEntity, T extends new(o: any) =
     }
 
     productionProgress(entity: E): number {
-      return Models[entity.construction!.kind].healthiness(entity.construction!);
+      // FIXME: The typechecker couldn't understand that `healthiness` only has to take the
+      // type matching the model. Try to fix that. Same problem recurs further down.
+      // This problem may go away when I stop passing around entities themselves?
+      return Models[entity.construction!.kind].healthiness(entity.construction! as any);
     }
 
     energyConsumption(entity: E): number {
@@ -47,7 +50,7 @@ export function EngineerModel<E extends IEngineerEntity, T extends new(o: any) =
 
       if (this.isWithinProductionRange(entity, entity.construction.position)) {
         const healthIncrease = entity.energyProvided / constructionModel.buildCostPerHealth(entity.construction);
-        constructionModel.repair(entity.construction, healthIncrease);
+        constructionModel.repair(entity.construction as any, healthIncrease);
       }
 
       return entity;

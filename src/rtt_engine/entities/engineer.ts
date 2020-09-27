@@ -1,6 +1,5 @@
-import { newPhysics } from '.';
 import * as abilities from '../abilities';
-import { IConstructableVehicleEntity } from '../lib';
+import { IConstructableVehicleEntity, newPhysics } from '../lib';
 
 export interface IEngineer extends IConstructableVehicleEntity, abilities.IEngineerEntity {
   kind: "engineer";

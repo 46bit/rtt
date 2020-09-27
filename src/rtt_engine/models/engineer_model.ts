@@ -1,12 +1,25 @@
 import { Player, Vector } from '../';
 import * as abilities from '../abilities';
-import { ConstructableVehicleModel, newEntity } from '../lib';
+import { Model, newEntity } from '../lib';
 import { IEngineer, EngineerMetadata } from '../entities';
 
-export class EngineerModel extends ConstructableVehicleModel<IEngineer> {
-  newEntity(cfg: {position: Vector, player: Player, built: false}): IEngineer {
+export class EngineerModel extends abilities.EngineerModel(
+    abilities.ConstructableModel(
+      abilities.OwnableModel(
+        abilities.PathableModel(Model)))) {
+  newEntity(cfg: {position: Vector, player: Player, built: boolean}): IEngineer {
     return {
-      ...this.newConstructableVehicle({...cfg, kind: "engineer"}),
+      ...newEntity({kind: "engineer", position: cfg.position}),
+      health: cfg.built ? EngineerMetadata.fullHealth : 0,
+      dead: false,
+      built: cfg.built,
+      player: cfg.player,
+      destination: null,
+      route: null,
+      angularVelocity: 0,
+      velocity: 0,
+      direction: Math.random(),
+      orders: [],
       energyProvided: 0,
     };
   }

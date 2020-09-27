@@ -1,5 +1,4 @@
-import { newPhysics } from '.';
-import { IVehicleEntity } from '../lib';
+import { IVehicleEntity, newPhysics } from '../lib';
 import * as abilities from '../abilities';
 
 export interface ICommander extends IVehicleEntity, abilities.IEngineerEntity {

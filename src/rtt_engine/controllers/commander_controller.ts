@@ -17,6 +17,7 @@ export class CommanderController extends VehicleController<ICommander> {
     }
     Models["commander"].updateProduction(entity);
     this.updateOrders(entity, ctx);
+    return entity;
   }
 
   // FIXME: Deduplicate this code with what's on Engineer

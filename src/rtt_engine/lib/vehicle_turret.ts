@@ -1,11 +1,10 @@
-import { Vector } from '../../vector';
+import { Vector } from '..';
 
 export interface IVehicleTurretConfig {
   turnRate: number;
   force: number;
   friction: number;
   rotation: number;
-  rotationalVelocity: number;
   tolerance?: number;
 }
 
@@ -23,7 +22,7 @@ export function newVehicleTurret(cfg: IVehicleTurretConfig): IVehicleTurret {
     turnRate: cfg.turnRate,
     force: cfg.force,
     friction: cfg.friction,
-    rotation: 0,
+    rotation: cfg.rotation,
     rotationalVelocity: 0,
     tolerance: cfg.tolerance ?? 0.06,
   };
@@ -37,7 +36,7 @@ export function updateVehicleTurret(value: IVehicleTurret, defaultDirection: num
   value.force *= 3;
 }
 
-export function updateTowards(value: IVehicleTurret, baseDirection: number, targetDirection: number) {
+export function updateTurretTowards(value: IVehicleTurret, baseDirection: number, targetDirection: number) {
   applyDragForces(value);
   updateRotationalVelocity(value, baseDirection, targetDirection);
 }

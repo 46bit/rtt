@@ -1,4 +1,3 @@
-import { IVehicleTurret, newPhysics } from '.';
 import * as abilities from '../abilities';
 import { IProjectileEntity } from '../lib';
 
@@ -16,9 +15,7 @@ export const TurretMetadata = {
   fullHealth: 60,
   movementRate: 0.07,
   turnRate: 4.0 / 3.0,
-  physics: newPhysics(),
   firingRate: 5,
-  turretInput: [0.08, 1, 0.8],
 };
 
 export interface ITurretProjectile extends IProjectileEntity {

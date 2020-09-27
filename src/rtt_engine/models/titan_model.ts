@@ -1,15 +1,14 @@
 import { Player, Vector } from '../';
 import * as abilities from '../abilities';
-import { ConstructableVehicleModel, ProjectileModel, newEntity } from '../lib';
-import { ITitan, ITitanProjectile, TitanMetadata, TitanProjectileMetadata, newVehicleTurret } from '../entities';
+import { ConstructableVehicleModel, ProjectileModel, newEntity, newVehicleTurret } from '../lib';
+import { ITitan, ITitanProjectile, TitanMetadata, TitanProjectileMetadata } from '../entities';
 
 export class TitanModel extends ConstructableVehicleModel<ITitan> {
   newEntity(cfg: {position: Vector, player: Player, built: false}): ITitan {
-    return {
-      ...this.newConstructableVehicle({...cfg, kind: "titan"}),
-      updateCounter: 0,
-      turret: newVehicleTurret(TitanMetadata.turretInput),
-    };
+    const entity: any = this.newConstructableVehicle({...cfg, kind: "titan"});
+    entity.updateCounter = 0;
+    entity.turret = newVehicleTurret({...TitanMetadata.turretInput, rotation: entity.direction});
+    return entity as ITitan;
   }
 }
 

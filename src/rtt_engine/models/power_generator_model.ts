@@ -15,6 +15,7 @@ export class PowerGeneratorModel extends abilities.ConstructableModel(abilities.
       powerSource: cfg.powerSource,
       upgrading: false,
       upgradeLevel: 0,
+      orders: [],
     };
   }
 

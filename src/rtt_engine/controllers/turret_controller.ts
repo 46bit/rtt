@@ -16,7 +16,7 @@ export class TurretController extends Controller<ITurret> {
     entity.updateCounter++;
 
     if (entity.updateCounter >= TurretMetadata.firingRate) {
-      const angleToFireProjectile = angleToNearestEnemy(ctx.nearbyEnemies);
+      const angleToFireProjectile = angleToNearestEnemy(entity, ctx.nearbyEnemies);
       if (angleToFireProjectile != null) {
         const projectile = Models["turretProjectile"].newEntity({
           position: entity.position,

@@ -1,7 +1,13 @@
 import { IPowerSource } from '.';
 import * as abilities from '../abilities';
 
-export interface IPowerGenerator extends abilities.IConstructableEntity, abilities.IOwnableEntity, abilities.ICollidableEntity {
+export type PowerGeneratorAbilities =
+  abilities.IConstructableEntity
+  & abilities.IOwnableEntity
+  & abilities.ICollidableEntity
+  & abilities.IOrderableEntity;
+
+export interface IPowerGenerator extends PowerGeneratorAbilities {
   kind: "powerGenerator";
   powerSource: IPowerSource;
   upgrading: boolean;

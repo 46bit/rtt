@@ -1,5 +1,4 @@
-import { newPhysics } from '.';
-import { IConstructableVehicleEntity, IProjectileEntity } from '../lib';
+import { IConstructableVehicleEntity, IProjectileEntity, newPhysics } from '../lib';
 import * as abilities from '../abilities';
 
 export const ARTILLERY_RANGE = 210;

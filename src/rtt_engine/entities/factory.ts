@@ -1,4 +1,3 @@
-import { newPhysics } from '.';
 import * as abilities from '../abilities';
 
 export interface IFactory extends abilities.IConstructableEntity, abilities.IOwnableEntity, abilities.ICollidableEntity, abilities.IEngineerEntity {

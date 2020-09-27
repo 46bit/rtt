@@ -1,21 +1,19 @@
 import { Player, Vector } from '../';
 import * as abilities from '../abilities';
-import { ConstructableVehicleModel, ProjectileModel, newEntity } from '../lib';
+import { ConstructableVehicleModel, ProjectileModel, newEntity, newVehicleTurret } from '../lib';
 import {
   IShotgunTank,
   IShotgunTankProjectile,
   ShotgunTankMetadata,
   ShotgunTankProjectileMetadata,
-  newVehicleTurret,
 } from '../entities';
 
 export class ShotgunTankModel extends ConstructableVehicleModel<IShotgunTank> {
   newEntity(cfg: {position: Vector, player: Player, built: false}): IShotgunTank {
-    return {
-      ...this.newConstructableVehicle({...cfg, kind: "shotgunTank"}),
-      updateCounter: 0,
-      turret: newVehicleTurret(ShotgunTankMetadata.turretInput),
-    };
+    const entity: any = this.newConstructableVehicle({...cfg, kind: "shotgunTank"});
+    entity.updateCounter = 0;
+    entity.turret = newVehicleTurret({...ShotgunTankMetadata.turretInput, rotation: entity.direction});
+    return entity as IShotgunTank;
   }
 }
 
