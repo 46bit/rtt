@@ -1,14 +1,12 @@
 import { newPhysics } from '.';
 import * as abilities from '../abilities';
 
-export interface ICommander extends abilities.IConstructableEntity, abilities.IOwnableEntity, abilities.ICollidableEntity, abilities.IEngineerEntity, abilities.IPathableEntity {
+export interface ICommander extends abilities.IKillableEntity, abilities.IOwnableEntity, abilities.ICollidableEntity, abilities.IEngineerEntity, abilities.IPathableEntity {
   kind: "commander";
 }
 
 export const CommanderMetadata = {
   collisionRadius: 8,
-  buildCost: 10000,
-  constructableByMobileUnits: false,
   fullHealth: 1000,
   movementRate: 0.03,
   turnRate: 2.0 / 3.0,

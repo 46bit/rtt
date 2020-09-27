@@ -18,6 +18,7 @@ export class ArtilleryTankModel extends abilities.ConstructableModel(
       angularVelocity: 0,
       velocity: 0,
       direction: Math.random(),
+      updateCounter: 0,
     };
   }
 }
