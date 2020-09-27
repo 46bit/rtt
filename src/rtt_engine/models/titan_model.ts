@@ -1,6 +1,6 @@
 import { Player, Vector } from '../';
 import * as abilities from '../abilities';
-import { Model, newEntity } from '../lib';
+import { Model, ProjectileModel, newEntity } from '../lib';
 import { ITitan, ITitanProjectile, TitanMetadata, TitanProjectileMetadata, newVehicleTurret } from '../entities';
 
 export class TitanModel extends abilities.ConstructableModel(
@@ -24,17 +24,8 @@ export class TitanModel extends abilities.ConstructableModel(
   }
 }
 
-export class TitanProjectileModel extends abilities.KillableModel(
-    abilities.OwnableModel(
-      abilities.MovableModel(Model))) {
-  newEntity(cfg: {position: Vector, player: Player}): ITitanProjectile {
-    return {
-      ...newEntity({kind: "titanProjectile", position: cfg.position}),
-      health: TitanProjectileMetadata.fullHealth,
-      dead: false,
-      player: cfg.player,
-      velocity: TitanProjectileMetadata.velocity,
-      direction: Math.random(),
-    };
+export class TitanProjectileModel extends ProjectileModel<ITitanProjectile> {
+  newEntity(cfg: {position: Vector, direction: number, player: Player}): ITitanProjectile {
+    return this.newProjectileEntity({...cfg, kind: "titanProjectile"});
   }
 }

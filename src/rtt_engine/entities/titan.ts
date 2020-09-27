@@ -1,5 +1,6 @@
 import { IVehicleTurret, newPhysics } from '.';
 import * as abilities from '../abilities';
+import { IProjectileEntity } from '../lib';
 
 export const TITAN_RANGE = 150;
 
@@ -21,7 +22,7 @@ export const TitanMetadata = {
   turretInput: [0.05, 1, 0.8, 0],
 };
 
-export interface ITitanProjectile extends abilities.IKillableEntity, abilities.IOwnableEntity, abilities.ICollidableEntity, abilities.IMovableEntity {
+export interface ITitanProjectile extends IProjectileEntity {
   kind: "titanProjectile";
 }
 

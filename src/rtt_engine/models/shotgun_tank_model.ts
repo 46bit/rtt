@@ -1,6 +1,6 @@
 import { Player, Vector } from '../';
 import * as abilities from '../abilities';
-import { Model, newEntity } from '../lib';
+import { Model, ProjectileModel, newEntity } from '../lib';
 import {
   IShotgunTank,
   IShotgunTankProjectile,
@@ -30,17 +30,8 @@ export class ShotgunTankModel extends abilities.ConstructableModel(
   }
 }
 
-export class ShotgunTankProjectileModel extends abilities.KillableModel(
-    abilities.OwnableModel(
-      abilities.MovableModel(Model))) {
-  newEntity(cfg: {position: Vector, player: Player}): IShotgunTankProjectile {
-    return {
-      ...newEntity({kind: "shotgunTankProjectile", position: cfg.position}),
-      health: ShotgunTankProjectileMetadata.fullHealth,
-      dead: false,
-      player: cfg.player,
-      velocity: ShotgunTankProjectileMetadata.velocity,
-      direction: Math.random(),
-    };
+export class ShotgunTankProjectileModel extends ProjectileModel<IShotgunTankProjectile> {
+  newEntity(cfg: {position: Vector, direction: number, player: Player}): IShotgunTankProjectile {
+    return this.newProjectileEntity({...cfg, kind: "shotgunTankProjectile"});
   }
 }
