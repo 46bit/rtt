@@ -1,59 +1,58 @@
-import { Vector } from '../../vector';
-import { IEntityMetadata, IEntityState } from '../lib/entity';
-import { UnitMetadata, KindsOfUnitsWithAbility } from '../lib/poc';
-import { healthiness, repair, isDead } from './killable';
-import { IConstructableState, isBuilt, buildCostPerHealth } from './constructable';
+import { Vector } from '..';
+import { IConstructableEntity } from '.';
+import { ComposableConstructor, IEntity, EntityMetadata, EntitiesWithMetadata, Models } from '../lib';
 
-export type EngineerUnits = KindsOfUnitsWithAbility<IEngineerMetadata>;
-export interface IEngineerMetadata extends IEntityMetadata {
+export interface IEngineerMetadata {
   productionRange: number;
 }
 
-export interface IEngineerState extends IEntityState {
-  kind: EngineerUnits;
+export interface IEngineerEntity extends IEntity {
+  kind: EntitiesWithMetadata<IEngineerMetadata>;
   energyProvided: number;
-  construction?: IConstructableState;
+  construction?: IConstructableEntity;
 }
 
-export type IEngineerStateFields = Omit<IEngineerState, keyof IEntityState>;
-export function newEngineer<K extends EngineerUnits>(kind: K): IEngineerStateFields {
-  return { energyProvided: 0 };
-}
+export function EngineerModel<E extends IEngineerEntity, T extends new(o: any) => {}>(base: T) {
+  class Engineer extends (base as new(o: any) => {}) {
+    isProducing(entity: E): boolean {
+      return !!entity.construction;
+    }
 
-export function isProducing(value: IEngineerState): boolean {
-  return !!value.construction;
-}
+    productionProgress(entity: E): number {
+      return Models[entity.construction!.kind].healthiness(entity.construction!);
+    }
 
-export function productionProgress(value: IEngineerState): number {
-   return healthiness(value.construction!);
-}
+    energyConsumption(entity: E): number {
+      return this.isProducing(entity) ? 20 : 0;
+    }
 
-export function energyConsumption(value: IEngineerState): number {
-  return isProducing(value) ? 20 : 0;
-}
+    isWithinProductionRange(entity: E, target: Vector): boolean {
+      return Vector.subtract(entity.position, target).magnitude() <= EntityMetadata[entity.kind].productionRange;
+    }
 
-export function isWithinProductionRange(value: IEngineerState, target: Vector): boolean {
-  return Vector.subtract(value.position, target).magnitude() <= UnitMetadata[value.kind].productionRange;
-}
+    updateProduction(entity: E): E {
+      if (!entity.construction) {
+        return entity;
+      }
+      const constructionModel = Models[entity.construction!.kind];
 
-export function updateProduction<E extends IEngineerState>(value: E): E {
-  if (!value.construction) {
-    return value;
+      if (constructionModel.isDead(entity.construction)) {
+        entity.construction = undefined;
+        return entity;
+      }
+
+      if (constructionModel.isBuilt(entity.construction)) {
+        return entity;
+      }
+
+      if (this.isWithinProductionRange(entity, entity.construction.position)) {
+        const healthIncrease = entity.energyProvided / constructionModel.buildCostPerHealth(entity.construction);
+        constructionModel.repair(entity.construction, healthIncrease);
+      }
+
+      return entity;
+    }
   }
 
-  if (isDead(value.construction)) {
-    value.construction = undefined;
-    return value;
-  }
-
-  if (isBuilt(value.construction)) {
-    return value;
-  }
-
-  if (isWithinProductionRange(value, value.construction.position)) {
-    const healthIncrease = value.energyProvided / buildCostPerHealth(value.construction);
-    repair(value.construction, healthIncrease);
-  }
-
-  return value;
+  return Engineer as ComposableConstructor<typeof Engineer, T>;
 }

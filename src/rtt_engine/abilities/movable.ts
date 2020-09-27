@@ -1,39 +1,40 @@
-import { Vector } from '../../vector';
-import { IEntityMetadata, IEntityState } from '../lib/entity';
-import { UnitMetadata, KindsOfUnitsWithAbility } from '../lib/poc';
+import { Vector } from '..';
+import { ComposableConstructor, IEntity, EntityMetadata, EntitiesWithMetadata, Model } from '../lib';
 
 export type Pathfinder = (from: Vector, to: Vector) => Vector[] | null;
 
-export type MovableUnits = KindsOfUnitsWithAbility<IMovableMetadata>;
-export interface IMovableMetadata extends IEntityMetadata {
+export interface IEntityUpdateContext {
+  pathfinder: Pathfinder;
+  nearbyEnemies: IEntity[];
+}
+
+export interface IMovableMetadata {
   movementRate: number;
 }
 
-export interface IMovableState extends IEntityState {
-  kind: MovableUnits;
+export interface IMovableEntity extends IEntity {
+  kind: EntitiesWithMetadata<IMovableMetadata>;
   velocity: number;
   direction: number;
 }
 
-export type IMovableStateFields = Omit<IMovableState, keyof IEntityState>;
-export function newMovable<K extends MovableUnits>(kind: K, cfg?: {velocity?: number, direction?: number}): IMovableStateFields {
-  return {
-    velocity: cfg?.velocity ?? 0,
-    direction: cfg?.direction ?? 0,
-  };
-}
+export function MovableModel<E extends IMovableEntity, T extends new(o: any) => any>(base: T) {
+  class Movable extends (base as new(o: any) => Model<E>) {
+    updatePosition(entity: E): E {
+      const speed = entity.velocity * EntityMetadata[entity.kind].movementRate;
+      const velocityVector = Vector.from_magnitude_and_direction(speed, entity.direction);
+      entity.position = Vector.add(entity.position, velocityVector);
+      return entity;
+    }
 
-export function updatePosition<T extends IMovableState>(value: T): T {
-  const speed = value.velocity * UnitMetadata[value.kind].movementRate;
-  const velocityVector = Vector.from_magnitude_and_direction(speed, value.direction);
-  value.position = Vector.add(value.position, velocityVector);
-  return value;
-}
+    isGoingSouth(entity: IMovableEntity): boolean {
+      return Math.abs(entity.direction) < Math.PI / 2;
+    }
 
-export function isGoingSouth(value: IMovableState): boolean {
-  return Math.abs(value.direction) < Math.PI / 2;
-}
+    isGoingEast(entity: IMovableEntity): boolean {
+      return entity.direction > 0;
+    }
+  }
 
-export function isGoingEast(value: IMovableState): boolean {
-  return value.direction > 0;
+  return Movable as ComposableConstructor<typeof Movable, T>;
 }

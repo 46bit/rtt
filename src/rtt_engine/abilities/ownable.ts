@@ -1,15 +1,21 @@
 import { Player } from '..';
-import { IEntity, EntityMetadata, EntitiesWithMetadata, Controller } from '../lib';
+import { ComposableConstructor, IEntity, Model } from '../lib';
 
 export interface IOwnableEntity extends IEntity {
   player: Player;
 }
 
-export function captureOwnable<T extends IOwnableEntity>(value: T, player: Player): T {
-  value.player = player;
-  return value;
-}
+export function OwnableModel<E extends IOwnableEntity, T extends new(o: any) => any>(base: T) {
+  class Ownable extends (base as new(o: any) => Model<E>) {
+    captureOwnable(entity: E, player: Player): E {
+      entity.player = player;
+      return entity;
+    }
 
-export function playerOwnsOwnable(value: IOwnableEntity, player: Player): boolean {
-  return value.player === player;
+    playerOwnsOwnable(entity: E, player: Player): boolean {
+      return entity.player === player;
+    }
+  }
+
+  return Ownable as ComposableConstructor<typeof Ownable, T>;
 }

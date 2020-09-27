@@ -3,6 +3,17 @@ import { IEntityState, IEntityMetadata, IEntityUpdateContext } from './entity';
 import { UnitMetadata, KindsOfUnitsWithAbility, IUnitMetadata, IUnitState, UnitAbilities, newUnit } from './';
 import { Player, Vector } from '../../';
 
+class NonAbstractClass { }
+
+function extendByAnAbstractClass(classToBeExtended: new() => any) {
+  abstract class AbstractClass extends classToBeExtended { }
+  return AbstractClass;
+}
+
+class ImpossibleClass extends extendByAnAbstractClass(NonAbstractClass) { }
+
+let impossibleClass = new ImpossibleClass();
+
 export type VehicleUnits = KindsOfUnitsWithAbility<IVehicleMetadata>;
 export type IVehicleMetadata =
   IUnitMetadata
@@ -18,6 +29,7 @@ export type VehicleAbilities =
 export interface IVehicleState extends VehicleAbilities {
   kind: VehicleUnits;
 }
+type E = keyof Omit<VehicleAbilities, "">;
 
 export type IVehicleStateFields = Omit<IVehicleState, "kind">;
 export function newVehicle<K extends VehicleUnits>(kind: K, position: Vector, player: Player | null): IVehicleStateFields {

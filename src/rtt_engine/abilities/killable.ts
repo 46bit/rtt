@@ -5,13 +5,14 @@ export interface IKillableMetadata {
 }
 
 export interface IKillableEntity extends IEntity {
+  kind: EntitiesWithMetadata<IKillableMetadata>;
   health: number;
   dead: boolean;
   orders?: any[];
 }
 
-export function KillableModel<E extends IKillableEntity, T extends new(o: any) => {}>(base: T) {
-  class Killable extends (base as new(o: any) => {}) {
+export function KillableModel<E extends IKillableEntity, T extends new(o: any) => any>(base: T) {
+  class Killable extends (base as new(o: any) => Model<E>) {
     kill(entity: E): E {
       entity.dead = true;
       entity.health = 0;
@@ -43,7 +44,7 @@ export function KillableModel<E extends IKillableEntity, T extends new(o: any) =
     }
 
     isDamaged(entity: E): boolean {
-      return entity.health <  EntityMetadata[entity.kind].fullHealth;
+      return entity.health < EntityMetadata[entity.kind].fullHealth;
     }
 
     healthiness(entity: E): number {

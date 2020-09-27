@@ -1,11 +1,10 @@
 import lodash from 'lodash';
+import { Vector } from '..';
+import { IEntity } from '../lib';
 import { unionize, ofType, UnionOf } from 'unionize';
-import { Vector } from '../../vector';
-import { IKillableMetadata, IKillableState, newKillable } from './killable';
-import { IEntityState, IEntityUpdateContext, newEntity } from '../lib/entity';
-import { UnitMetadata, KindsOfUnitsWithAbility } from '../lib/poc';
+import { IKillableEntity, IEntityUpdateContext } from '.';
 
-export interface IOrderableState extends IKillableState {
+export interface IOrderableState extends IEntity {
   orders: Order[];
 }
 
@@ -34,7 +33,7 @@ export interface ManoeuvreOrder {
 }
 
 export interface AttackOrder {
-  target: IKillableState;
+  target: IKillableEntity;
   context?: IEntityUpdateContext;
 }
 
@@ -45,7 +44,7 @@ export interface PatrolOrder {
 }
 
 export interface GuardOrder {
-  protectEntity: IEntityState;
+  protectEntity: IEntity;
   context?: IEntityUpdateContext;
 }
 

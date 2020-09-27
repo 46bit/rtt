@@ -1,19 +1,11 @@
-import { Vector } from '../';
-import * as abilities from './abilities';
-import { IEntityMetadata, IEntityState, IPowerGeneratorState, newEntity } from './';
+import { IPowerGenerator } from '.';
+import * as abilities from '../abilities';
 
-export type IPowerSourceMetadata = IEntityMetadata & abilities.ICollidableMetadata;
-export type PowerSourceAbilities = IEntityState & abilities.ICollidableState;
-
-export interface IPowerSourceState extends PowerSourceAbilities {
+export interface IPowerSource extends abilities.ICollidableEntity {
   kind: "powerSource";
-  structure: IPowerGeneratorState | null;
+  structure: IPowerGenerator | null;
 }
 
-export function newPowerSource(position: Vector): IPowerSourceState {
-  const kind = "powerSource";
-  return {
-    ...newEntity({kind, position}),
-    structure: null,
-  };
-}
+export const PowerSourceMetadata = {
+  collisionRadius: 7.0,
+};

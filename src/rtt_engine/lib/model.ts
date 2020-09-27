@@ -1,14 +1,21 @@
 import { IEntity } from '.';
 import { Vector, Player } from '..';
 import { Pathfinder } from '../abilities';
-import { BotController, ShotgunTankController } from '../controllers';
+import { ArtilleryTankModel, BotModel, ShotgunTankModel } from '../models';
 
-export type Models = never;// = BotController | ShotgunTankController;
+export const Models = {
+  artilleryTank: new ArtilleryTankModel({}),
+  bot: new BotModel({}),
+  shotgunTank: new ShotgunTankModel({}),
+};
+export type ModelsType = typeof Models;
 
-export type ModelNames = Models["kind"];
-
-export abstract class Model<E extends IEntity> {
+// Cannot be abstract because it gets passed through the ability mixins
+// That could be 'fixed' using `any` but the abstract constraint then disappears
+export class Model<E extends IEntity> {
   constructor(o: {}) { }
 
-  abstract newEntity(position: Vector, player: Player): E;
+  newEntity(cfg: {position: Vector, player: Player}): E {
+    throw Error("unimplemented");
+  }
 }

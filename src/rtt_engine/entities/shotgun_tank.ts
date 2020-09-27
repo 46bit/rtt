@@ -1,10 +1,8 @@
 import { IVehicleTurret, newPhysics } from '.';
 import * as abilities from '../abilities';
 
-export const IShotgunTankKind = "shotgunTank";
-
-export interface IShotgunTank extends abilities.IKillableEntity {
-  kind: typeof IShotgunTankKind;
+export interface IShotgunTank extends abilities.IConstructableEntity, abilities.IOwnableEntity, abilities.ICollidableEntity, abilities.IPathableEntity {
+  kind: "shotgunTank";
   updateCounter: number;
   turret: IVehicleTurret;
 }
@@ -22,18 +20,17 @@ export const ShotgunTankMetadata = {
   turretInput: [0.08, 1, 0.8],
 };
 
+export interface IShotgunTankProjectile extends abilities.IKillableEntity, abilities.IOwnableEntity, abilities.ICollidableEntity, abilities.IMovableEntity {
+  kind: "shotgunTankProjectile";
+}
 
-
-
-// export interface IShotgunTankMetadata extends IVehicleMetadata {
-//   firingRate: number;
-// }
-
-// export interface IShotgunTankState extends IVehicleState {
-//   kind: "shotgunTank";
-//   updateCounter: number;
-//   turret: VehicleTurret;
-// }
+export const ShotgunTankProjectileMetadata = {
+  collisionRadius: 5,
+  velocity: 1.8,
+  movementRate: 1.0,
+  lifetime: ARTILLERY_RANGE / 1.8,
+  fullHealth: 18,
+};
 
 // export function newShotgunTank(position: Vector, player: Player | null): IShotgunTankState {
 //   const kind = "shotgunTank";

@@ -1,10 +1,8 @@
 import { newPhysics } from '.';
 import * as abilities from '../abilities';
 
-export const IBotKind = "bot";
-
-export interface IBot extends abilities.IKillableEntity {
-  kind: typeof IBotKind;
+export interface IBot extends abilities.IConstructableEntity, abilities.IOwnableEntity, abilities.ICollidableEntity, abilities.IPathableEntity {
+  kind: "bot";
 }
 
 export const BotMetadata = {
