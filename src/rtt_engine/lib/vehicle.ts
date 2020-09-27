@@ -11,20 +11,7 @@ export type VehicleEntity =
   & abilities.IOrderableEntity
   & abilities.IConstructableEntity;
 
-export abstract class VehicleController<E extends VehicleEntity> extends Controller<E> {
-  updateOrders(entity: E, ctx: abilities.IEntityUpdateContext): E {
-    abilities.OrderUnion.match(entity.orders[0], {
-      manoeuvre: (o: abilities.ManoeuvreOrder) => this.updateManoeuvreOrder(entity, o, ctx),
-      attack: (o: abilities.AttackOrder) => this.updateAttackOrder(entity, o, ctx),
-      patrol: (o: abilities.PatrolOrder) => this.updatePatrolOrder(entity, o, ctx),
-      guard: (o: abilities.GuardOrder) => this.updateGuardOrder(entity, o, ctx),
-      constructStructure: (o: abilities.ConstructStructureOrder) => this.updateConstructStructureOrder(entity, o, ctx),
-      constructVehicle: (o: abilities.ConstructVehicleOrder) => this.updateConstructVehicleOrder(entity, o, ctx),
-      upgrade: (o: {}) => this.updateUpgradeOrder(entity, ctx),
-    } as abilities.OrderMatchExhaustiveCases<boolean>);
-    return entity;
-  }
-
+export abstract class VehicleController<E extends VehicleEntity> extends abilities.OrderableController<E> {
   updateManoeuvreOrder(entity: E, order: abilities.ManoeuvreOrder, ctx: abilities.IEntityUpdateContext): boolean {
     const stopAtDistanceToDestination = 10; //UnitMetadata[value.kind].stopAtDistanceToDestination ?? 10;
     const distanceToDestination = Vector.subtract(entity.position, order.destination).magnitude();
@@ -55,21 +42,5 @@ export abstract class VehicleController<E extends VehicleEntity> extends Control
       this.updateManoeuvreOrder(entity, {destination: order.location}, ctx);
     }
     return true;
-  }
-
-  updateGuardOrder(entity: E, order: abilities.GuardOrder, ctx: abilities.IEntityUpdateContext): boolean {
-    return false;
-  }
-
-  updateConstructStructureOrder(entity: E, order: abilities.ConstructStructureOrder, ctx: abilities.IEntityUpdateContext): boolean {
-    return false;
-  }
-
-  updateConstructVehicleOrder(entity: E, order: abilities.ConstructVehicleOrder, ctx: abilities.IEntityUpdateContext): boolean {
-    return false;
-  }
-
-  updateUpgradeOrder(entity: E, ctx: abilities.IEntityUpdateContext): boolean {
-    return false;
   }
 }
