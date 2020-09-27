@@ -1,10 +1,10 @@
 import { newPhysics } from '.';
-import { VehicleEntity, IProjectileEntity } from '../lib';
+import { IConstructableVehicleEntity, IProjectileEntity } from '../lib';
 import * as abilities from '../abilities';
 
 export const ARTILLERY_RANGE = 210;
 
-export interface IArtilleryTank extends VehicleEntity {
+export interface IArtilleryTank extends IConstructableVehicleEntity {
   kind: "artilleryTank";
   updateCounter: number;
 }

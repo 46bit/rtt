@@ -1,6 +1,6 @@
 import { Player, Vector } from '../';
 import * as abilities from '../abilities';
-import { Model, ProjectileModel, newEntity } from '../lib';
+import { ConstructableVehicleModel, ProjectileModel, VehicleController, newEntity } from '../lib';
 import {
   IArtilleryTank,
   IArtilleryTankProjectile,
@@ -8,23 +8,11 @@ import {
   ArtilleryTankProjectileMetadata,
 } from '../entities';
 
-export class ArtilleryTankModel extends abilities.ConstructableModel(
-    abilities.OwnableModel(
-      abilities.PathableModel(Model))) {
+export class ArtilleryTankModel extends ConstructableVehicleModel<IArtilleryTank> {
   newEntity(cfg: {position: Vector, player: Player, built: false}): IArtilleryTank {
     return {
-      ...newEntity({kind: "artilleryTank", position: cfg.position}),
-      health: cfg.built ? ArtilleryTankMetadata.fullHealth : 0,
-      dead: false,
-      built: cfg.built,
-      player: cfg.player,
-      destination: null,
-      route: null,
-      angularVelocity: 0,
-      velocity: 0,
-      direction: Math.random(),
+      ...this.newConstructableVehicle({...cfg, kind: "artilleryTank"}),
       updateCounter: 0,
-      orders: [],
     };
   }
 }

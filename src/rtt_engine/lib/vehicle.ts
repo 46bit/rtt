@@ -1,15 +1,55 @@
 import { Player, Vector } from '..';
 import * as abilities from '../abilities';
-import { Controller, EntityMetadata } from '.';
+import { Model, Controller, EntityMetadata, newEntity } from '.';
 
-export type VehicleEntity =
-  abilities.IConstructableEntity
+export type IVehicleEntity =
+  abilities.IKillableEntity
   & abilities.IOwnableEntity
   & abilities.ICollidableEntity
   & abilities.IPathableEntity
   & abilities.IOrderableEntity;
+export type IConstructableVehicleEntity = IVehicleEntity & abilities.IConstructableEntity;
 
-export abstract class VehicleController<E extends VehicleEntity> extends abilities.OrderableController<E> {
+export abstract class VehicleModel<E extends IVehicleEntity> extends abilities.KillableModel(
+    abilities.OwnableModel(
+      abilities.PathableModel(Model))) {
+  newVehicle(cfg: {kind: E["kind"], position: Vector, player: Player}): IVehicleEntity & {kind: E["kind"]} {
+    return {
+      ...newEntity({kind: cfg.kind, position: cfg.position}),
+      health: EntityMetadata[cfg.kind].fullHealth,
+      dead: false,
+      player: cfg.player,
+      destination: null,
+      route: null,
+      angularVelocity: 0,
+      velocity: 0,
+      direction: Math.random(),
+      orders: [],
+    };
+  }
+}
+
+export abstract class ConstructableVehicleModel<E extends IConstructableVehicleEntity> extends abilities.ConstructableModel(
+    abilities.OwnableModel(
+      abilities.PathableModel(Model))) {
+  newConstructableVehicle(cfg: {kind: E["kind"], position: Vector, player: Player, built: boolean}): IConstructableVehicleEntity & {kind: E["kind"]} {
+    return {
+      ...newEntity({kind: cfg.kind, position: cfg.position}),
+      health: cfg.built ? EntityMetadata[cfg.kind].fullHealth : 0,
+      dead: false,
+      built: cfg.built,
+      player: cfg.player,
+      destination: null,
+      route: null,
+      angularVelocity: 0,
+      velocity: 0,
+      direction: Math.random(),
+      orders: [],
+    };
+  }
+}
+
+export abstract class VehicleController<E extends IVehicleEntity> extends abilities.OrderableController<E> {
   updateManoeuvreOrder(entity: E, order: abilities.ManoeuvreOrder, ctx: abilities.IEntityUpdateContext): boolean {
     const stopAtDistanceToDestination = 10; //UnitMetadata[value.kind].stopAtDistanceToDestination ?? 10;
     const distanceToDestination = Vector.subtract(entity.position, order.destination).magnitude();

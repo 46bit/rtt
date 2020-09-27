@@ -1,7 +1,8 @@
 import { newPhysics } from '.';
+import { IVehicleEntity } from '../lib';
 import * as abilities from '../abilities';
 
-export interface ICommander extends abilities.IKillableEntity, abilities.IOwnableEntity, abilities.ICollidableEntity, abilities.IEngineerEntity, abilities.IPathableEntity {
+export interface ICommander extends IVehicleEntity, abilities.IEngineerEntity {
   kind: "commander";
 }
 

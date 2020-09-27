@@ -1,10 +1,10 @@
 import * as abilities from '../abilities';
-import { IProjectileEntity } from '../lib';
+import { IConstructableVehicleEntity, IProjectileEntity } from '../lib';
 import { IVehicleTurret, newPhysics } from '.';
 
 export const SHOTGUN_RANGE = 80;
 
-export interface IShotgunTank extends abilities.IConstructableEntity, abilities.IOwnableEntity, abilities.ICollidableEntity, abilities.IPathableEntity {
+export interface IShotgunTank extends IConstructableVehicleEntity {
   kind: "shotgunTank";
   updateCounter: number;
   turret: IVehicleTurret;

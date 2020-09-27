@@ -1,8 +1,8 @@
 import { newPhysics } from '.';
-import { VehicleEntity } from '../lib';
+import { IConstructableVehicleEntity } from '../lib';
 import * as abilities from '../abilities';
 
-export interface IBot extends VehicleEntity {
+export interface IBot extends IConstructableVehicleEntity {
   kind: "bot";
 }
 

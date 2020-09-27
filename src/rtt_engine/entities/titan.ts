@@ -1,10 +1,10 @@
 import { IVehicleTurret, newPhysics } from '.';
 import * as abilities from '../abilities';
-import { IProjectileEntity } from '../lib';
+import { IConstructableVehicleEntity, IProjectileEntity } from '../lib';
 
 export const TITAN_RANGE = 150;
 
-export interface ITitan extends abilities.IConstructableEntity, abilities.IOwnableEntity, abilities.ICollidableEntity, abilities.IPathableEntity {
+export interface ITitan extends IConstructableVehicleEntity {
   kind: "titan";
   updateCounter: number;
   turret: IVehicleTurret;
