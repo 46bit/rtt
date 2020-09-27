@@ -1,15 +1,17 @@
+import { EntityKinds } from '.';
 import { IEntity } from './entity';
 import { Vector, Player } from '../';
-import { Pathfinder } from '../abilities';
+import * as abilities from '../abilities';
 import { BotController, ShotgunTankController } from '../controllers';
 
-export type Controllers = BotController | ShotgunTankController;
+// Probably removable if any circular type problems emerge
+export type ControllersType = {[K in EntityKinds]: Controller<IEntity & {kind: K}>};
 
-export type ControllerNames = Controllers["kind"];
+export const Controllers: ControllersType = {
+  bot: new BotController(),
+  shotgunTank: new ShotgunTankController(),
+};
 
 export abstract class Controller<E extends IEntity> {
-  abstract kind: E["kind"];
-
-  abstract newEntity(position: Vector, player: Player): E;
-  abstract updateEntities(entities: E[], pathfinder: Pathfinder): E[];
+  abstract updateEntities(entities: E[], ctx: abilities.IEntityUpdateContext): E[];
 }

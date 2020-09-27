@@ -1,23 +1,17 @@
-import { Player, Vector } from '../';
-import { IShotgunTank, IShotgunTankKind, ShotgunTankMetadata } from '../entities';
+import lodash from 'lodash';
+import { Player, Vector } from '..';
 import * as abilities from '../abilities';
+import { Controller, EntityMetadata, IEntity } from '../lib';
+import { SHOTGUN_RANGE, IShotgunTank, ShotgunTankMetadata } from '../entities';
 
 export class ShotgunTankController extends Controller<IShotgunTank> {
-  readonly kind = IShotgunTankKind;
   readonly entityMetadata = ShotgunTankMetadata;
 
-  newEntity(position: Vector, player: Player): IShotgunTank {
-    const kind = "shotgunTank";
-    const turret = newVehicleTurret(...this.entityMetadata.turretInput);
-    const updateCounter = 0;
-    return {kind, turret, updateCounter, ...newVehicle(kind, position, player)};
-  }
-
-  updateEntities(shotgunTanks: IShotgunTank[], ctx: IEntityUpdateContext): IShotgunTank[] {
+  updateEntities(shotgunTanks: IShotgunTank[], ctx: abilities.IEntityUpdateContext): IShotgunTank[] {
     return shotgunTanks;
   }
 
-  protected updateEntity(entity: IShotgunTank, ctx: IEntityUpdateContext) {
+  protected updateEntity(entity: IShotgunTank, ctx: abilities.IEntityUpdateContext) {
     if (entity.dead) {
       return;
     }
@@ -57,7 +51,7 @@ export class ShotgunTankController extends Controller<IShotgunTank> {
   }
 }
 
-export function angleToNearestEnemy(value: IShotgunTankState, enemies: IEntityState[]): [number, number] | null {
+export function angleToNearestEnemy(value: IShotgunTank, enemies: IEntity[]): [number, number] | null {
   const nearestEnemy = lodash.minBy(enemies, (e) => Vector.subtract(value.position, e.position).magnitude());
   if (nearestEnemy == null) {
     return null;

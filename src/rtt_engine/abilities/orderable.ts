@@ -4,7 +4,7 @@ import { IEntity } from '../lib';
 import { unionize, ofType, UnionOf } from 'unionize';
 import { IKillableEntity, IEntityUpdateContext } from '.';
 
-export interface IOrderableState extends IEntity {
+export interface IOrderableEntity extends IEntity {
   orders: Order[];
 }
 
@@ -22,10 +22,12 @@ export type OrderRecord = typeof OrderUnion._Record;
 
 // `OrderMatchAllCases` is enough to pass to `OrderUnion.match`. Can't be empty.
 // Merge `OrderMatchCases` into `OrderMatchAllCases` to extend/override match clauses.
-export type OrderMatchCases<T, ReturnValue> = OrderRecordCases<T, ReturnValue> & (OrderDefaultCase<T, ReturnValue> | {});
-export type OrderMatchAllCases<T, ReturnValue> = OrderRecordCases<T, ReturnValue> & OrderDefaultCase<T, ReturnValue>;
-type OrderRecordCases<T, ReturnValue> = { [O in keyof OrderRecord]?: (value: T, order: OrderRecord[O]) => ReturnValue };
-type OrderDefaultCase<T, ReturnValue> = { default: (value: T, order: Order) => ReturnValue };
+export type OrderMatchCases<ReturnValue> = OrderRecordCases<ReturnValue> & (OrderDefaultCase<ReturnValue> | {});
+export type OrderMatchExhaustiveCases<ReturnValue> = OrderRecordAllCases<ReturnValue>;
+export type OrderMatchAllCases<ReturnValue> = OrderRecordAllCases<ReturnValue> | (OrderRecordCases<ReturnValue> & OrderDefaultCase<ReturnValue>);
+type OrderRecordCases<ReturnValue> = { [O in keyof OrderRecord]?: (order: OrderRecord[O]) => ReturnValue };
+type OrderRecordAllCases<ReturnValue> = { [O in keyof OrderRecord]: (order: OrderRecord[O]) => ReturnValue };
+type OrderDefaultCase<ReturnValue> = { default: (order: Order) => ReturnValue };
 
 export interface ManoeuvreOrder {
   destination: Vector;

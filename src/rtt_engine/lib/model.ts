@@ -1,4 +1,4 @@
-import { IEntity } from '.';
+import { IEntity, EntityKinds } from '.';
 import { Vector, Player } from '..';
 import { Pathfinder } from '../abilities';
 import {
@@ -18,7 +18,10 @@ import {
   TurretProjectileModel,
 } from '../models';
 
-export const Models = {
+// Probably removable if any circular type problems emerge
+export type ModelsType = {[K in EntityKinds]: Model<IEntity & {kind: K}>};
+
+export const Models: ModelsType = {
   artilleryTank: new ArtilleryTankModel({}),
   artilleryTankProjectile: new ArtilleryTankProjectileModel({}),
   bot: new BotModel({}),
@@ -34,7 +37,6 @@ export const Models = {
   turret: new TurretModel({}),
   turretProjectile: new TurretProjectileModel({}),
 };
-export type ModelsType = typeof Models;
 
 // Cannot be abstract because it gets passed through the ability mixins
 // That could be 'fixed' using `any` but the abstract constraint then disappears
