@@ -54,12 +54,12 @@ export class ShotgunTankController extends VehicleController<IShotgunTank> {
   }
 }
 
-function angleToNearestEnemy(value: IShotgunTank, enemies: IEntity[]): [number, number] | null {
-  const nearestEnemy = lodash.minBy(enemies, (e) => Vector.subtract(value.position, e.position).magnitude());
+function angleToNearestEnemy(entity: IShotgunTank, enemies: IEntity[]): [number, number] | null {
+  const nearestEnemy = lodash.minBy(enemies, (e) => Vector.subtract(entity.position, e.position).magnitude());
   if (nearestEnemy == null) {
     return null;
   }
-  const offset = Vector.subtract(nearestEnemy.position, value.position);
+  const offset = Vector.subtract(nearestEnemy.position, entity.position);
   if (offset.magnitude() > SHOTGUN_RANGE * 2) {
     return null;
   }

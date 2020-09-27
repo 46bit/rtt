@@ -1,8 +1,8 @@
 import lodash from 'lodash';
 import { Vector } from '..';
-import { IEntity, Controller } from '../lib';
+import { IEntity, Controller, EntitiesWithMetadata } from '../lib';
 import { unionize, ofType, UnionOf } from 'unionize';
-import { IKillableEntity, IEntityUpdateContext } from '.';
+import { IKillableEntity, IEntityUpdateContext, IConstructableMetadata } from '.';
 
 export interface IOrderableEntity extends IEntity {
   orders: Order[];
@@ -92,12 +92,12 @@ export interface GuardOrder {
 }
 
 export interface ConstructStructureOrder {
-  structureClass: any;
+  structureKind: EntitiesWithMetadata<IConstructableMetadata>;
   position: Vector;
   metadata?: any;
 }
 
 export interface ConstructVehicleOrder {
-  vehicleClass: any;
+  vehicleKind: EntitiesWithMetadata<IConstructableMetadata>;
   metadata?: any;
 }

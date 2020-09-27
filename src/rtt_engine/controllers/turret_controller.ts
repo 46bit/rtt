@@ -2,7 +2,7 @@ import lodash from 'lodash';
 import { Player, Vector } from '..';
 import * as abilities from '../abilities';
 import { Controller, ProjectileController, Models, IEntity } from '../lib';
-import { ITurretProjectile, ITurret, TurretMetadata } from '../entities';
+import { TURRET_RANGE, ITurretProjectile, ITurret, TurretMetadata } from '../entities';
 
 export class TurretController extends Controller<ITurret> {
   updateEntities(entities: ITurret[], ctx: abilities.IEntityUpdateContext): ITurret[] {
@@ -34,12 +34,12 @@ export class TurretController extends Controller<ITurret> {
 
 export class TurretProjectileController extends ProjectileController<ITurretProjectile> { }
 
-function angleToNearestEnemy(enemies: IEntity[]): number | null {
-  const nearestEnemy = lodash.minBy(enemies, (e) => Vector.subtract(this.position, e.position).magnitude());
+function angleToNearestEnemy(entity: IEntity, enemies: IEntity[]): number | null {
+  const nearestEnemy = lodash.minBy(enemies, (e) => Vector.subtract(entity.position, e.position).magnitude());
   if (nearestEnemy == null) {
     return null;
   }
-  const offset = Vector.subtract(nearestEnemy.position, this.position);
+  const offset = Vector.subtract(nearestEnemy.position, entity.position);
   if (offset.magnitude() > TURRET_RANGE * 1.3) {
     return null;
   }

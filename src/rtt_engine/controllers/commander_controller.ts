@@ -1,7 +1,7 @@
 import { Player, Vector } from '..';
 import * as abilities from '../abilities';
 import { VehicleController, Models } from '../lib';
-import { ICommander, CommanderMetadata } from '../entities';
+import { ICommander, CommanderMetadata, IPowerSource } from '../entities';
 
 export class CommanderController extends VehicleController<ICommander> {
   updateEntities(entities: ICommander[], ctx: abilities.IEntityUpdateContext): ICommander[] {
@@ -12,14 +12,11 @@ export class CommanderController extends VehicleController<ICommander> {
     if (entity.construction != null) {
       const constructionModel = Models[entity.construction.kind];
       if (constructionModel.isBuilt(entity.construction) || constructionModel.isDead(entity.construction)) {
-        entity.construction = null;
+        entity.construction = undefined;
       }
     }
     Models["commander"].updateProduction(entity);
     this.updateOrders(entity, ctx);
-    if (entity.construction == null) {
-      entity.constructing = false;
-    }
   }
 
   // FIXME: Deduplicate this code with what's on Engineer
@@ -29,30 +26,24 @@ export class CommanderController extends VehicleController<ICommander> {
       return true;
     }
     if (entity.construction == null) {
-      if (entity.constructing) {
-        entity.constructing = false;
-        return false;
-      } else if (order.structureClass == PowerGenerator) {
-        const powerSource: PowerSource = order.metadata;
+      if (order.structureKind == "powerGenerator") {
+        const powerSource: IPowerSource = order.metadata;
         if (powerSource.structure == null) {
-          entity.constructing = true;
-          entity.construction = new order.structureClass(
-            order.position,
-            entity.player,
-            false,
+          entity.construction = Models["powerGenerator"].newEntity({
+            position: powerSource.position,
+            player: entity.player,
+            built: false,
             powerSource,
-          );
-        } else if (powerSource.structure.player == entity.player && powerSource.structure.isUnderConstruction()) {
-          entity.constructing = true;
+          });
+        } else if (powerSource.structure.player == entity.player && Models[powerSource.structure.kind].isUnderConstruction(powerSource.structure)) {
           entity.construction = powerSource.structure;
         }
       } else {
-        entity.constructing = true;
-        entity.construction = new order.structureClass(
-          order.position,
-          entity.player,
-          false,
-        );
+        entity.construction = Models[order.structureKind].newEntity({
+          position: order.position,
+          player: entity.player,
+          built: false,
+        });
         return true;
       }
     }
