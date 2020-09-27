@@ -1,6 +1,8 @@
 import { IVehicleTurret, newPhysics } from '.';
 import * as abilities from '../abilities';
 
+export const SHOTGUN_RANGE = 80;
+
 export interface IShotgunTank extends abilities.IConstructableEntity, abilities.IOwnableEntity, abilities.ICollidableEntity, abilities.IPathableEntity {
   kind: "shotgunTank";
   updateCounter: number;
@@ -25,11 +27,11 @@ export interface IShotgunTankProjectile extends abilities.IKillableEntity, abili
 }
 
 export const ShotgunTankProjectileMetadata = {
-  collisionRadius: 5,
-  velocity: 1.8,
+  collisionRadius: 3,
+  velocity: 6.5,
   movementRate: 1.0,
-  lifetime: ARTILLERY_RANGE / 1.8,
-  fullHealth: 18,
+  lifetime: SHOTGUN_RANGE / 5,
+  fullHealth: 2.5,
 };
 
 // export function newShotgunTank(position: Vector, player: Player | null): IShotgunTankState {

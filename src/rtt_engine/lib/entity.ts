@@ -13,6 +13,8 @@ import {
   ShotgunTankProjectileMetadata,
   TitanMetadata,
   TitanProjectileMetadata,
+  TurretMetadata,
+  TurretProjectileMetadata,
 } from '../entities';
 
 export interface IEntity {
@@ -39,6 +41,8 @@ export const EntityMetadata = {
   shotgunTankProjectile: ShotgunTankProjectileMetadata,
   titan: TitanMetadata,
   titanProjectile: TitanProjectileMetadata,
+  turret: TurretMetadata,
+  turretProjectile: TurretProjectileMetadata,
 };
 export type EntityMetadataType = typeof EntityMetadata;
 

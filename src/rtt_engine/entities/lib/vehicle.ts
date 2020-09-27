@@ -3,17 +3,6 @@ import { IEntityState, IEntityMetadata, IEntityUpdateContext } from './entity';
 import { UnitMetadata, KindsOfUnitsWithAbility, IUnitMetadata, IUnitState, UnitAbilities, newUnit } from './';
 import { Player, Vector } from '../../';
 
-class NonAbstractClass { }
-
-function extendByAnAbstractClass(classToBeExtended: new() => any) {
-  abstract class AbstractClass extends classToBeExtended { }
-  return AbstractClass;
-}
-
-class ImpossibleClass extends extendByAnAbstractClass(NonAbstractClass) { }
-
-let impossibleClass = new ImpossibleClass();
-
 export type VehicleUnits = KindsOfUnitsWithAbility<IVehicleMetadata>;
 export type IVehicleMetadata =
   IUnitMetadata
