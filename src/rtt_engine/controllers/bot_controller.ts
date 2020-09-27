@@ -1,10 +1,10 @@
-import { Controller } from '../lib';
 import { Player, Vector } from '..';
 import * as abilities from '../abilities';
-import { IBot, BotMetadata } from '../entities';
+import { VehicleController } from '../lib';
+import { IBot } from '../entities';
 
-export class BotController extends Controller<IBot> {
-  updateEntities(bots: IBot[], ctx: abilities.IEntityUpdateContext): IBot[] {
-    return bots;
+export class BotController extends VehicleController<IBot> {
+  updateEntities(entities: IBot[], ctx: abilities.IEntityUpdateContext): IBot[] {
+    return entities;
   }
 }

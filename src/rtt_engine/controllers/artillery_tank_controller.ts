@@ -1,10 +1,10 @@
 import lodash from 'lodash';
-import { Player, Vector } from '../';
+import { Player, Vector } from '..';
 import * as abilities from '../abilities';
+import { VehicleController, Models, IEntity } from '../lib';
 import { ARTILLERY_RANGE, IArtilleryTank, ArtilleryTankMetadata } from '../entities';
-import { Controller, Models, IEntity } from '../lib';
 
-export class ArtilleryTankController extends Controller<IArtilleryTank> {
+export class ArtilleryTankController extends VehicleController<IArtilleryTank> {
   updateEntities(entities: IArtilleryTank[], ctx: abilities.IEntityUpdateContext): IArtilleryTank[] {
     return entities.map((e) => this.updateEntity(e, ctx));
   }

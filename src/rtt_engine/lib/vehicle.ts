@@ -8,8 +8,7 @@ export type VehicleEntity =
   & abilities.IOwnableEntity
   & abilities.ICollidableEntity
   & abilities.IPathableEntity
-  & abilities.IOrderableEntity
-  & abilities.IConstructableEntity;
+  & abilities.IOrderableEntity;
 
 export abstract class VehicleController<E extends VehicleEntity> extends abilities.OrderableController<E> {
   updateManoeuvreOrder(entity: E, order: abilities.ManoeuvreOrder, ctx: abilities.IEntityUpdateContext): boolean {
