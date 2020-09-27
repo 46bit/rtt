@@ -1,10 +1,10 @@
 import lodash from 'lodash';
 import { Player, Vector } from '..';
 import * as abilities from '../abilities';
-import { Controller, EntityMetadata, IEntity, ProjectileController } from '../lib';
+import { VehicleController, EntityMetadata, IEntity, ProjectileController, Models } from '../lib';
 import { SHOTGUN_RANGE, IShotgunTank, ShotgunTankMetadata, IShotgunTankProjectile } from '../entities';
 
-export class ShotgunTankController extends Controller<IShotgunTank> {
+export class ShotgunTankController extends VehicleController<IShotgunTank> {
   readonly entityMetadata = ShotgunTankMetadata;
 
   updateEntities(shotgunTanks: IShotgunTank[], ctx: abilities.IEntityUpdateContext): IShotgunTank[] {
@@ -17,7 +17,7 @@ export class ShotgunTankController extends Controller<IShotgunTank> {
     }
 
     this.updateOrders(entity, ctx);
-    this.updateMovement(entity, ctx.pathfinder);
+    Models["shotgunTank"].updateMovement(entity, ctx.pathfinder);
 
     entity.updateCounter++;
 
@@ -26,13 +26,16 @@ export class ShotgunTankController extends Controller<IShotgunTank> {
       value.turret.update(entity.direction);
       return;
     }
-    this.updateTurretTowards(entity, 0, angleToFireProjectile[0]);
+    Models["shotgunTank"].updateTurretTowards(entity, 0, angleToFireProjectile[0]);
 
     if (entity.updateCounter >= this.entityMetadata.firingRate && angleToFireProjectile[1] <= this.entityMetadata.firingRange * 1.2) {
       for (let projectileOffsetAngle = -4.8; projectileOffsetAngle <= 4.8; projectileOffsetAngle += 2.4) {
         const projectileAngle = entity.turret.rotation + projectileOffsetAngle*Math.PI/180;
-        const projectile = newProjectile("shotgunProjectile", entity.position, projectileAngle, entity.player);
-        // FIXME: It's clear that player isn't optional. Make it mandatory on most things?
+        const projectile = Models["shotgunTankProjectile"].newEntity({
+          position: entity.position,
+          player: entity.player,
+          direction: projectileAngle,
+        });
         entity.player.turretProjectiles.push(projectile);
       }
       entity.updateCounter = 0;
@@ -64,66 +67,3 @@ function angleToNearestEnemy(value: IShotgunTank, enemies: IEntity[]): [number, 
 }
 
 export class ShotgunTankProjectileController extends ProjectileController<IShotgunTankProjectile> { }
-
-// export function newShotgunTank(position: Vector, player: Player | null): IShotgunTankState {
-//   const kind = "shotgunTank";
-//   const turret = new VehicleTurret(...UnitMetadata[kind].turretInput);
-//   return {
-//     kind,
-//     turret,
-//     updateCounter: 0,
-//     ...newVehicle(kind, position, player),
-//   };
-// }
-
-// export function updateShotgunTank(value: IShotgunTankState, ctx: {pathfinder: Pathfinder, nearbyEnemies: IEntityState[]}) {
-//   if (value.dead) {
-//     return value;
-//   }
-
-//   abilities.updateOrders(value, ctx);
-//   abilities.updateMovement(value, ctx.pathfinder);
-
-//   value.updateCounter++;
-//   const angleToFireProjectile = angleToNearestEnemy(value, ctx.nearbyEnemies);
-//   if (angleToFireProjectile == null) {
-//     value.turret.update(value.direction);
-//     return value;
-//   }
-//   value.turret.updateTowards(0, angleToFireProjectile[0]);
-
-//   if (value.updateCounter >= UnitMetadata[value.kind].firingRate && angleToFireProjectile[1] <= SHOTGUN_RANGE * 1.2) {
-//     for (let projectileOffsetAngle = -4.8; projectileOffsetAngle <= 4.8; projectileOffsetAngle += 2.4) {
-//       const projectileAngle = value.turret.rotation + projectileOffsetAngle*Math.PI/180;
-//       const projectile = newProjectile("shotgunProjectile", value.position, projectileAngle, value.player);
-//       // FIXME: It's clear that player isn't optional. Make it mandatory on most things?
-//       value.player!.turretProjectiles.push(projectile);
-//     }
-//     value.updateCounter = 0;
-//   }
-
-//   return value;
-// }
-
-// export function angleToNearestEnemy(value: IShotgunTankState, enemies: IEntityState[]): [number, number] | null {
-//   const nearestEnemy = lodash.minBy(enemies, (e) => Vector.subtract(value.position, e.position).magnitude());
-//   if (nearestEnemy == null) {
-//     return null;
-//   }
-//   const offset = Vector.subtract(nearestEnemy.position, value.position);
-//   if (offset.magnitude() > SHOTGUN_RANGE * 2) {
-//     return null;
-//   }
-//   return [offset.angle(), offset.magnitude()];
-// }
-
-// export function attack(value: IShotgunTankState, attackOrder: abilities.AttackOrder): boolean {
-//   if (attackOrder.target.dead) {
-//     return false;
-//   }
-//   const distance = Vector.subtract(value.position, attackOrder.target.position).magnitude();
-//   if (distance > SHOTGUN_RANGE) {
-//     value.destination = attackOrder.target.position;
-//   }
-//   return true;
-// }

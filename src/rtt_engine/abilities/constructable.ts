@@ -2,6 +2,7 @@ import { ComposableConstructor, IEntity, EntityMetadata, EntitiesWithMetadata, M
 import { IKillableMetadata, IKillableEntity, KillableModel } from '.';
 
 export interface IConstructableMetadata extends IKillableMetadata {
+  // FIXME: It seems like `buildCost` isn't being used for repairing, and maybe not used anywhere
   buildCost: number;
   constructableByMobileUnits: boolean;
 }

@@ -13,8 +13,39 @@ export class PowerGeneratorModel extends abilities.ConstructableModel(abilities.
       player: cfg.player,
       energyProvided: 0,
       powerSource: cfg.powerSource,
-      energyOutput: 0,
       upgrading: false,
+      upgradeLevel: 0,
     };
+  }
+
+  kill(entity: IPowerGenerator): IPowerGenerator {
+    entity.powerSource.structure = null;
+    super.kill(entity);
+    return entity;
+  }
+
+  energyOutput(entity: IPowerGenerator): number {
+    return Math.pow(PowerGeneratorMetadata.upgradeEnergyOutputMultiplier, entity.upgradeLevel);
+  }
+
+  energyConsumption(entity: IPowerGenerator): number {
+    return entity.upgrading ? 10 : 0;
+  }
+
+  fullHealthIncludingUpgrades(entity: IPowerGenerator): number {
+    return PowerGeneratorMetadata.fullHealth * Math.pow(PowerGeneratorMetadata.upgradeHealthMultiplier, entity.upgradeLevel);
+  }
+
+  repair(entity: IPowerGenerator, amount: number): IPowerGenerator {
+    entity.health = Math.min(entity.health + amount, this.fullHealthIncludingUpgrades(entity));
+    return entity;
+  }
+
+  isDamaged(entity: IPowerGenerator): boolean {
+    return entity.health < this.fullHealthIncludingUpgrades(entity);
+  }
+
+  healthiness(entity: IPowerGenerator): number {
+    return entity.health / this.fullHealthIncludingUpgrades(entity);
   }
 }

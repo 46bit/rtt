@@ -9,39 +9,6 @@ export class EngineerController extends VehicleController<IEngineer> {
   }
 }
 
-// import { Player } from '../player';
-// import { Vector } from '../vector';
-// import { Engineerable, ConstructStructureOrder } from './abilities';
-// import { Vehicle, IEntityUpdateContext } from './lib';
-// import { PowerGenerator, PowerSource } from './';
-
-// export class Engineer extends Engineerable(Vehicle) {
-//   constructing: boolean;
-
-//   constructor(position: Vector, direction: number, player: Player, built: boolean) {
-//     super({
-//       position,
-//       direction,
-//       collisionRadius: 6,
-//       built,
-//       buildCost: 50,
-//       player,
-//       fullHealth: 16,
-//       health: built ? 16 : 0,
-//       movementRate: 0.06,
-//       turnRate: 4.0 / 3.0,
-//       productionRange: 25.0,
-//       orderBehaviours: {
-//         constructStructure: (o: ConstructStructureOrder) => this.constructStructure(o),
-//       },
-//     } as any);
-//     this.constructing = false;
-//   }
-
-//   kill() {
-//     super.kill();
-//   }
-
 //   update(input: {context: IEntityUpdateContext}) {
 //     // FIXME: This seems to be updating orders etc twice!
 //     super.update(input);

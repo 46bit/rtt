@@ -17,7 +17,7 @@ export class ArtilleryTankController extends VehicleController<IArtilleryTank> {
     entity.updateCounter++;
 
     if (entity.updateCounter >= ArtilleryTankMetadata.firingRate && entity.velocity == 0) {
-      const angleToFireProjectile = angleToNearestEnemy(ctx.nearbyEnemies);
+      const angleToFireProjectile = angleToNearestEnemy(entity, ctx.nearbyEnemies);
       if (angleToFireProjectile == null) {
         return entity;
       }
