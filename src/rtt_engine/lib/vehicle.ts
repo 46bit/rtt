@@ -1,7 +1,6 @@
 import { Player, Vector } from '..';
 import * as abilities from '../abilities';
 import { Controller, EntityMetadata } from '.';
-import { IBot, BotMetadata } from '../entities';
 
 export type VehicleEntity =
   abilities.IConstructableEntity
