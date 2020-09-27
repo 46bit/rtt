@@ -1,7 +1,12 @@
 import { Player, Vector } from '../';
 import * as abilities from '../abilities';
 import { Model, newEntity } from '../lib';
-import { IArtilleryTank, ArtilleryTankMetadata } from '../entities';
+import {
+  IArtilleryTank,
+  IArtilleryTankProjectile,
+  ArtilleryTankMetadata,
+  ArtilleryTankProjectileMetadata,
+} from '../entities';
 
 export class ArtilleryTankModel extends abilities.ConstructableModel(
     abilities.OwnableModel(
@@ -19,6 +24,21 @@ export class ArtilleryTankModel extends abilities.ConstructableModel(
       velocity: 0,
       direction: Math.random(),
       updateCounter: 0,
+    };
+  }
+}
+
+export class ArtilleryTankProjectileModel extends abilities.KillableModel(
+    abilities.OwnableModel(
+      abilities.MovableModel(Model))) {
+  newEntity(cfg: {position: Vector, player: Player}): IArtilleryTankProjectile {
+    return {
+      ...newEntity({kind: "artilleryTankProjectile", position: cfg.position}),
+      health: ArtilleryTankProjectileMetadata.fullHealth,
+      dead: false,
+      player: cfg.player,
+      velocity: ArtilleryTankProjectileMetadata.velocity,
+      direction: Math.random(),
     };
   }
 }

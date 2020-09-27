@@ -21,18 +21,16 @@ export const TitanMetadata = {
   turretInput: [0.05, 1, 0.8, 0],
 };
 
-export interface ITitanProjectile extends abilities.IKillableEntity, abilities.IOwnableEntity, abilities.ICollidableEntity, abilities.IMovableMetadata {
+export interface ITitanProjectile extends abilities.IKillableEntity, abilities.IOwnableEntity, abilities.ICollidableEntity, abilities.IMovableEntity {
   kind: "titanProjectile";
-  updateCounter: number;
-  turret: IVehicleTurret;
-  laserStopAfter?: number;
 }
 
 export const TitanProjectileMetadata = {
   collisionRadius: 3,
   fullHealth: 9,
   lifetime: TITAN_RANGE / 9,
-  velocity: 9,
+  velocity: 0,
+  movementRate: 1,
 };
 
 //     this.turret2 = new VehicleTurret(0.05, 1, 0.8, 0);
