@@ -11,6 +11,10 @@ export interface IKillableEntity extends IEntity {
   orders?: any[];
 }
 
+export interface IKillableModel {
+  kill(entity: any): any;
+}
+
 export function KillableModel<E extends IKillableEntity, T extends new(o: any) => any>(base: T) {
   class Killable extends (base as new(o: any) => Model<E>) {
     kill(entity: E): E {

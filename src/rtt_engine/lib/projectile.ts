@@ -1,6 +1,3 @@
-import { Vector, Player } from '../../';
-import * as abilities from '../abilities';
-import { UnitMetadata, KindsOfUnitsWithAbility, ISolidEntityMetadata, SolidEntityAbilities, newSolidEntity } from './';
 import { Player, Vector } from '..';
 import * as abilities from '../abilities';
 import { Controller, EntityMetadata, EntitiesWithMetadata, Models } from '.';

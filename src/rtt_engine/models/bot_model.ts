@@ -18,6 +18,7 @@ export class BotModel extends abilities.ConstructableModel(
       angularVelocity: 0,
       velocity: 0,
       direction: Math.random(),
+      orders: [],
     };
   }
 }
