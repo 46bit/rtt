@@ -1,4 +1,4 @@
-import { Vector } from '../../vector';
+import { Vector } from '..';
 
 export interface IPhysics {
   mass: number;

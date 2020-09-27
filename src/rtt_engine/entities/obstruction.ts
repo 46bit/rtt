@@ -1,6 +1,6 @@
-import { Vector } from '../vector';
-import { IEntityConfig, newEntity } from './lib';
-import { ICollidableConfig, ICollidable, newCollidable } from './abilities';
+import { Vector } from '..';
+import { EntityMetadata } from '../lib';
+import { ICollidableEntity } from '../abilities';
 
 export interface IObstructionConfig {
   left: number;
@@ -9,11 +9,16 @@ export interface IObstructionConfig {
   bottom: number;
 }
 
-export interface IObstruction extends ICollidable {
+// FIXME: It would help to transform this back to being an `ICollidableEntity`
+// to simplify code elsewhere. But how to do that is unclear, as the current
+// setup requires `collisionRadius` to be static and in `EntityMetadata`.
+export interface IObstruction {
   left: number;
   right: number;
   top: number;
   bottom: number;
+  circumcircleCenter: Vector;
+  circumcircleRadius: number;
 }
 
 export function newObstruction(cfg: IObstructionConfig): IObstruction {
@@ -24,41 +29,42 @@ export function newObstruction(cfg: IObstructionConfig): IObstruction {
     [cfg.top, cfg.bottom] = [cfg.bottom, cfg.top];
   }
 
-  const position = new Vector(
+  const circumcircleCenter = new Vector(
     (cfg.left + cfg.right) / 2,
     (cfg.top + cfg.bottom) / 2,
   );
   const topLeft = new Vector(cfg.left, cfg.top);
   const bottomRight = new Vector(cfg.right, cfg.bottom);
   const diagonalDistance = Vector.distance(topLeft, bottomRight);
-  const collisionRadius = diagonalDistance + 0.1;
-  const collidableEntityCfg = { position, collisionRadius };
+  const circumcircleRadius = diagonalDistance + 0.1;
 
   return {
-    ...newCollidable(newEntity(collidableEntityCfg), collidableEntityCfg),
     left: cfg.left,
     right: cfg.right,
     top: cfg.top,
     bottom: cfg.bottom,
+    circumcircleCenter,
+    circumcircleRadius,
   };
 }
 
-export function obstructionContains(value: IObstruction, unit: { position: Vector, collisionRadius: number }): boolean {
+export function obstructionContains(value: IObstruction, colliderPosition: Vector, collideCollisionRadius: number }): boolean {
   const contained = (
-    unit.position.x + unit.collisionRadius > value.left
-    && unit.position.x - unit.collisionRadius <= value.right
-    && unit.position.y + unit.collisionRadius > value.top
-    && unit.position.y - unit.collisionRadius <= value.bottom
+    colliderPosition.x + collideCollisionRadius > value.left
+    && colliderPosition.x - collideCollisionRadius <= value.right
+    && colliderPosition.y + collideCollisionRadius > value.top
+    && colliderPosition.y - collideCollisionRadius <= value.bottom
   );
   return contained;
 }
 
-export function resolveCollisionWithObstruction(obstruction: IObstruction, collider: ICollidable): void {
-  while (obstructionContains(obstruction, collider)) {
-    const aboveY = obstruction.top - collider.collisionRadius;
-    const belowY = obstruction.bottom + collider.collisionRadius;
-    const leftX = obstruction.left - collider.collisionRadius;
-    const rightX = obstruction.right + collider.collisionRadius;
+export function resolveCollisionWithObstruction(obstruction: IObstruction, collider: ICollidableEntity): void {
+  const colliderCollisionRadius = EntityMetadata[collider.kind].collisionRadius;
+  while (obstructionContains(obstruction, collider.position, colliderCollisionRadius)) {
+    const aboveY = obstruction.top - colliderCollisionRadius;
+    const belowY = obstruction.bottom + colliderCollisionRadius;
+    const leftX = obstruction.left - colliderCollisionRadius;
+    const rightX = obstruction.right + colliderCollisionRadius;
 
     const distanceToBeAbove = Math.abs(collider.position.y - aboveY);
     const distanceToBeBelow = Math.abs(collider.position.y - belowY);

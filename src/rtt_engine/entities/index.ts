@@ -1,4 +1,3 @@
-export * from './lib';
 export * from './bot';
 export * from './artillery_tank';
 export * from './shotgun_tank';
