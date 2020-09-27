@@ -1,5 +1,5 @@
 import { Vector } from '..';
-import { EntityMetadata } from '../lib';
+import { IEntity, EntityMetadata, newEntity } from '../lib';
 import { ICollidableEntity } from '../abilities';
 
 export interface IObstructionConfig {
@@ -12,7 +12,8 @@ export interface IObstructionConfig {
 // FIXME: It would help to transform this back to being an `ICollidableEntity`
 // to simplify code elsewhere. But how to do that is unclear, as the current
 // setup requires `collisionRadius` to be static and in `EntityMetadata`.
-export interface IObstruction {
+// At least it's an IEntity…
+export interface IObstruction extends IEntity {
   left: number;
   right: number;
   top: number;
@@ -39,6 +40,7 @@ export function newObstruction(cfg: IObstructionConfig): IObstruction {
   const circumcircleRadius = diagonalDistance + 0.1;
 
   return {
+    ...newEntity({kind: "obstruction", position: circumcircleCenter}),
     left: cfg.left,
     right: cfg.right,
     top: cfg.top,

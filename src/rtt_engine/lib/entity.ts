@@ -1,6 +1,7 @@
 import { Vector } from '..';
 import { nanoid } from 'nanoid';
 import {
+  IObstruction,
   IArtilleryTank,
   IArtilleryTankProjectile,
   IBot,
@@ -43,6 +44,7 @@ export function newEntity<K extends EntityKinds>(cfg: {kind: K, position: Vector
 }
 
 export type Entities = {
+  obstruction: IObstruction,
   artilleryTank: IArtilleryTank,
   artilleryTankProjectile: IArtilleryTankProjectile,
   bot: IBot,
@@ -60,6 +62,7 @@ export type Entities = {
 };
 
 export const EntityMetadata = {
+  obstruction: null,
   artilleryTank: ArtilleryTankMetadata,
   artilleryTankProjectile: ArtilleryTankProjectileMetadata,
   bot: BotMetadata,
@@ -79,8 +82,8 @@ export type EntityMetadataType = typeof EntityMetadata;
 
 // Assert we're instantiating a controller for every entity.
 // Maybe this can be done in a better way? This file has become messy.
-export type EntityMetadataAssertType = {[K in keyof Entities]: {}};
-const EveryEntityHasAController = EntityMetadata as EntityMetadataAssertType;
+export type EntityMetadataAssertType = {[K in keyof Entities]: {} | null};
+const EveryEntityHasMetadata = EntityMetadata as EntityMetadataAssertType;
 
 export type EntityKinds = keyof EntityMetadataType;
 export type EntitiesWithMetadata<RequiredMetadata> =

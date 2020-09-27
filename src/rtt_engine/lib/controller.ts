@@ -20,6 +20,7 @@ import {
 } from '../controllers';
 
 export const Controllers = {
+  obstruction: null,
   artilleryTank: new ArtilleryTankController(),
   artilleryTankProjectile: new ArtilleryTankProjectileController(),
   bot: new BotController(),
@@ -38,7 +39,7 @@ export const Controllers = {
 
 // Assert we're instantiating a controller for every entity, without erasing the
 // type information on Controllers. (Maybe this can be done in a better way?)
-export type ControllersType = {[K in EntityKinds]: Controller<IEntity & {kind: K}>};
+export type ControllersType = {[K in EntityKinds]: Controller<IEntity & {kind: K}> | null};
 const EveryEntityHasAController = Controllers as ControllersType;
 
 export abstract class Controller<E extends IEntity> {

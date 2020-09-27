@@ -19,6 +19,7 @@ import {
 } from '../models';
 
 export const Models = {
+  obstruction: null,
   artilleryTank: new ArtilleryTankModel({}),
   artilleryTankProjectile: new ArtilleryTankProjectileModel({}),
   bot: new BotModel({}),
@@ -37,7 +38,7 @@ export const Models = {
 
 // Assert we're instantiating a model for every entity, without erasing the
 // type information on Models. (Maybe this can be done in a better way?)
-export type ModelsType = {[K in EntityKinds]: Model<IEntity & {kind: K}>};
+export type ModelsType = {[K in EntityKinds]: Model<IEntity & {kind: K}> | null};
 const EveryEntityHasAModel = Models as ModelsType;
 
 // Cannot be abstract because it gets passed through the ability mixins
