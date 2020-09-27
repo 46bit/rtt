@@ -1,8 +1,8 @@
 import lodash from 'lodash';
 import { Player, Vector } from '..';
 import * as abilities from '../abilities';
-import { VehicleController, Models, IEntity } from '../lib';
-import { ARTILLERY_RANGE, IArtilleryTank, ArtilleryTankMetadata } from '../entities';
+import { VehicleController, ProjectileController, Models, IEntity } from '../lib';
+import { ARTILLERY_RANGE, IArtilleryTank, ArtilleryTankMetadata, IArtilleryTankProjectile } from '../entities';
 
 export class ArtilleryTankController extends VehicleController<IArtilleryTank> {
   updateEntities(entities: IArtilleryTank[], ctx: abilities.IEntityUpdateContext): IArtilleryTank[] {
@@ -44,14 +44,16 @@ export class ArtilleryTankController extends VehicleController<IArtilleryTank> {
   }
 }
 
-function angleToNearestEnemy(enemies: IEntity[]): number | null {
-  const nearestEnemy = lodash.minBy(enemies, (e) => Vector.subtract(this.position, e.position).magnitude());
+function angleToNearestEnemy(entity: IEntity, enemies: IEntity[]): number | null {
+  const nearestEnemy = lodash.minBy(enemies, (e) => Vector.subtract(entity.position, e.position).magnitude());
   if (nearestEnemy == null) {
     return null;
   }
-  const offset = Vector.subtract(nearestEnemy.position, this.position);
+  const offset = Vector.subtract(nearestEnemy.position, entity.position);
   if (offset.magnitude() > ARTILLERY_RANGE * 1.1) {
     return null;
   }
   return offset.angle();
 }
+
+export class ArtilleryTankProjectileController extends ProjectileController<IArtilleryTankProjectile> { }

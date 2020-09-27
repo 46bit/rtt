@@ -1,5 +1,6 @@
-import { IVehicleTurret, newPhysics } from '.';
 import * as abilities from '../abilities';
+import { IProjectileEntity } from '../lib';
+import { IVehicleTurret, newPhysics } from '.';
 
 export const SHOTGUN_RANGE = 80;
 
@@ -22,7 +23,7 @@ export const ShotgunTankMetadata = {
   turretInput: [0.08, 1, 0.8],
 };
 
-export interface IShotgunTankProjectile extends abilities.IKillableEntity, abilities.IOwnableEntity, abilities.ICollidableEntity, abilities.IMovableEntity {
+export interface IShotgunTankProjectile extends IProjectileEntity {
   kind: "shotgunTankProjectile";
 }
 

@@ -1,8 +1,8 @@
 import lodash from 'lodash';
 import { Player, Vector } from '..';
 import * as abilities from '../abilities';
-import { Controller, EntityMetadata, IEntity } from '../lib';
-import { SHOTGUN_RANGE, IShotgunTank, ShotgunTankMetadata } from '../entities';
+import { Controller, EntityMetadata, IEntity, ProjectileController } from '../lib';
+import { SHOTGUN_RANGE, IShotgunTank, ShotgunTankMetadata, IShotgunTankProjectile } from '../entities';
 
 export class ShotgunTankController extends Controller<IShotgunTank> {
   readonly entityMetadata = ShotgunTankMetadata;
@@ -51,7 +51,7 @@ export class ShotgunTankController extends Controller<IShotgunTank> {
   }
 }
 
-export function angleToNearestEnemy(value: IShotgunTank, enemies: IEntity[]): [number, number] | null {
+function angleToNearestEnemy(value: IShotgunTank, enemies: IEntity[]): [number, number] | null {
   const nearestEnemy = lodash.minBy(enemies, (e) => Vector.subtract(value.position, e.position).magnitude());
   if (nearestEnemy == null) {
     return null;
@@ -62,3 +62,5 @@ export function angleToNearestEnemy(value: IShotgunTank, enemies: IEntity[]): [n
   }
   return [offset.angle(), offset.magnitude()];
 }
+
+export class ShotgunTankProjectileController extends ProjectileController<IShotgunTankProjectile> { }

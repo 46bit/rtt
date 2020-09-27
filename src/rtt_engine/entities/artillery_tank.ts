@@ -1,5 +1,5 @@
 import { newPhysics } from '.';
-import { VehicleEntity } from '../lib';
+import { VehicleEntity, IProjectileEntity } from '../lib';
 import * as abilities from '../abilities';
 
 export const ARTILLERY_RANGE = 210;
@@ -20,7 +20,7 @@ export const ArtilleryTankMetadata = {
   firingRate: 75,
 };
 
-export interface IArtilleryTankProjectile extends abilities.IKillableEntity, abilities.IOwnableEntity, abilities.ICollidableEntity, abilities.IMovableEntity {
+export interface IArtilleryTankProjectile extends IProjectileEntity {
   kind: "artilleryTankProjectile";
 }
 
