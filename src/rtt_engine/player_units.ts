@@ -1,41 +1,70 @@
 import {
-  Bot,
-  ArtilleryTank,
-  ShotgunTank,
-  Titan,
-  Engineer,
-  Commander,
-  Factory,
-  PowerGenerator,
-  Turret,
-  IKillable,
-  ICollidable,
-  IConstructable,
-  IOwnable,
-  IEntity,
-  IUnit,
-  IEntityUpdateContext,
+  IBot,
+  IArtilleryTank,
+  IShotgunTank,
+  ITitan,
+  IEngineer,
+  ICommander,
+  IFactory,
+  IPowerGenerator,
+  ITurret,
 } from './entities';
-
-// FIXME: Do this based upon an `IUnit`?
-type Unit = Bot | ArtilleryTank | ShotgunTank | Titan | Engineer | Commander | PowerGenerator | Factory | Turret;
-
-// FIXME: Do this based upon an `IVehicle`?
-type Vehicle = Bot | ArtilleryTank | ShotgunTank | Titan | Engineer;
+import {
+  IKillableEntity,
+  ICollidableEntity,
+  IConstructableEntity,
+  IOwnableEntity,
+  IEntityUpdateContext,
+} from './abilities';
+import {
+  Models,
+  Controllers,
+  EntityMetadata,
+  IVehicleEntity,
+} from './lib';
 
 export class PlayerUnits {
   public unitCap: number | null;
-  public unitsByKind: Map<string, IUnit[]>;
-  public constructionsById: Map<string, IUnit>;
+  public commander: ICommander | null;
+  public vehicles: IVehicleEntity[];
+  public engineers: IEngineer[];
+  public factories: IFactory[];
+  public powerGenerators: IPowerGenerator[];
+  public turrets: ITurret[];
+  public constructions: {[id: string]: IKillableEntity & ICollidableEntity & IConstructableEntity & IOwnableEntity};
 
   public constructor(unitCap: number | null) {
     this.unitCap = unitCap;
-    this.unitsByKind = new Map();
-    this.constructionsById = new Map();
+    this.commander = null;
+    this.vehicles = [];
+    this.engineers = [];
+    this.factories = [];
+    this.powerGenerators = [];
+    this.turrets = [];
+    this.constructions = {};
+  }
+
+  public allKillableCollidableUnits(): (IKillableEntity & ICollidableEntity & IOwnableEntity)[] {
+    let units = [];
+    // Engineers are also in this.vehicles
+    units.push(...this.vehicles);
+    units.push(...this.factories);
+    units.push(...this.powerGenerators);
+    units.push(...this.turrets);
+    units.push(...Object.values(this.constructions));
+    if (this.commander != null) {
+      units.push(this.commander);
+    }
+    return units;
   }
 
   public unitCount() {
-    return this.unitsByKind.size;
+    return (this.commander ? 1 : 0)
+      + this.vehicles.length
+      + this.factories.length
+      + this.powerGenerators.length
+      + this.turrets.length
+      + Object.keys(this.constructions).length;
   }
 
   public isAtUnitCap() {
@@ -43,49 +72,27 @@ export class PlayerUnits {
   }
 
   public energyOutput() {
-    let output = 0;
-    output += this.unitsByKind.get("commander").reduce((sum, com) => sum + com.energyOutput, 0);
-    output += this.unitsByKind.get("powerGenerator").reduce((sum, powerGen) => sum + powerGen.energyOutput, 0);
-    return output;
+    return (this.commander ? EntityMetadata.commander.energyOutput : 0)
+      + this.powerGenerators.reduce((sum, powerGenerator) => sum + Models["powerGenerator"].energyOutput(powerGenerator), 0);
   }
 
-  public update(enemies: (IKillable & ICollidable)[], context: IEntityUpdateContext) {
+  public update(enemies: (IKillableEntity & ICollidableEntity)[], ctx: IEntityUpdateContext) {
     this.removeDeadUnits();
     if (this.commander != null) {
-      this.commander.update({context});
+      Controllers.commander.updateEntities([this.commander], ctx);
     }
-    for (let powerGenerator of this.powerGenerators) {
-      powerGenerator.update({context});
-    }
+    Controllers.powerGenerator.updateEntities(this.powerGenerators, ctx);
     for (let vehicle of this.vehicles) {
-      switch (vehicle.constructor) {
-        case Bot:
-          (vehicle as Bot).update({context});
-          break;
-        case ShotgunTank:
-          (vehicle as ShotgunTank).update({enemies, context});
-          break;
-        case ArtilleryTank:
-          (vehicle as ArtilleryTank).update({enemies, context});
-          break;
-        case Titan:
-          (vehicle as Titan).update({enemies, context});
-          break;
-        case Engineer:
-          (vehicle as Engineer).update({context});
-          break;
-      }
+      Controllers[vehicle.kind].updateEntities([vehicle as any], ctx);
     }
-    for (const turret of this.turrets) {
-      turret.update({enemies, context});
-    }
-    this.updateFactoriesAndConstructions(context);
+    Controllers.turret.updateEntities(this.turrets, ctx);
+    this.updateFactoriesAndConstructions(ctx);
     this.removeDeadUnits();
   }
 
-  public updateFactoriesAndConstructions(context: IEntityUpdateContext) {
+  public updateFactoriesAndConstructions(ctx: IEntityUpdateContext) {
+    Controllers.factory.updateEntities(this.factories, ctx);
     for (let factory of this.factories) {
-      factory.update({context});
       if (factory.construction != null) {
         this.constructions[factory.construction.id] = factory.construction;
       }
@@ -101,44 +108,44 @@ export class PlayerUnits {
 
     for (let unitId in this.constructions) {
       const unit = this.constructions[unitId];
-      if (unit.isDead()) {
+      if (Models[unit.kind].isDead(unit)) {
         delete(this.constructions[unitId]);
         continue;
       }
-      if (this.isAtUnitCap() || !unit.isBuilt()) {
+      if (this.isAtUnitCap() || !Models[unit.kind].isBuilt(unit)) {
         continue;
       }
       delete(this.constructions[unitId]);
-      switch (unit.constructor) {
-        case Factory:
-          this.factories.push(unit as Factory);
+      switch (unit.kind) {
+        case "factory":
+          this.factories.push(unit as IFactory);
           break;
-        case PowerGenerator:
+        case "powerGenerator":
           // Power generators have special support for being built by multiple engineers at once
           // and so needs guard logic for the multiple completions that will happen. Eventually this
           // will be present for all structures.
-          if (!(this.powerGenerators.includes(unit as PowerGenerator))) {
-            this.powerGenerators.push(unit as PowerGenerator);
+          if (!(this.powerGenerators.includes(unit as IPowerGenerator))) {
+            this.powerGenerators.push(unit as IPowerGenerator);
           }
           break;
-        case Bot:
-          this.vehicles.push(unit as Bot);
+        case "bot":
+          this.vehicles.push(unit as IBot);
           break;
-        case ShotgunTank:
-          this.vehicles.push(unit as ShotgunTank);
+        case "shotgunTank":
+          this.vehicles.push(unit as IShotgunTank);
           break;
-        case ArtilleryTank:
-          this.vehicles.push(unit as ArtilleryTank);
+        case "artilleryTank":
+          this.vehicles.push(unit as IArtilleryTank);
           break;
-        case Titan:
-          this.vehicles.push(unit as Titan);
+        case "titan":
+          this.vehicles.push(unit as ITitan);
           break;
-        case Engineer:
-          this.vehicles.push(unit as Engineer);
-          this.engineers.push(unit as Engineer);
+        case "engineer":
+          this.vehicles.push(unit as IEngineer);
+          this.engineers.push(unit as IEngineer);
           break;
-        case Turret:
-          this.turrets.push(unit as Turret);
+        case "turret":
+          this.turrets.push(unit as ITurret);
           break;
         default:
           throw new TypeError('unexpected kind of construction completed: ' + unit);
@@ -150,10 +157,10 @@ export class PlayerUnits {
     if (this.commander != null && this.commander.dead) {
       this.commander = null;
     }
-    this.powerGenerators = this.powerGenerators.filter((powerGenerator) => powerGenerator.isAlive());
-    this.factories = this.factories.filter((factory) => factory.isAlive());
-    this.vehicles = this.vehicles.filter((vehicle) => vehicle.isAlive());
-    this.engineers = this.engineers.filter((engineer) => engineer.isAlive());
-    this.turrets = this.turrets.filter((turret) => turret.isAlive());
+    this.powerGenerators = this.powerGenerators.filter((powerGenerator) => Models.powerGenerator.isAlive(powerGenerator));
+    this.factories = this.factories.filter((factory) => Models.factory.isAlive(factory));
+    this.vehicles = this.vehicles.filter((vehicle) => Models[vehicle.kind].isAlive(vehicle));
+    this.engineers = this.engineers.filter((engineer) => Models.engineer.isAlive(engineer));
+    this.turrets = this.turrets.filter((turret) => Models.turret.isAlive(turret));
   }
 }

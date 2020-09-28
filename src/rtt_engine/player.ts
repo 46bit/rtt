@@ -1,7 +1,14 @@
-import { PowerSource, TurretProjectile, IEngineerable, IEntityUpdateContext } from './entities';
-import { PlayerUnits } from './player_units';
 import lodash from 'lodash';
 import * as THREE from 'three';
+import {
+  IPowerSource,
+  IProjectileEntity,
+  IEngineerEntity,
+  IEntityUpdateContext,
+  Models,
+  Controllers,
+  PlayerUnits,
+} from '.';
 
 export class Player {
   public name: string;
@@ -9,7 +16,7 @@ export class Player {
   public color: THREE.Color;
   public units: PlayerUnits;
   public storedEnergy: number;
-  public turretProjectiles: TurretProjectile[];
+  public turretProjectiles: IProjectileEntity[];
 
   constructor(name: string, color: THREE.Color, units: PlayerUnits) {
     this.name = name;
@@ -23,19 +30,20 @@ export class Player {
     return this.units.unitCount() === 0;
   }
 
-  public update(powerSources: readonly PowerSource[], otherPlayers: readonly Player[], context: IEntityUpdateContext) {
+  public update(powerSources: readonly IPowerSource[], otherPlayers: readonly Player[], ctx: Omit<IEntityUpdateContext, "nearbyEnemies">) {
     this.updateEnergy();
     const enemies = otherPlayers.map((p) => p.units.allKillableCollidableUnits()).flat();
+    let context: IEntityUpdateContext = {...ctx, nearbyEnemies: enemies};
     this.units.update(enemies, context);
     for (let turretProjectile of this.turretProjectiles) {
-      turretProjectile.update();
+      Controllers[turretProjectile.kind].updateEntities([turretProjectile as any]);
     }
-    this.turretProjectiles = this.turretProjectiles.filter((turretProjectile) => turretProjectile.isAlive());
+    this.turretProjectiles = this.turretProjectiles.filter((turretProjectile) => Models[turretProjectile.kind].isAlive(turretProjectile));
   }
 
   public updateEnergy() {
     this.storedEnergy += this.units.energyOutput();
-    const drainingUnits = (this.units.factories as IEngineerable[]).concat(this.units.powerGenerators);
+    const drainingUnits = (this.units.factories as any).concat(this.units.powerGenerators);
     if (this.units.commander != null) {
       drainingUnits.push(this.units.commander);
     }

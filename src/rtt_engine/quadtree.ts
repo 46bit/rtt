@@ -1,5 +1,4 @@
-import { IEntity, IEntityConfig } from '../rtt_engine/entities';
-import { ICollidableConfig, ICollidable } from '../rtt_engine/entities/abilities';
+import { EntityMetadata, IEntity, IOwnableEntity, ICollidableEntity, isColliding } from '.';
 
 export class Bounds {
   left: number;
@@ -14,7 +13,7 @@ export class Bounds {
     this.bottom = bottom;
   }
 
-  contains<E extends ICollidable>(entity: E, entityRadius: (e: E) => number): boolean {
+  contains<E extends ICollidableEntity>(entity: E, entityRadius: (e: E) => number): boolean {
     const itemLeft = entity.position.x - entityRadius(entity);
     const itemRight = entity.position.x + entityRadius(entity);
     const itemTop = entity.position.y - entityRadius(entity);
@@ -25,7 +24,7 @@ export class Bounds {
       && (itemBottom <= this.bottom);
   }
 
-  containedBy<E extends ICollidable>(entity: E, entityRadius: (e: E) => number): boolean {
+  containedBy<E extends ICollidableEntity>(entity: E, entityRadius: (e: E) => number): boolean {
     const itemLeft = entity.position.x - entityRadius(entity);
     const itemRight = entity.position.x + entityRadius(entity);
     const itemTop = entity.position.y - entityRadius(entity);
@@ -37,13 +36,13 @@ export class Bounds {
   }
 }
 
-export class IQuadrant<E extends ICollidable> {
-  public static fromEntityCollisions<E extends ICollidable>(bounds: Bounds, entities: E[]): IQuadrant<E> {
-    const entityRadius = (e: E) => e.collisionRadius;
+export class IQuadrant<E extends ICollidableEntity & IOwnableEntity> {
+  public static fromEntityCollisions<E extends ICollidableEntity & IOwnableEntity>(bounds: Bounds, entities: E[]): IQuadrant<E> {
+    const entityRadius = (e: E) => EntityMetadata[e.kind].collisionRadius;
     return this.fromEntitiesAndRadii(bounds, entities, entityRadius);
   }
 
-  public static fromEntitiesAndRadii<E extends ICollidable>(bounds: Bounds, entities: E[], entityRadius: (e: E) => number): IQuadrant<E> {
+  public static fromEntitiesAndRadii<E extends ICollidableEntity & IOwnableEntity>(bounds: Bounds, entities: E[], entityRadius: (e: E) => number): IQuadrant<E> {
     return new IQuadrant<E>(bounds, entities, entityRadius);
   }
 
@@ -121,7 +120,7 @@ export class IQuadrant<E extends ICollidable> {
     }
     let collisions = [];
     for (let quadtreeEntity of this.entities) {
-      if (quadtreeEntity.player != collidingEntity.player && quadtreeEntity.isCollidingWith(collidingEntity, 0)) {
+      if (quadtreeEntity.player != collidingEntity.player && isColliding(quadtreeEntity, collidingEntity, 0)) {
         collisions.push(quadtreeEntity);
       }
     }

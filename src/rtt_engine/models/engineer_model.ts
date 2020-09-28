@@ -3,7 +3,7 @@ import * as abilities from '../abilities';
 import { Model, newEntity } from '../lib';
 import { IEngineer, EngineerMetadata } from '../entities';
 
-export class EngineerModel extends abilities.EngineerModel(
+export class BEngineerModel extends abilities.EngineerModel(
     abilities.ConstructableModel(
       abilities.OwnableModel(
         abilities.PathableModel(Model)))) {

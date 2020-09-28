@@ -3,7 +3,7 @@ import cdt2d from "cdt2d";
 import { NavMesh } from "nav2d";
 import cleanPSLG from "clean-pslg";
 import { Vector } from './vector';
-import { Obstruction } from './entities';
+import { IObstruction } from './entities';
 
 export interface ITriangulatedMap {
   worldSize: number;
@@ -12,7 +12,7 @@ export interface ITriangulatedMap {
   passableTriangles: [number, number, number][];
 }
 
-export function triangulate(worldSize: number, obstructions: Obstruction[], clearance: number): ITriangulatedMap {
+export function triangulate(worldSize: number, obstructions: IObstruction[], clearance: number): ITriangulatedMap {
   const points: [number, number][] = [];
   const boundaryEdges: [number, number][] = [];
 

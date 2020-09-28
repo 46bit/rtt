@@ -1,16 +1,16 @@
-import { PowerSource, Obstruction, IEntityUpdateContext } from './entities';
+import { IPowerSource, IObstruction, IEntityUpdateContext } from '.';
 import { Player } from './player';
 
 export class Game {
-  public powerSources: readonly PowerSource[];
+  public powerSources: readonly IPowerSource[];
   public players: readonly Player[];
   public sandbox: boolean;
   public updateCounter: number;
   public winner: string | null;
   public winTime: Date | null;
-  public obstructions: Obstruction[];
+  public obstructions: IObstruction[];
 
-  constructor(powerSources: readonly PowerSource[], players: readonly Player[], obstructions: Obstruction[], sandbox = false) {
+  constructor(powerSources: readonly IPowerSource[], players: readonly Player[], obstructions: IObstruction[], sandbox = false) {
     this.powerSources = powerSources;
     this.players = players;
     this.sandbox = sandbox;
@@ -20,7 +20,7 @@ export class Game {
     this.obstructions = obstructions;
   }
 
-  public update(context: IEntityUpdateContext) {
+  public update(context: Omit<IEntityUpdateContext, "nearbyEnemies">) {
     this.updateCounter += 1;
 
     this.updatePlayers(context);
@@ -30,7 +30,7 @@ export class Game {
     }
   }
 
-  public updatePlayers(context: IEntityUpdateContext) {
+  public updatePlayers(context: Omit<IEntityUpdateContext, "nearbyEnemies">) {
     this.players.forEach((player) => {
       player.update(this.powerSources, this.players.filter((p) => p != player), context);
     });

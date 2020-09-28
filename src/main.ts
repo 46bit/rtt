@@ -172,7 +172,7 @@ function main() {
   //let triangulatedMapPresenter = new rtt_renderer.TriangulatedMapPresenter(obstacleBorderLessTriangulatedMap, renderer.gameCoordsGroup);
   //triangulatedMapPresenter.predraw();
 
-  let context: rtt_engine.IEntityUpdateContext = {
+  let context: Omit<rtt_engine.IEntityUpdateContext, "nearbyEnemies"> = {
     pathfinder: function(from: rtt_engine.Vector, to: rtt_engine.Vector) {
       let navmeshRoute = navmesh.findPath([from.x, from.y], [to.x, to.y]);
       if (!navmeshRoute || navmeshRoute.length == 0) {
