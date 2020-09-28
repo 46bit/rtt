@@ -22,7 +22,7 @@ window.rttEngine = rtt_engine;
 window.rttRenderer = rtt_renderer;
 window.paused = false;
 
-function mirrorFor4Players(worldSize: number, powerSources: rtt_engine.Vector[], obstructions: rtt_engine.Obstruction[]): [rtt_engine.Vector[], rtt_engine.Obstruction[]] {
+function mirrorFor4Players(worldSize: number, powerSources: rtt_engine.Vector[], obstructions: rtt_engine.IObstruction[]): [rtt_engine.Vector[], rtt_engine.IObstruction[]] {
   let newPowerSources = [];
   for (const powerSource of powerSources) {
     newPowerSources.push(new rtt_engine.Vector(
@@ -40,26 +40,27 @@ function mirrorFor4Players(worldSize: number, powerSources: rtt_engine.Vector[],
   }
   powerSources = powerSources.concat(...newPowerSources);
 
-  let newObstructions = [];
+  let newObstructions: rtt_engine.IObstruction[] = [];
   for (const obstruction of obstructions) {
-    newObstructions.push(new rtt_engine.Obstruction(
-      worldSize - obstruction.right,
-      worldSize - obstruction.left,
-      worldSize - obstruction.bottom,
-      worldSize - obstruction.top,
-    ));
-    newObstructions.push(new rtt_engine.Obstruction(
-      worldSize - obstruction.bottom,
-      worldSize - obstruction.top,
-      obstruction.right,
-      obstruction.left,
-    ));
-    newObstructions.push(new rtt_engine.Obstruction(
-      obstruction.bottom,
-      obstruction.top,
-      worldSize - obstruction.right,
-      worldSize - obstruction.left,
-    ));
+    // FIXME: Check if the elements are the right way around
+    newObstructions.push(rtt_engine.newObstruction({
+      left: worldSize - obstruction.right,
+      right: worldSize - obstruction.left,
+      top: worldSize - obstruction.bottom,
+      bottom: worldSize - obstruction.top,
+    }));
+    newObstructions.push(rtt_engine.newObstruction({
+      left: worldSize - obstruction.bottom,
+      right: worldSize - obstruction.top,
+      top: obstruction.right,
+      bottom: obstruction.left,
+    }));
+    newObstructions.push(rtt_engine.newObstruction({
+      left: obstruction.bottom,
+      right: obstruction.top,
+      top: worldSize - obstruction.right,
+      bottom: worldSize - obstruction.left,
+    }));
   }
   obstructions = obstructions.concat(...newObstructions);
 
@@ -94,14 +95,44 @@ function main() {
     new rtt_engine.Vector(edge + spacing * 7.8, edge + spacing * 7.8),
     new rtt_engine.Vector(edge + spacing * 7.8, edge + spacing * 9.3),
   ], [
-    new rtt_engine.Obstruction(0, spacing * 3, size - edge - spacing * 4, size - edge - spacing * 3),
+    rtt_engine.newObstruction({
+      left: 0,
+      right: spacing * 3,
+      top: size - edge - spacing * 4,
+      bottom: size - edge - spacing * 3,
+    }),
 
-    new rtt_engine.Obstruction(edge + spacing, edge + spacing * 2, size / 2 - spacing * 4.5, size / 2 + spacing * 4),
-    new rtt_engine.Obstruction(edge + spacing, edge + spacing * 3, size / 2 - spacing * 5.5, size / 2 - spacing * 4.5),
+    rtt_engine.newObstruction({
+      left: edge + spacing,
+      right: edge + spacing * 2,
+      top: size / 2 - spacing * 4.5,
+      bottom: size / 2 + spacing * 4,
+    }),
+    rtt_engine.newObstruction({
+      left: edge + spacing,
+      right: edge + spacing * 3,
+      top: size / 2 - spacing * 5.5,
+      bottom: size / 2 - spacing * 4.5,
+    }),
 
-    new rtt_engine.Obstruction(edge + spacing * 5, edge + spacing * 7, size / 2 + spacing, size / 2 + spacing * 2),
-    new rtt_engine.Obstruction(edge + spacing * 6, edge + spacing * 7, size / 2 - spacing * 4, size / 2 - spacing * 2),
-    new rtt_engine.Obstruction(edge + spacing * 6, edge + spacing * 7, size / 2 + spacing * 2, size / 2 + spacing * 4),
+    rtt_engine.newObstruction({
+      left: edge + spacing * 5,
+      right: edge + spacing * 7,
+      top: size / 2 + spacing,
+      bottom: size / 2 + spacing * 2,
+    }),
+    rtt_engine.newObstruction({
+      left: edge + spacing * 6,
+      right: edge + spacing * 7,
+      top: size / 2 - spacing * 4,
+      bottom: size / 2 - spacing * 2,
+    }),
+    rtt_engine.newObstruction({
+      left: edge + spacing * 6,
+      right: edge + spacing * 7,
+      top: size / 2 + spacing * 2,
+      bottom: size / 2 + spacing * 4,
+    }),
   ]);
   const map = {
     name: 'double-cross',
@@ -134,7 +165,7 @@ function main() {
   const bounds = new rtt_engine.Bounds(0, map.worldSize, 0, map.worldSize);
 
   let game = rtt_engine.gameFromConfig(config);
-  const obstructionQuadtree = rtt_engine.IQuadrant.fromEntityCollisions(bounds, game.obstructions as rtt_engine.ICollidable[]);
+  const obstructionQuadtree = rtt_engine.IQuadrant.fromEntityCollisions(bounds, game.obstructions as any);
   window.game = game;
 
   let ais: IAI[] = game.players.map((player) => {
@@ -293,17 +324,17 @@ function main() {
       quadtree = rtt_engine.IQuadrant.fromEntityCollisions(bounds, unitsAndProjectiles);
       let unitOriginalHealths: {[id: string]: number} = {};
       for (let unit of unitsAndProjectiles) {
-        if (unit.damage != null) {
-          unitOriginalHealths[unit.id] = (unit instanceof rtt_engine.Engineer) ? unit.health / 6 : unit.health;
+        if (unit.health != null) {
+          unitOriginalHealths[unit.id] = (unit.kind == "engineer") ? unit.health / 6 : unit.health;
         }
       }
 
       let collisions = quadtree.getCollisions(unitsAndProjectiles);
       for (let unitId in collisions) {
-        const unit: rtt_engine.IKillable = unitsAndProjectiles.filter((u: rtt_engine.IKillable) => u.id == unitId)[0];
+        const unit: rtt_engine.IKillableEntity = unitsAndProjectiles.filter((u: rtt_engine.IKillableEntity) => u.id == unitId)[0];
         let unitCollisions = collisions[unitId];
-        if (unit instanceof rtt_engine.Projectile) {
-          unitCollisions = unitCollisions.filter((u: rtt_engine.IKillable) => !(u instanceof rtt_engine.Projectile));
+        if (unit instanceof rtt_engine.IProjectileEntity) {
+          unitCollisions = unitCollisions.filter((u: rtt_engine.IKillableEntity) => !(u instanceof rtt_engine.IProjectileEntity));
         }
         const numberOfCollidingUnits = unitCollisions.length;
         if (numberOfCollidingUnits == 0) {
@@ -323,12 +354,15 @@ function main() {
       const units = livingPlayers.map((p) => p.units.allKillableCollidableUnits()).flat();
       const obstructionCollisions = obstructionQuadtree.getCollisions(units);
       for (let unitId in obstructionCollisions) {
-        const unitOrProjectile = units.filter((u: rtt_engine.IKillable) => u.id == unitId)[0];
+        const unitOrProjectile = units.filter((u: rtt_engine.IKillableEntity) => u.id == unitId)[0];
         if (unitOrProjectile.dead) {
           continue;
         }
         for (let obstruction of obstructionCollisions[unitId]) {
-          (obstruction as rtt_engine.Obstruction).collide(unitOrProjectile);
+          rtt_engine.resolveCollisionWithObstruction(
+            obstruction as unknown as rtt_engine.IObstruction,
+            unitOrProjectile,
+          );
         }
       }
     });
