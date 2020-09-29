@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Player, Vector } from '../../rtt_engine';
-import { Bot } from '../../rtt_engine/entities';
+import { IBot } from '../../rtt_engine/entities';
 import { InstancedGeometryPresenter } from './lib';
 
 import vehicle_vert from '../shaders/vehicle_vert.glsl.js';
@@ -30,6 +30,6 @@ export class BotPresenter extends InstancedGeometryPresenter {
   }
 
   getInstances(): {position: Vector, direction: number, player: Player | null}[] {
-    return this.player.units.vehicles.filter(v => v instanceof Bot);
+    return this.player.units.vehicles.filter(v => v.kind == "bot");
   }
 }

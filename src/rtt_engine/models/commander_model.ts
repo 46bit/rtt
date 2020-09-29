@@ -9,7 +9,7 @@ export class CommanderModel extends abilities.EngineerModel(
     abilities.KillableModel(
       abilities.OwnableModel(
         abilities.PathableModel(Model)))) {
-  newEntity(cfg: {position: Vector, player: Player, built: false}): ICommander {
+  newEntity(cfg: {position: Vector, player: Player, built: boolean}): ICommander {
     this.updateProduction
     return {
       ...newEntity({kind: "commander", position: cfg.position}),

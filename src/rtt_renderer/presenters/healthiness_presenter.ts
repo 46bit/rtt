@@ -1,7 +1,5 @@
 import * as THREE from 'three';
-import { Player } from '../../rtt_engine/player';
-import { Bot } from '../../rtt_engine/entities/bot';
-import { Vector } from '../../rtt_engine/vector';
+import { Player, Vector, Models, EntityMetadata } from '../../rtt_engine';
 
 export class HealthinessPresenter {
   player: Player;
@@ -65,7 +63,7 @@ export class HealthinessPresenter {
   }
 
   draw() {
-    const units = this.player.units.allKillableCollidableUnits().filter((u) => u.isDamaged());
+    const units = this.player.units.allKillableCollidableUnits().filter((u) => Models[u.kind].isDamaged(u as any));
     const numberOfUnits = units.length;
     if (this.instancedMesh != undefined && this.instancedMesh.count != numberOfUnits) {
       this.dedraw();
@@ -78,10 +76,10 @@ export class HealthinessPresenter {
     for (let i = 0; i < numberOfUnits; i++) {
       const unit = units[i];
       m = m.identity();
-      m.makeScale(unit.collisionRadius * 2.5, 2, 0);
-      m.setPosition(unit.position.x, unit.position.y - unit.collisionRadius - 3, 0);
+      m.makeScale(EntityMetadata[unit.kind].collisionRadius * 2.5, 2, 0);
+      m.setPosition(unit.position.x, unit.position.y - EntityMetadata[unit.kind].collisionRadius - 3, 0);
       this.instancedMesh!.setMatrixAt(i, m);
-      this.healthiness![i] = unit.healthiness();
+      this.healthiness![i] = Models[unit.kind].healthiness(unit as any);
     }
     this.instancedMesh!.instanceMatrix.needsUpdate = true;
     (this.instancedMesh!.geometry as THREE.BufferGeometry).attributes!.healthiness.needsUpdate = true;

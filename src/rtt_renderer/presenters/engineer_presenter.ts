@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import { Player } from '../../rtt_engine/player';
-import { Bot } from '../../rtt_engine/entities';
 import { Vector } from '../../rtt_engine';
 import { InstancedGeometryPresenter } from './lib';
 

@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import { Vector } from '../rtt_engine';
-import { ScreenPositionToWorldPosition } from './selection';
 
 export function time(name: string, callback: () => void): void {
   let clock = new THREE.Clock();
@@ -179,5 +178,35 @@ export class Renderer {
       0,
     );
     this.camera.applyMatrix4(translateBottomAndRight);
+  }
+}
+
+export class ScreenPositionToWorldPosition {
+  rendererDomElement: any;
+  camera: THREE.Camera;
+
+  constructor(rendererDomElement: any, camera: THREE.Camera) {
+    this.rendererDomElement = rendererDomElement;
+    this.camera = camera;
+  }
+
+  convert(clientX: number, clientY: number): Vector | undefined {
+    // FIXME: This must encode the coordinate system being used. That coordinate system really,
+    // really needs documenting.
+    const normalisedX = clientX / parseInt(this.rendererDomElement.style.width) * 2 - 1;
+    const normalisedY = - clientY / parseInt(this.rendererDomElement.style.height) * 2 + 1;
+    const normalisedMousePosition = new THREE.Vector2(normalisedX, normalisedY);
+
+    const raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera(normalisedMousePosition, this.camera);
+
+    const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1));
+    const result = new THREE.Vector3();
+    raycaster.ray.intersectPlane(plane, result);
+
+    return new Vector(
+      result.x,
+      result.y,
+    );
   }
 }

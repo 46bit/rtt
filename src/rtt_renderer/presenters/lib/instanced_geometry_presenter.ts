@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Player } from '../../../rtt_engine/player';
-import { IMovable } from '../../../rtt_engine/entities';
+import { IMovableEntity } from '../../../rtt_engine';
 import { Vector } from '../../../rtt_engine/vector';
 
 export abstract class InstancedGeometryPresenter {

@@ -1,17 +1,17 @@
 import * as THREE from 'three';
 import { Player } from '../../../rtt_engine/player';
-import { IMovable } from '../../../rtt_engine/entities';
+import { IMovableEntity } from '../../../rtt_engine';
 import { Vector } from '../../../rtt_engine/vector';
 
 export class InstancedRotateablePresenter {
   player: Player;
-  instanceCallback: (player: Player) => (IMovable & {turret?: {rotation: number}})[];
+  instanceCallback: (player: Player) => (IMovableEntity & {turret?: {rotation: number}})[];
   scene: THREE.Group;
   material?: THREE.Material;
   geometry?: THREE.BufferGeometry;
   instancedMesh?: THREE.InstancedMesh;
 
-  constructor(player: Player, instanceCallback: (player: Player) => IMovable[], geometry: THREE.BufferGeometry, scene: THREE.Group) {
+  constructor(player: Player, instanceCallback: (player: Player) => IMovableEntity[], geometry: THREE.BufferGeometry, scene: THREE.Group) {
     this.player = player;
     this.instanceCallback = instanceCallback;
     this.geometry = geometry;

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Player } from '../../rtt_engine/player';
-import { Titan, TitanProjectile, TITAN_RANGE } from '../../rtt_engine/entities';
+import { ITitan, ITitanProjectile, TITAN_RANGE } from '../../rtt_engine/entities';
 import { InstancedRotateablePresenter } from './lib';
 
 export function titanShape(): THREE.Shape {
@@ -34,7 +34,7 @@ export class TitanPresenter extends InstancedRotateablePresenter {
   constructor(player: Player, scene: THREE.Group) {
     super(
       player,
-      (p) => p.units.vehicles.filter(v => v instanceof Titan),
+      (p) => p.units.vehicles.filter(v => v.kind == "titan"),
       new THREE.ShapeBufferGeometry(titanShape()),
       scene,
     );
@@ -61,7 +61,7 @@ export class TitanTurretPresenter extends InstancedRotateablePresenter {
   constructor(player: Player, scene: THREE.Group) {
     super(
       player,
-      (p) => p.units.vehicles.filter(v => v instanceof Titan),
+      (p) => p.units.vehicles.filter(v => v.kind == "titan"),
       new THREE.ShapeBufferGeometry(titanTurretShape()),
       scene,
     );
@@ -82,8 +82,8 @@ export class TitanTurretPresenter extends InstancedRotateablePresenter {
     }
     let m = new THREE.Matrix4();
     for (let i = 0; i < instanceCount; i++) {
-      const instance = instances[i] as Titan;
-      m.makeRotationZ(-Math.PI/2 - instance.turret2.rotation);
+      const instance = instances[i] as ITitan;
+      m.makeRotationZ(-Math.PI/2 - instance.turret.rotation);
       m.setPosition(instance.position.x, instance.position.y, 0);
       this.instancedMesh.setMatrixAt(i, m);
     }
@@ -104,7 +104,7 @@ export class TitanProjectilePresenter extends InstancedRotateablePresenter {
   constructor(player: Player, scene: THREE.Group) {
     super(
       player,
-      (p) => p.units.vehicles.filter(v => v instanceof Titan),
+      (p) => p.units.vehicles.filter(v => v.kind == "titan"),
       new THREE.ShapeBufferGeometry(titanProjectileShape()),
       scene,
     );
@@ -113,7 +113,7 @@ export class TitanProjectilePresenter extends InstancedRotateablePresenter {
   }
 
   draw() {
-    const instances = this.instanceCallback(this.player).filter((i) => (i as Titan).laserStopAfter != null);
+    const instances = this.instanceCallback(this.player).filter((i) => (i as ITitan).laserStopAfter != null);
     const instanceCount = instances.length;
     if (this.instancedMesh != undefined && this.instancedMesh.count != instanceCount) {
       this.scene.remove(this.instancedMesh);
@@ -128,8 +128,8 @@ export class TitanProjectilePresenter extends InstancedRotateablePresenter {
     let m = new THREE.Matrix4();
     let s = new THREE.Vector3(0, 1, 1);
     for (let i = 0; i < instanceCount; i++) {
-      const instance = instances[i] as Titan;
-      m.makeRotationZ(-Math.PI/2 - instance.turret2.rotation);
+      const instance = instances[i] as ITitan;
+      m.makeRotationZ(-Math.PI/2 - instance.turret.rotation);
       s.x = instance.laserStopAfter!;
       m.scale(s);
       m.setPosition(instance.position.x, instance.position.y, 0);

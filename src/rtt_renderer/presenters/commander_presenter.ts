@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { Commander } from '../../rtt_engine/entities/commander';
+import { ICommander } from '../../rtt_engine/entities/commander';
 import { Vector } from '../../rtt_engine/vector';
 
 export function commanderShape(): THREE.Shape {
@@ -18,12 +18,12 @@ export function commanderShape(): THREE.Shape {
 }
 
 export class CommanderPresenter {
-  commander: Commander;
+  commander: ICommander;
   scene: THREE.Group;
   mesh?: THREE.Mesh;
   predrawn: boolean;
 
-  constructor(commander: Commander, scene: THREE.Group) {
+  constructor(commander: ICommander, scene: THREE.Group) {
     this.commander = commander;
     this.scene = scene;
     this.predrawn = false;
@@ -38,7 +38,7 @@ export class CommanderPresenter {
   }
 
   draw() {
-    if (this.commander.isDead()) {
+    if (this.commander.dead) {
       if (this.predrawn) {
         this.dedraw();
       }

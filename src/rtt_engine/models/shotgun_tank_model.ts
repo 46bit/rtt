@@ -9,7 +9,7 @@ import {
 } from '../entities';
 
 export class ShotgunTankModel extends ConstructableVehicleModel<IShotgunTank> {
-  newEntity(cfg: {position: Vector, player: Player, built: false}): IShotgunTank {
+  newEntity(cfg: {position: Vector, player: Player, built: boolean}): IShotgunTank {
     const entity: any = this.newConstructableVehicle({...cfg, kind: "shotgunTank"});
     entity.updateCounter = 0;
     entity.turret = newVehicleTurret({...ShotgunTankMetadata.turretInput, rotation: entity.direction});

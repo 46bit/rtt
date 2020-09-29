@@ -43,16 +43,16 @@ export class Player {
 
   public updateEnergy() {
     this.storedEnergy += this.units.energyOutput();
-    const drainingUnits = (this.units.factories as any).concat(this.units.powerGenerators);
+    const drainingUnits: IEngineerEntity[] = (this.units.factories as any).concat(this.units.powerGenerators);
     if (this.units.commander != null) {
       drainingUnits.push(this.units.commander);
     }
     drainingUnits.push(...this.units.engineers);
-    const desiredEnergy = lodash.sum(drainingUnits.map((u) => u.energyConsumption()));
+    const desiredEnergy = lodash.sum(drainingUnits.map((u) => Models[u.kind].energyConsumption(u)));
     if (desiredEnergy > 0) {
       const proportionOfEnergyProvided = Math.min(this.storedEnergy / desiredEnergy, 1);
       for (let drainingUnit of drainingUnits) {
-        drainingUnit.energyProvided = drainingUnit.energyConsumption() * proportionOfEnergyProvided;
+        drainingUnit.energyProvided = Models[drainingUnit.kind].energyConsumption(drainingUnit) * proportionOfEnergyProvided;
       }
       this.storedEnergy -= desiredEnergy * proportionOfEnergyProvided;
     }

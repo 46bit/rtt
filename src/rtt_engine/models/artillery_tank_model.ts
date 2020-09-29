@@ -9,7 +9,7 @@ import {
 } from '../entities';
 
 export class ArtilleryTankModel extends ConstructableVehicleModel<IArtilleryTank> {
-  newEntity(cfg: {position: Vector, player: Player, built: false}): IArtilleryTank {
+  newEntity(cfg: {position: Vector, player: Player, built: boolean}): IArtilleryTank {
     return {
       ...this.newConstructableVehicle({...cfg, kind: "artilleryTank"}),
       updateCounter: 0,

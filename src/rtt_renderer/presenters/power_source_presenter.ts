@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Game } from '../../rtt_engine/game';
-import { PowerSource } from '../../rtt_engine/entities/power_source';
+import { IPowerSource } from '../../rtt_engine/entities/power_source';
 import { Vector } from '../../rtt_engine/vector';
 
 export function powerSourceShape(): THREE.Shape {

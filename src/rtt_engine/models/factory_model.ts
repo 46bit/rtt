@@ -6,7 +6,7 @@ import { IFactory, FactoryMetadata } from '../entities';
 export class FactoryModel extends abilities.ConstructableModel(
     abilities.OwnableModel(
       abilities.EngineerModel(Model))) {
-  newEntity(cfg: {position: Vector, player: Player, built: false}): IFactory {
+  newEntity(cfg: {position: Vector, player: Player, built: boolean}): IFactory {
     return {
       ...newEntity({kind: "factory", position: cfg.position}),
       health: cfg.built ? FactoryMetadata.fullHealth : 0,

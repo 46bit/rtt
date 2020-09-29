@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Player, Vector } from '../../rtt_engine';
-import { ArtilleryTank, ArtilleryProjectile } from '../../rtt_engine/entities';
+import { IArtilleryTank, IArtilleryTankProjectile } from '../../rtt_engine/entities';
 import { InstancedGeometryPresenter } from './lib';
 
 import vehicle_vert from '../shaders/vehicle_vert.glsl.js';
@@ -31,7 +31,7 @@ export class ArtilleryTankPresenter extends InstancedGeometryPresenter {
   }
 
   getInstances(): {position: Vector, direction: number, player: Player | null}[] {
-    return this.player.units.vehicles.filter(v => v instanceof ArtilleryTank);
+    return this.player.units.vehicles.filter(v => v.kind == "artilleryTank");
   }
 }
 
@@ -60,6 +60,6 @@ export class ArtilleryProjectilePresenter extends InstancedGeometryPresenter {
   }
 
   getInstances(): {position: Vector, direction: number, player: Player | null}[] {
-    return this.player.turretProjectiles.filter(v => v instanceof ArtilleryProjectile);
+    return this.player.turretProjectiles.filter(v => v.kind == "artilleryTankProjectile");
   }
 }

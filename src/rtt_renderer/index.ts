@@ -1,6 +1,4 @@
 export * from './renderer';
-export * from './selection';
-export * from './ui';
 export * from './presenters/bot_presenter';
 export * from './presenters/shotgun_tank_presenter';
 export * from './presenters/artillery_tank_presenter';
@@ -16,5 +14,4 @@ export * from './presenters/turret_projectile_presenter';
 export * from './presenters/map_presenter';
 export * from './presenters/obstruction_presenter';
 export * from './presenters/triangulated_map_presenter';
-export * from './presenters/selection_presenter';
 export * from './presenters/engineer_presenter';

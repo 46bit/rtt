@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import { Player } from '../../rtt_engine/player';
-import { PowerSource } from '../../rtt_engine/entities/power_source';
 import { Vector } from '../../rtt_engine/vector';
 import { InstancedPresenter } from './lib';
 

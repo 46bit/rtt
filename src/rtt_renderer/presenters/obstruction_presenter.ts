@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { Obstruction } from '../../rtt_engine/entities';
+import { IObstruction } from '../../rtt_engine/entities';
 import { Vector } from '../../rtt_engine/vector';
 import { Game } from '../../rtt_engine';
 

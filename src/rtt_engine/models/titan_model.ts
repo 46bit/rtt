@@ -4,7 +4,7 @@ import { ConstructableVehicleModel, ProjectileModel, newEntity, newVehicleTurret
 import { ITitan, ITitanProjectile, TitanMetadata, TitanProjectileMetadata } from '../entities';
 
 export class TitanModel extends ConstructableVehicleModel<ITitan> {
-  newEntity(cfg: {position: Vector, player: Player, built: false}): ITitan {
+  newEntity(cfg: {position: Vector, player: Player, built: boolean}): ITitan {
     const entity: any = this.newConstructableVehicle({...cfg, kind: "titan"});
     entity.updateCounter = 0;
     entity.turret = newVehicleTurret({...TitanMetadata.turretInput, rotation: entity.direction});

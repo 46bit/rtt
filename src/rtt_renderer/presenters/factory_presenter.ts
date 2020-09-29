@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Player } from '../../rtt_engine/player';
-import { Factory } from '../../rtt_engine/entities/factory';
+import { IFactory } from '../../rtt_engine/entities/factory';
 import { Vector } from '../../rtt_engine/vector';
 import { InstancedGeometryPresenter } from './lib';
 

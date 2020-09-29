@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Player } from '../../../rtt_engine/player';
-import { IEntity } from '../../../rtt_engine/entities';
+import { IEntity } from '../../../rtt_engine';
 import { Vector } from '../../../rtt_engine/vector';
 
 export class InstancedPresenter {

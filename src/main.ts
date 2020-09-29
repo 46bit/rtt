@@ -11,7 +11,7 @@ declare global {
     paused: boolean;
     game: rtt_engine.Game;
     renderer: rtt_renderer.Renderer;
-    selection: rtt_renderer.Selection;
+    //selection: rtt_renderer.Selection;
     navmesh: any;
     obstacleBorderLessNavmesh: any;
   }
@@ -179,11 +179,11 @@ function main() {
   window.renderer = renderer;
 
   let screenPositionToWorldPosition = new rtt_renderer.ScreenPositionToWorldPosition(renderer.renderer.domElement, renderer.camera);
-  let selection = new rtt_renderer.Selection(game, screenPositionToWorldPosition);
-  window.selection = selection;
-  let selectionPresenter = new rtt_renderer.SelectionPresenter(selection, renderer.gameCoordsGroup);
+  //let selection = new rtt_renderer.Selection(game, screenPositionToWorldPosition);
+  //window.selection = selection;
+  //let selectionPresenter = new rtt_renderer.SelectionPresenter(selection, renderer.gameCoordsGroup);
 
-  let ui = new rtt_renderer.UI(game, selection, rttSidebar, rttViewport);
+  //let ui = new rtt_renderer.UI(game, null, rttSidebar, rttViewport);
 
   // The final parameter here is how closely the triangles should go to unpassable obstacles.
   // Small values will make pathfinding collide a lot; large values will create slightly
@@ -281,19 +281,19 @@ function main() {
   document.addEventListener('contextmenu', function (e) {
     e.preventDefault();
   });
-  renderer.renderer.domElement.addEventListener('mousedown', function (e) {
-    e.preventDefault();
-    selection.mousedown(e);
-  }, false);
-  renderer.renderer.domElement.addEventListener('mousemove', function (e) {
-    e.preventDefault();
-    selection.mousemove(e);
-  }, false);
-  // Detect mouseup anywhere, so selections in progress don't miss the mouseup
-  document.body.addEventListener('mouseup', function (e) {
-    e.preventDefault();
-    selection.mouseup(e, quadtree);
-  }, false);
+  // renderer.renderer.domElement.addEventListener('mousedown', function (e) {
+  //   e.preventDefault();
+  //   selection.mousedown(e);
+  // }, false);
+  // renderer.renderer.domElement.addEventListener('mousemove', function (e) {
+  //   e.preventDefault();
+  //   selection.mousemove(e);
+  // }, false);
+  // // Detect mouseup anywhere, so selections in progress don't miss the mouseup
+  // document.body.addEventListener('mouseup', function (e) {
+  //   e.preventDefault();
+  //   selection.mouseup(e, quadtree);
+  // }, false);
 
   setInterval(() => {
     if (window.paused) {
@@ -301,7 +301,7 @@ function main() {
     }
 
     rtt_renderer.time("update", () => {
-      selection.update();
+      //selection.update();
 
       for (let ai of ais) {
         if (ai.player.isDefeated()) {
@@ -317,7 +317,7 @@ function main() {
       for (let unitOrProjectile of unitsAndProjectiles) {
         if (!bounds.contains(unitOrProjectile, () => 0)) {
           //console.log("bounds " + JSON.stringify(bounds) + " killed " + unitOrProjectile.position.x + " " + unitOrProjectile.position.y);
-          unitOrProjectile.kill();
+          rtt_engine.Models[unitOrProjectile.kind].kill(unitOrProjectile as any);
         }
       }
 
@@ -333,8 +333,8 @@ function main() {
       for (let unitId in collisions) {
         const unit: rtt_engine.IKillableEntity = unitsAndProjectiles.filter((u: rtt_engine.IKillableEntity) => u.id == unitId)[0];
         let unitCollisions = collisions[unitId];
-        if (unit instanceof rtt_engine.IProjectileEntity) {
-          unitCollisions = unitCollisions.filter((u: rtt_engine.IKillableEntity) => !(u instanceof rtt_engine.IProjectileEntity));
+        if (unit.kind in ["artilleryTankProjectile", "shotgunTankProjectile", "titanProjectile", "turretProjectile"]) {
+          unitCollisions = unitCollisions.filter((u: rtt_engine.IKillableEntity) => !(u.kind in ["artilleryTankProjectile", "shotgunTankProjectile", "titanProjectile", "turretProjectile"]));
         }
         const numberOfCollidingUnits = unitCollisions.length;
         if (numberOfCollidingUnits == 0) {
@@ -371,7 +371,7 @@ function main() {
       mapPresenter.draw();
       obstructionPresenter.draw();
       powerSourcePresenter.draw();
-      selectionPresenter.draw();
+      //selectionPresenter.draw();
       for (let commanderPresenter of commanderPresenters) {
         commanderPresenter.draw();
       }
@@ -415,7 +415,7 @@ function main() {
         turretProjectilePresenter.draw();
       }
 
-      ui.update();
+      //ui.update();
     });
   }, 1000 / 30);
 }

@@ -4,7 +4,7 @@ import { Model, newEntity } from '../lib';
 import { IPowerSource, IPowerGenerator, PowerGeneratorMetadata } from '../entities';
 
 export class PowerGeneratorModel extends abilities.ConstructableModel(abilities.OwnableModel(Model)) {
-  newEntity(cfg: {position: Vector, player: Player, built: false, powerSource: IPowerSource}): IPowerGenerator {
+  newEntity(cfg: {position: Vector, player: Player, built: boolean, powerSource: IPowerSource}): IPowerGenerator {
     return {
       ...newEntity({kind: "powerGenerator", position: cfg.position}),
       health: cfg.built ? PowerGeneratorMetadata.fullHealth : 0,

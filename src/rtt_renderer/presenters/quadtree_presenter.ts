@@ -1,15 +1,15 @@
 import * as THREE from 'three';
 import { IQuadrant } from '../../rtt_engine/quadtree';
 import { Vector } from '../../rtt_engine/vector';
-import { ICollidable } from '../../rtt_engine';
+import { ICollidableEntity, IOwnableEntity } from '../../rtt_engine';
 
 export class QuadtreePresenter {
-  quadtree: IQuadrant<ICollidable>;
-  knownQuadtree?: IQuadrant<ICollidable>;
+  quadtree: IQuadrant<ICollidableEntity & IOwnableEntity>;
+  knownQuadtree?: IQuadrant<ICollidableEntity & IOwnableEntity>;
   scene: THREE.Group;
   childScene?: THREE.Group;
 
-  constructor(quadtree: IQuadrant<ICollidable>, scene: THREE.Group) {
+  constructor(quadtree: IQuadrant<ICollidableEntity & IOwnableEntity>, scene: THREE.Group) {
     this.quadtree = quadtree;
     this.scene = scene;
   }
@@ -28,7 +28,7 @@ export class QuadtreePresenter {
     }
   }
 
-  protected drawQuadrant(quadrant: IQuadrant<ICollidable>) {
+  protected drawQuadrant(quadrant: IQuadrant<ICollidableEntity & IOwnableEntity>) {
     const planeGeometry = new THREE.PlaneGeometry(quadrant.bounds.right - quadrant.bounds.left, quadrant.bounds.bottom - quadrant.bounds.top);
     const planeEdgesGeometry = new THREE.EdgesGeometry(planeGeometry);
     const planeEdgesMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });

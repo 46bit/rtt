@@ -4,7 +4,7 @@ import { Model, ProjectileModel, newEntity } from '../lib';
 import { ITurret, ITurretProjectile, TurretMetadata, TurretProjectileMetadata } from '../entities';
 
 export class TurretModel extends abilities.ConstructableModel(abilities.OwnableModel(Model)) {
-  newEntity(cfg: {position: Vector, player: Player, built: false}): ITurret {
+  newEntity(cfg: {position: Vector, player: Player, built: boolean}): ITurret {
     return {
       ...newEntity({kind: "turret", position: cfg.position}),
       health: cfg.built ? TurretMetadata.fullHealth : 0,
