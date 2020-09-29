@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import * as rtt_engine from './rtt_engine';
 import * as rtt_renderer from './rtt_renderer';
-import { IAI, ExistingAI, AttackNearestAI, ExpansionAI } from './ai';
+import { IAI, ExistingAI } from './ai';
 
 declare global {
   interface Window {
@@ -169,7 +169,7 @@ function main() {
   window.game = game;
 
   let ais: IAI[] = game.players.map((player) => {
-    const aiClass = Math.random() >= 0.3 ? AttackNearestAI : Math.random() > 0.5 ? ExistingAI : ExpansionAI;
+    const aiClass = ExistingAI;
     player.aiName = aiClass.name;
     return new aiClass(game, player, game.players.filter((p) => p != player));
   });

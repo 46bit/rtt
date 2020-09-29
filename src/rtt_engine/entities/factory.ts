@@ -1,6 +1,7 @@
 import * as abilities from '../abilities';
 
-export interface IFactory extends abilities.IConstructableEntity, abilities.IOwnableEntity, abilities.ICollidableEntity, abilities.IEngineerEntity {
+export type FactoryAbilities = abilities.IConstructableEntity & abilities.IOwnableEntity & abilities.ICollidableEntity & abilities.IEngineerEntity & abilities.IOrderableEntity;
+export interface IFactory extends FactoryAbilities {
   kind: "factory";
 }
 

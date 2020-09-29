@@ -1,5 +1,5 @@
 import * as abilities from '../abilities';
-import { IConstructableVehicleEntity, IProjectileEntity, IVehicleTurret, newPhysics } from '../lib';
+import { IConstructableVehicleEntity, IProjectileEntity, IVehicleTurret, physics } from '../lib';
 
 export const SHOTGUN_RANGE = 80;
 
@@ -16,7 +16,7 @@ export const ShotgunTankMetadata = {
   fullHealth: 35,
   movementRate: 0.07,
   turnRate: 4.0 / 3.0,
-  physics: newPhysics(),
+  physics,
   firingRate: 40,
   firingRange: 80,
   turretInput: {

@@ -1,4 +1,4 @@
-import { IConstructableVehicleEntity, IProjectileEntity, newPhysics } from '../lib';
+import { IConstructableVehicleEntity, IProjectileEntity, physics } from '../lib';
 import * as abilities from '../abilities';
 
 export const ARTILLERY_RANGE = 210;
@@ -15,7 +15,7 @@ export const ArtilleryTankMetadata = {
   fullHealth: 10,
   movementRate: 0.15,
   turnRate: 5.0 / 3.0,
-  physics: newPhysics(),
+  physics,
   firingRate: 75,
 };
 

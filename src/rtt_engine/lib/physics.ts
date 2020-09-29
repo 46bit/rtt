@@ -12,6 +12,8 @@ export interface IPhysics {
   turnCoefficient: number;
 }
 
+export const physics = newPhysics();
+
 // FIXME: Change this to a global const, and precompute a lot of the functions further down?
 export function newPhysics(): IPhysics {
   return {

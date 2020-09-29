@@ -1,4 +1,4 @@
-import { IConstructableVehicleEntity, newPhysics } from '../lib';
+import { IConstructableVehicleEntity, physics } from '../lib';
 import * as abilities from '../abilities';
 
 export interface IBot extends IConstructableVehicleEntity {
@@ -12,5 +12,5 @@ export const BotMetadata = {
   fullHealth: 10,
   movementRate: 0.15,
   turnRate: 5.0 / 3.0,
-  physics: newPhysics(),
+  physics,
 };

@@ -14,6 +14,7 @@ export class FactoryModel extends abilities.ConstructableModel(
       built: cfg.built,
       player: cfg.player,
       energyProvided: 0,
+      orders: [],
     };
   }
 }

@@ -1,4 +1,4 @@
-import { IVehicleEntity, newPhysics } from '../lib';
+import { IVehicleEntity, physics } from '../lib';
 import * as abilities from '../abilities';
 
 export interface ICommander extends IVehicleEntity, abilities.IEngineerEntity {
@@ -10,7 +10,7 @@ export const CommanderMetadata = {
   fullHealth: 1000,
   movementRate: 0.03,
   turnRate: 2.0 / 3.0,
-  physics: newPhysics(),
+  physics,
   productionRange: 35.0,
   energyOutput: 5,
 };
