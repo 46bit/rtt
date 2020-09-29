@@ -1,5 +1,6 @@
 import { Player } from '..';
-import { ComposableConstructor, IEntity, Model } from '../lib';
+import { ComposableConstructor, IEntity } from '../lib';
+import { Model } from '../lib/model';
 
 export interface IOwnableEntity extends IEntity {
   player: Player;

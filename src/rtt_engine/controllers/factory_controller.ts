@@ -1,6 +1,6 @@
 import { Player, Vector } from '..';
 import * as abilities from '../abilities';
-import { Controller } from '../lib';
+import { Controller } from '../lib/controller';
 import { IFactory } from '../entities';
 
 export class FactoryController extends Controller<IFactory> {

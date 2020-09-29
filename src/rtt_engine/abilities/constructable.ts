@@ -1,5 +1,6 @@
-import { ComposableConstructor, IEntity, EntityMetadata, EntitiesWithMetadata, Model } from '../lib';
-import { IKillableMetadata, IKillableEntity, KillableModel } from '.';
+import { ComposableConstructor, IEntity, EntityMetadata, EntitiesWithMetadata } from '../lib';
+import { Model } from '../lib/model';
+import { IKillableMetadata, IKillableEntity, KillableModel } from './killable';
 
 export interface IConstructableMetadata extends IKillableMetadata {
   // FIXME: It seems like `buildCost` isn't being used for repairing, and maybe not used anywhere

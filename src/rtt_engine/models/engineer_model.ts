@@ -1,12 +1,17 @@
 import { Player, Vector } from '../';
 import * as abilities from '../abilities';
-import { Model, newEntity } from '../lib';
+import { EngineerModel } from '../abilities/engineer';
+import { ConstructableModel } from '../abilities/constructable';
+import { OwnableModel } from '../abilities/ownable';
+import { PathableModel } from '../abilities/pathable';
+import { newEntity } from '../lib';
+import { Model } from '../lib/model';
 import { IEngineer, EngineerMetadata } from '../entities';
 
-export class BEngineerModel extends abilities.EngineerModel(
-    abilities.ConstructableModel(
-      abilities.OwnableModel(
-        abilities.PathableModel(Model)))) {
+export class BEngineerModel extends EngineerModel(
+    ConstructableModel(
+      OwnableModel(
+        PathableModel(Model)))) {
   newEntity(cfg: {position: Vector, player: Player, built: boolean}): IEngineer {
     return {
       ...newEntity({kind: "engineer", position: cfg.position}),

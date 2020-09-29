@@ -1,6 +1,11 @@
 import { Player, Vector } from '..';
 import * as abilities from '../abilities';
-import { Controller, EntityMetadata, EntitiesWithMetadata, Models, Model, newEntity } from '.';
+import { KillableModel } from '../abilities/killable';
+import { OwnableModel } from '../abilities/ownable';
+import { MovableModel } from '../abilities/movable';
+import { EntityMetadata, EntitiesWithMetadata, Models, newEntity } from '.';
+import { Model } from './model';
+import { Controller } from './controller';
 
 export type ProjectileAbilities = abilities.ICollidableEntity & abilities.IKillableEntity & abilities.IOwnableEntity & abilities.IMovableEntity;
 
@@ -33,9 +38,9 @@ export abstract class ProjectileController<E extends IProjectileEntity> extends 
   }
 }
 
-export abstract class ProjectileModel<E extends IProjectileEntity> extends abilities.KillableModel(
-    abilities.OwnableModel(
-      abilities.MovableModel(Model))) {
+export abstract class ProjectileModel<E extends IProjectileEntity> extends KillableModel(
+    OwnableModel(
+      MovableModel(Model))) {
   newProjectileEntity(cfg: {kind: E["kind"], position: Vector, direction: number, player: Player}): IProjectileEntity & {kind: E["kind"]} {
     return {
       ...newEntity({kind: cfg.kind, position: cfg.position}),

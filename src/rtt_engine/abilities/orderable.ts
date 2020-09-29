@@ -1,6 +1,7 @@
 import lodash from 'lodash';
 import { Vector } from '..';
-import { IEntity, Controller, EntitiesWithMetadata } from '../lib';
+import { IEntity, EntitiesWithMetadata } from '../lib';
+import { Controller } from '../lib/controller';
 import { unionize, ofType, UnionOf } from 'unionize';
 import { IKillableEntity, IEntityUpdateContext, IConstructableMetadata } from '.';
 

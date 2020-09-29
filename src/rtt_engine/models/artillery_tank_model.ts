@@ -1,6 +1,8 @@
 import { Player, Vector } from '../';
 import * as abilities from '../abilities';
-import { ConstructableVehicleModel, ProjectileModel, VehicleController, newEntity } from '../lib';
+import { newEntity } from '../lib';
+import { ConstructableVehicleModel } from '../lib/vehicle';
+import { ProjectileModel } from '../lib/projectile';
 import {
   IArtilleryTank,
   IArtilleryTankProjectile,

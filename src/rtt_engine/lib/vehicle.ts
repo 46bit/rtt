@@ -1,6 +1,12 @@
 import { Player, Vector } from '..';
+import { PathableModel } from '../abilities/pathable';
+import { OwnableModel } from '../abilities/ownable';
+import { KillableModel } from '../abilities/killable';
+import { ConstructableModel } from '../abilities/constructable';
+import { OrderableController } from '../abilities/orderable';
 import * as abilities from '../abilities';
-import { Model, Controller, EntityMetadata, newEntity } from '.';
+import { Controller, EntityMetadata, newEntity } from '.';
+import { Model } from './model';
 
 export type IVehicleEntity =
   abilities.IKillableEntity
@@ -10,9 +16,9 @@ export type IVehicleEntity =
   & abilities.IOrderableEntity;
 export type IConstructableVehicleEntity = IVehicleEntity & abilities.IConstructableEntity;
 
-export abstract class VehicleModel<E extends IVehicleEntity> extends abilities.KillableModel(
-    abilities.OwnableModel(
-      abilities.PathableModel(Model))) {
+export abstract class VehicleModel<E extends IVehicleEntity> extends KillableModel(
+    OwnableModel(
+      PathableModel(Model))) {
   newVehicle(cfg: {kind: E["kind"], position: Vector, player: Player}): IVehicleEntity & {kind: E["kind"]} {
     return {
       ...newEntity({kind: cfg.kind, position: cfg.position}),
@@ -29,9 +35,9 @@ export abstract class VehicleModel<E extends IVehicleEntity> extends abilities.K
   }
 }
 
-export abstract class ConstructableVehicleModel<E extends IConstructableVehicleEntity> extends abilities.ConstructableModel(
-    abilities.OwnableModel(
-      abilities.PathableModel(Model))) {
+export abstract class ConstructableVehicleModel<E extends IConstructableVehicleEntity> extends ConstructableModel(
+    OwnableModel(
+      PathableModel(Model))) {
   newConstructableVehicle(cfg: {kind: E["kind"], position: Vector, player: Player, built: boolean}): IConstructableVehicleEntity & {kind: E["kind"]} {
     return {
       ...newEntity({kind: cfg.kind, position: cfg.position}),
@@ -49,7 +55,7 @@ export abstract class ConstructableVehicleModel<E extends IConstructableVehicleE
   }
 }
 
-export abstract class VehicleController<E extends IVehicleEntity> extends abilities.OrderableController<E> {
+export abstract class VehicleController<E extends IVehicleEntity> extends OrderableController<E> {
   updateManoeuvreOrder(entity: E, order: abilities.ManoeuvreOrder, ctx: abilities.IEntityUpdateContext): boolean {
     const stopAtDistanceToDestination = 10; //UnitMetadata[value.kind].stopAtDistanceToDestination ?? 10;
     const distanceToDestination = Vector.subtract(entity.position, order.destination).magnitude();

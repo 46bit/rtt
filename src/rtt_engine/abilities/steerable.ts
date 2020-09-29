@@ -1,10 +1,9 @@
 import { Vector } from '..';
-import { IMovableMetadata, IMovableEntity, MovableModel } from '.';
+import { IMovableMetadata, IMovableEntity, MovableModel } from './movable';
 import {
   ComposableConstructor,
   EntitiesWithMetadata,
   EntityMetadata,
-  Model,
   IPhysics,
   turningAngle,
   maxAccelerationForce,
@@ -12,6 +11,7 @@ import {
   rollingResistanceForces,
   momentum,
 } from '../lib';
+import { Model } from '../lib/model';
 
 export interface ISteerableMetadata extends IMovableMetadata {
   turnRate: number;

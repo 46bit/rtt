@@ -1,6 +1,7 @@
 import { Player, Vector } from '..';
 import * as abilities from '../abilities';
-import { VehicleController, Models } from '../lib';
+import { Models } from '../lib';
+import { VehicleController } from '../lib/vehicle';
 import { ICommander, CommanderMetadata, IPowerSource } from '../entities';
 
 export class CommanderController extends VehicleController<ICommander> {

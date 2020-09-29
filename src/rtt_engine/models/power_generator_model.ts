@@ -1,9 +1,12 @@
 import { Player, Vector } from '../';
 import * as abilities from '../abilities';
-import { Model, newEntity } from '../lib';
+import { ConstructableModel } from '../abilities/constructable';
+import { OwnableModel } from '../abilities/ownable';
+import { newEntity } from '../lib';
+import { Model } from '../lib/model';
 import { IPowerSource, IPowerGenerator, PowerGeneratorMetadata } from '../entities';
 
-export class PowerGeneratorModel extends abilities.ConstructableModel(abilities.OwnableModel(Model)) {
+export class PowerGeneratorModel extends ConstructableModel(OwnableModel(Model)) {
   newEntity(cfg: {position: Vector, player: Player, built: boolean, powerSource: IPowerSource}): IPowerGenerator {
     return {
       ...newEntity({kind: "powerGenerator", position: cfg.position}),

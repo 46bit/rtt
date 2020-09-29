@@ -1,6 +1,7 @@
 import { Player, Vector } from '../';
 import * as abilities from '../abilities';
-import { ConstructableVehicleModel, newEntity } from '../lib';
+import { newEntity } from '../lib';
+import { ConstructableVehicleModel } from '../lib/vehicle';
 import { IBot, BotMetadata } from '../entities';
 
 export class BotModel extends ConstructableVehicleModel<IBot> {

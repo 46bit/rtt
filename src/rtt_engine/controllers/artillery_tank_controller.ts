@@ -1,7 +1,9 @@
 import lodash from 'lodash';
 import { Player, Vector } from '..';
 import * as abilities from '../abilities';
-import { VehicleController, ProjectileController, Models, IEntity } from '../lib';
+import { Models, IEntity } from '../lib';
+import { VehicleController } from '../lib/vehicle';
+import { ProjectileController } from '../lib/projectile';
 import { ARTILLERY_RANGE, IArtilleryTank, ArtilleryTankMetadata, IArtilleryTankProjectile } from '../entities';
 
 export class ArtilleryTankController extends VehicleController<IArtilleryTank> {

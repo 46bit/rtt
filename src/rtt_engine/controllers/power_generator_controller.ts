@@ -1,9 +1,10 @@
 import { Player, Vector } from '..';
 import { EntityMetadata, Models } from '../lib';
 import * as abilities from '../abilities';
+import { OrderableController } from '../abilities/orderable';
 import { IPowerGenerator, PowerGeneratorMetadata } from '../entities';
 
-export class PowerGeneratorController extends abilities.OrderableController<IPowerGenerator> {
+export class PowerGeneratorController extends OrderableController<IPowerGenerator> {
   updateEntities(entities: IPowerGenerator[], ctx: abilities.IEntityUpdateContext): IPowerGenerator[] {
     return entities.map((e) => this.updateOrders(e, ctx));
   }

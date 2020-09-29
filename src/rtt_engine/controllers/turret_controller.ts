@@ -1,7 +1,9 @@
 import lodash from 'lodash';
 import { Player, Vector } from '..';
 import * as abilities from '../abilities';
-import { Controller, ProjectileController, Models, IEntity } from '../lib';
+import { Controller } from '../lib/controller';
+import { ProjectileController } from '../lib/projectile';
+import { Models, IEntity } from '../lib';
 import { TURRET_RANGE, ITurretProjectile, ITurret, TurretMetadata } from '../entities';
 
 export class TurretController extends Controller<ITurret> {

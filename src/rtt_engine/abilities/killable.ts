@@ -1,4 +1,5 @@
-import { ComposableConstructor, IEntity, EntityMetadata, EntitiesWithMetadata, Model } from '../lib';
+import { ComposableConstructor, IEntity, EntityMetadata, EntitiesWithMetadata } from '../lib';
+import { Model } from '../lib/model';
 
 export interface IKillableMetadata {
   fullHealth: number;

@@ -1,5 +1,6 @@
 import { Vector } from '..';
-import { ComposableConstructor, IEntity, EntityMetadata, EntitiesWithMetadata, Model } from '../lib';
+import { ComposableConstructor, IEntity, EntityMetadata, EntitiesWithMetadata } from '../lib';
+import { Model } from '../lib/model';
 
 export type Pathfinder = (from: Vector, to: Vector) => Vector[] | null;
 

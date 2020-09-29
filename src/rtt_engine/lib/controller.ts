@@ -19,29 +19,6 @@ import {
   TurretProjectileController,
 } from '../controllers';
 
-export const Controllers = {
-  obstruction: null,
-  artilleryTank: new ArtilleryTankController(),
-  artilleryTankProjectile: new ArtilleryTankProjectileController(),
-  bot: new BotController(),
-  commander: new CommanderController(),
-  engineer: new EngineerController(),
-  factory: new FactoryController(),
-  powerSource: new PowerSourceController(),
-  powerGenerator: new PowerGeneratorController(),
-  shotgunTank: new ShotgunTankController(),
-  shotgunTankProjectile: new ShotgunTankProjectileController(),
-  titan: new TitanController(),
-  titanProjectile: new TitanProjectileController(),
-  turret: new TurretController(),
-  turretProjectile: new TurretProjectileController(),
-};
-
-// Assert we're instantiating a controller for every entity, without erasing the
-// type information on Controllers. (Maybe this can be done in a better way?)
-export type ControllersType = {[K in EntityKinds]: Controller<IEntity & {kind: K}> | null};
-const EveryEntityHasAController = Controllers as ControllersType;
-
 export abstract class Controller<E extends IEntity> {
   // FIXME: Find a way to make this abstract again--abstract broke when
   // giving commander's controller as extending `abilities.EngineerModel(VehicleModel)`

@@ -1,6 +1,8 @@
 import { Vector } from '..';
-import { ISteerableMetadata, ISteerableEntity, SteerableModel, Pathfinder } from '.';
-import { ComposableConstructor, IEntity, EntityMetadata, EntitiesWithMetadata, Model, turningAngle } from '../lib';
+import { ISteerableMetadata, ISteerableEntity, SteerableModel } from './steerable';
+import { Pathfinder } from './movable';
+import { ComposableConstructor, IEntity, EntityMetadata, EntitiesWithMetadata, turningAngle } from '../lib';
+import { Model } from '../lib/model';
 
 export interface IPathableMetadata extends ISteerableMetadata {
   //stopAtDistanceToDestination?: number;

@@ -1,5 +1,6 @@
 import { Vector } from '../';
-import { Model, newEntity } from '../lib';
+import { newEntity } from '../lib';
+import { Model } from '../lib/model';
 import { IPowerSource, PowerSourceMetadata } from '../entities';
 
 export class PowerSourceModel extends Model<IPowerSource> {

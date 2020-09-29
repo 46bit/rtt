@@ -1,7 +1,9 @@
 import lodash from 'lodash';
 import { Player, Vector } from '..';
 import * as abilities from '../abilities';
-import { VehicleController, ProjectileController, Models, IEntity } from '../lib';
+import { VehicleController } from '../lib/vehicle';
+import { ProjectileController } from '../lib/projectile';
+import { Models, IEntity } from '../lib';
 import { ITitan, ITitanProjectile } from '../entities';
 
 export class TitanController extends VehicleController<ITitan> {

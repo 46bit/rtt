@@ -1,14 +1,19 @@
 import { Player, Vector } from '../';
 import * as abilities from '../abilities';
-import { Model, newEntity } from '../lib';
+import { EngineerModel } from '../abilities/engineer';
+import { KillableModel } from '../abilities/killable';
+import { OwnableModel } from '../abilities/ownable';
+import { PathableModel } from '../abilities/pathable';
+import { newEntity } from '../lib';
+import { Model } from '../lib/model';
 import { ICommander, CommanderMetadata } from '../entities';
 
 // FIXME: Restructure things so that I can extend VehicleModel with EngineerModel
 // Mixins on abstract classes just don't work :(
-export class CommanderModel extends abilities.EngineerModel(
-    abilities.KillableModel(
-      abilities.OwnableModel(
-        abilities.PathableModel(Model)))) {
+export class CommanderModel extends EngineerModel(
+    KillableModel(
+      OwnableModel(
+        PathableModel(Model)))) {
   newEntity(cfg: {position: Vector, player: Player, built: boolean}): ICommander {
     this.updateProduction
     return {
