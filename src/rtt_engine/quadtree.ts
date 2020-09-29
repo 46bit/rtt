@@ -38,7 +38,7 @@ export class Bounds {
 
 export class IQuadrant<E extends ICollidableEntity & IOwnableEntity> {
   public static fromEntityCollisions<E extends ICollidableEntity & IOwnableEntity>(bounds: Bounds, entities: E[]): IQuadrant<E> {
-    const entityRadius = (e: E) => EntityMetadata[e.kind].collisionRadius;
+    const entityRadius = (e: E) => (e as any).circumcircleRadius ?? EntityMetadata[e.kind].collisionRadius;
     return this.fromEntitiesAndRadii(bounds, entities, entityRadius);
   }
 

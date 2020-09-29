@@ -10,7 +10,9 @@ export interface ICollidableEntity extends IEntity {
 }
 
 export function isColliding(one: ICollidableEntity, two: ICollidableEntity, within = 0): boolean {
-  const combinedCollisionRadius = EntityMetadata[one.kind].collisionRadius + EntityMetadata[two.kind].collisionRadius + within;
+  const oneRadius = (one as any).circumcircleRadius ?? EntityMetadata[one.kind].collisionRadius;
+  const twoRadius = (two as any).circumcircleRadius ?? EntityMetadata[two.kind].collisionRadius;
+  const combinedCollisionRadius = oneRadius + twoRadius;
   const distanceBetween = Vector.subtract(one.position, two.position).magnitude();
   return distanceBetween < combinedCollisionRadius;
 }
