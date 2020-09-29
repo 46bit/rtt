@@ -50,7 +50,7 @@ export function EngineerModel<E extends IEngineerEntity, T extends new(o: any) =
 
       if (this.isWithinProductionRange(entity, entity.construction.position)) {
         const healthIncrease = entity.energyProvided / constructionModel.buildCostPerHealth(entity.construction);
-        constructionModel.repair(entity.construction as any, healthIncrease);
+        constructionModel.build(entity.construction as any, healthIncrease);
       }
 
       return entity;

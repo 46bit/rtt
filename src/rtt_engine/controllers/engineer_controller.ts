@@ -5,7 +5,11 @@ import { IEngineer } from '../entities';
 
 export class EngineerController extends VehicleController<IEngineer> {
   updateEntities(entities: IEngineer[], ctx: abilities.IEntityUpdateContext): IEngineer[] {
-    return entities;
+    return entities.map((e) => this.updateEntity(e, ctx));
+  }
+
+  updateEntity(entity: IEngineer, ctx: abilities.IEntityUpdateContext): IEngineer {
+    return this.updateOrders(entity, ctx);
   }
 }
 

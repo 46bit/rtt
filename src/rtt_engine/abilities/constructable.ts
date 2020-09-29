@@ -26,7 +26,7 @@ export function ConstructableModel<E extends IConstructableEntity, T extends new
       }
       this.repair(entity, amount);
       if (!entity.dead && !entity.built) {
-        entity.built = (entity.health === EntityMetadata[entity.kind].fullHealth);
+        entity.built = (entity.health >= EntityMetadata[entity.kind].fullHealth);
       }
       return entity;
     }

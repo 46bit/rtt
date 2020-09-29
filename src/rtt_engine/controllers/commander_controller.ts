@@ -6,7 +6,7 @@ import { ICommander, CommanderMetadata, IPowerSource } from '../entities';
 
 export class CommanderController extends VehicleController<ICommander> {
   updateEntities(entities: ICommander[], ctx: abilities.IEntityUpdateContext): ICommander[] {
-    return entities;
+    return entities.map((e) => this.updateEntity(e, ctx));
   }
 
   updateEntity(entity: ICommander, ctx: abilities.IEntityUpdateContext): ICommander {

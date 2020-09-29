@@ -8,7 +8,7 @@ import { TURRET_RANGE, ITurretProjectile, ITurret, TurretMetadata } from '../ent
 
 export class TurretController extends Controller<ITurret> {
   updateEntities(entities: ITurret[], ctx: abilities.IEntityUpdateContext): ITurret[] {
-    return entities;
+    return entities.map((e) => this.updateEntity(e, ctx));
   }
 
   updateEntity(entity: ITurret, ctx: abilities.IEntityUpdateContext): ITurret {

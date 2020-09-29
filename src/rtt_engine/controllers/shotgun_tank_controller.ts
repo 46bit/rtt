@@ -10,12 +10,12 @@ export class ShotgunTankController extends VehicleController<IShotgunTank> {
   readonly entityMetadata = ShotgunTankMetadata;
 
   updateEntities(shotgunTanks: IShotgunTank[], ctx: abilities.IEntityUpdateContext): IShotgunTank[] {
-    return shotgunTanks;
+    return shotgunTanks.map((e) => this.updateEntity(e, ctx));
   }
 
-  protected updateEntity(entity: IShotgunTank, ctx: abilities.IEntityUpdateContext) {
+  protected updateEntity(entity: IShotgunTank, ctx: abilities.IEntityUpdateContext): IShotgunTank {
     if (entity.dead) {
-      return;
+      return entity;
     }
 
     this.updateOrders(entity, ctx);
@@ -26,7 +26,7 @@ export class ShotgunTankController extends VehicleController<IShotgunTank> {
     const angleToFireProjectile = angleToNearestEnemy(entity, ctx.nearbyEnemies);
     if (angleToFireProjectile == null) {
       updateVehicleTurret(entity.turret, entity.direction);
-      return;
+      return entity;
     }
     updateTurretTowards(entity.turret, 0, angleToFireProjectile[0]);
 
@@ -42,6 +42,7 @@ export class ShotgunTankController extends VehicleController<IShotgunTank> {
       }
       entity.updateCounter = 0;
     }
+    return entity;
   }
 
   attackOrderBehaviour(entity: IShotgunTank, attackOrder: abilities.AttackOrder): boolean {

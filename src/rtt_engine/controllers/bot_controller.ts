@@ -5,6 +5,10 @@ import { IBot } from '../entities';
 
 export class BotController extends VehicleController<IBot> {
   updateEntities(entities: IBot[], ctx: abilities.IEntityUpdateContext): IBot[] {
-    return entities;
+    return entities.map((e) => this.updateEntity(e, ctx));
+  }
+
+  updateEntity(entity: IBot, ctx: abilities.IEntityUpdateContext): IBot {
+    return this.updateOrders(entity, ctx);
   }
 }

@@ -8,7 +8,11 @@ import { ITitan, ITitanProjectile } from '../entities';
 
 export class TitanController extends VehicleController<ITitan> {
   updateEntities(entities: ITitan[], ctx: abilities.IEntityUpdateContext): ITitan[] {
-    return entities;
+    return entities.map((e) => this.updateEntity(e, ctx));
+  }
+
+  updateEntity(entity: ITitan, ctx: abilities.IEntityUpdateContext): ITitan {
+    return this.updateOrders(entity, ctx);
   }
 }
 

@@ -1,11 +1,15 @@
 import { Player, Vector } from '..';
 import * as abilities from '../abilities';
-import { Controller } from '../lib/controller';
+import { OrderableController } from '../abilities/orderable';
 import { IFactory } from '../entities';
 
-export class FactoryController extends Controller<IFactory> {
+export class FactoryController extends OrderableController<IFactory> {
   updateEntities(entities: IFactory[], ctx: abilities.IEntityUpdateContext): IFactory[] {
-    return entities;
+    return entities.map((e) => this.updateEntity(e, ctx));
+  }
+
+  updateEntity(entity: IFactory, ctx: abilities.IEntityUpdateContext): IFactory {
+    return this.updateOrders(entity, ctx);
   }
 }
 
