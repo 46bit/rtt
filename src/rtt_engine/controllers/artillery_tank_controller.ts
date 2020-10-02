@@ -11,7 +11,7 @@ export class ArtilleryTankController extends VehicleController<IArtilleryTank> {
     return entities.map((e) => this.updateEntity(e, ctx));
   }
 
-  updateEntity(entity: IArtilleryTank, ctx: abilities.IEntityUpdateContext): IArtilleryTank {
+  public updateEntity(entity: IArtilleryTank, ctx: abilities.IEntityUpdateContext): IArtilleryTank {
     if (entity.dead) {
       return entity;
     }

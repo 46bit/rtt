@@ -9,7 +9,7 @@ export class CommanderController extends VehicleController<ICommander> {
     return entities.map((e) => this.updateEntity(e, ctx));
   }
 
-  updateEntity(entity: ICommander, ctx: abilities.IEntityUpdateContext): ICommander {
+  public updateEntity(entity: ICommander, ctx: abilities.IEntityUpdateContext): ICommander {
     if (entity.construction != null) {
       const constructionModel = Models[entity.construction.kind];
       if (constructionModel.isBuilt(entity.construction) || constructionModel.isDead(entity.construction)) {

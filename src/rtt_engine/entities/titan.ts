@@ -1,5 +1,6 @@
 import * as abilities from '../abilities';
-import { IConstructableVehicleEntity, IProjectileEntity, IVehicleTurret, physics } from '../lib';
+import { IConstructableVehicleEntity, IProjectileEntity, IVehicleTurret } from '../lib';
+import { physics } from '../lib/physics';
 
 export const TITAN_RANGE = 150;
 

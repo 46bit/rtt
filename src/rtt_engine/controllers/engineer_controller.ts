@@ -8,7 +8,7 @@ export class EngineerController extends VehicleController<IEngineer> {
     return entities.map((e) => this.updateEntity(e, ctx));
   }
 
-  updateEntity(entity: IEngineer, ctx: abilities.IEntityUpdateContext): IEngineer {
+  public updateEntity(entity: IEngineer, ctx: abilities.IEntityUpdateContext): IEngineer {
     return this.updateOrders(entity, ctx);
   }
 }

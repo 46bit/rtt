@@ -21,9 +21,6 @@ export function ConstructableModel<E extends IConstructableEntity, T extends new
     }
 
     build(entity: E, amount: number): E {
-      if (!EntityMetadata[entity.kind].constructableByMobileUnits) {
-        return entity;
-      }
       this.repair(entity, amount);
       if (!entity.dead && !entity.built) {
         entity.built = (entity.health >= EntityMetadata[entity.kind].fullHealth);

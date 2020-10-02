@@ -20,8 +20,8 @@ export interface IProjectileMetadata {
 }
 
 export abstract class ProjectileController<E extends IProjectileEntity> extends Controller<E> {
-  updateEntities(entities: E[]): E[] {
-    return entities.map((e) => this.updateProjectile(e));
+  updateEntity(entity: E, ..._: any): E {
+    return this.updateProjectile(entity);
   }
 
   updateProjectile(entity: E): E {

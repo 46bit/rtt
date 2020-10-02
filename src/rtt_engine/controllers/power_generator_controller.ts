@@ -6,7 +6,11 @@ import { IPowerGenerator, PowerGeneratorMetadata } from '../entities';
 
 export class PowerGeneratorController extends OrderableController<IPowerGenerator> {
   updateEntities(entities: IPowerGenerator[], ctx: abilities.IEntityUpdateContext): IPowerGenerator[] {
-    return entities.map((e) => this.updateOrders(e, ctx));
+    return entities.map((e) => this.updateEntity(e, ctx));
+  }
+
+  public updateEntity(entity: IPowerGenerator, ctx: abilities.IEntityUpdateContext): IPowerGenerator {
+    return this.updateOrders(entity, ctx);
   }
 
   updateUpgradeOrder(entity: IPowerGenerator, ctx: abilities.IEntityUpdateContext): boolean {

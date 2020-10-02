@@ -36,7 +36,7 @@ export class Player {
     let context: IEntityUpdateContext = {...ctx, nearbyEnemies: enemies};
     this.units.update(enemies, context);
     for (let turretProjectile of this.turretProjectiles) {
-      Controllers[turretProjectile.kind].updateEntities([turretProjectile as any]);
+      Controllers[turretProjectile.kind].updateEntity(turretProjectile as any, context);
     }
     this.turretProjectiles = this.turretProjectiles.filter((turretProjectile) => Models[turretProjectile.kind].isAlive(turretProjectile));
   }

@@ -8,7 +8,7 @@ export class BotController extends VehicleController<IBot> {
     return entities.map((e) => this.updateEntity(e, ctx));
   }
 
-  updateEntity(entity: IBot, ctx: abilities.IEntityUpdateContext): IBot {
+  public updateEntity(entity: IBot, ctx: abilities.IEntityUpdateContext): IBot {
     return this.updateOrders(entity, ctx);
   }
 }

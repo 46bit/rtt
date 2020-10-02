@@ -13,7 +13,7 @@ export class ShotgunTankController extends VehicleController<IShotgunTank> {
     return shotgunTanks.map((e) => this.updateEntity(e, ctx));
   }
 
-  protected updateEntity(entity: IShotgunTank, ctx: abilities.IEntityUpdateContext): IShotgunTank {
+  updateEntity(entity: IShotgunTank, ctx: abilities.IEntityUpdateContext): IShotgunTank {
     if (entity.dead) {
       return entity;
     }

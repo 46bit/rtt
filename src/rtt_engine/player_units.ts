@@ -79,11 +79,12 @@ export class PlayerUnits {
   public update(enemies: (IKillableEntity & ICollidableEntity)[], ctx: IEntityUpdateContext) {
     this.removeDeadUnits();
     if (this.commander != null) {
-      Controllers.commander.updateEntities([this.commander], ctx);
+      Controllers.commander.updateEntity(this.commander, ctx);
     }
     Controllers.powerGenerator.updateEntities(this.powerGenerators, ctx);
     for (let vehicle of this.vehicles) {
-      Controllers[vehicle.kind].updateEntities([vehicle as any], ctx);
+      let v = vehicle as any;
+      Controllers[vehicle.kind].updateEntity(v, ctx);
     }
     Controllers.turret.updateEntities(this.turrets, ctx);
     this.updateFactoriesAndConstructions(ctx);

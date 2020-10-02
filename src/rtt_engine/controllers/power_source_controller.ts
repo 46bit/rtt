@@ -7,4 +7,8 @@ export class PowerSourceController extends Controller<IPowerSource> {
   updateEntities(entities: IPowerSource[], ctx: abilities.IEntityUpdateContext): IPowerSource[] {
     return entities;
   }
+
+  public updateEntity(entity: IPowerSource, ctx: abilities.IEntityUpdateContext): IPowerSource {
+    return entity;
+  }
 }

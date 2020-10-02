@@ -22,5 +22,11 @@ import {
 export abstract class Controller<E extends IEntity> {
   // FIXME: Find a way to make this abstract again--abstract broke when
   // giving commander's controller as extending `abilities.EngineerModel(VehicleModel)`
-  abstract updateEntities(entities: E[], ctx: abilities.IEntityUpdateContext): E[];
+  updateEntities(entities: E[], ctx: abilities.IEntityUpdateContext): E[] {
+    return entities.map((e) => this.updateEntity(e, ctx));
+  }
+
+  // FIXME: Find a way to make this abstract again--abstract broke when
+  // giving commander's controller as extending `abilities.EngineerModel(VehicleModel)`
+  abstract updateEntity(entities: E, ctx: abilities.IEntityUpdateContext): E;
 }

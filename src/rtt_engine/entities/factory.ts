@@ -9,6 +9,6 @@ export const FactoryMetadata = {
   collisionRadius: 15,
   buildCost: 1200,
   constructableByMobileUnits: true,
-  productionRange: 0,
+  productionRange: 1,
   fullHealth: 120,
 };
