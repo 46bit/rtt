@@ -9,6 +9,7 @@ export class UI {
   selection: Selection;
   sidebar: any;
   viewport: any;
+  timeCell: HTMLElement;
   scoreTableRows: {[playerName: string]: ScoreTableRow};
   playerTabs: {[name: string]: any};
   selectedUnitList: any;
@@ -23,6 +24,7 @@ export class UI {
 
     this.scoreTableRows = {};
     const scoreTable = document.getElementsByClassName("player-scores")[0];
+    this.timeCell = scoreTable.getElementsByClassName("time")[0] as HTMLElement;
     const scoreTableBody = scoreTable.getElementsByTagName("tbody")[0];
     this.game.players.forEach((player) => {
       const row = document.createElement("tr");
@@ -79,6 +81,16 @@ export class UI {
   }
 
   update() {
+    const timeElapsedInSeconds = this.game.updateCounter / 30;
+    let minutesElapsed = Math.floor(timeElapsedInSeconds / 60);
+    let secondsElapsed = Math.floor(timeElapsedInSeconds % 60);
+    if (secondsElapsed == 60) {
+      minutesElapsed++;
+      secondsElapsed = 0;
+    }
+    const zeroPad = (n: number) => n >= 10 ? `${n}` : `0${n}`;
+    this.timeCell.innerText = `${zeroPad(minutesElapsed)}:${zeroPad(secondsElapsed)}`;
+
     this.game.players.forEach((player) => {
       if (player.isDefeated()) {
         this.scoreTableRows[player.name].nameCell.style.color = "grey";
