@@ -138,7 +138,7 @@ function main() {
   window.game = game;
 
   let ais: IAI[] = game.players.map((player) => {
-    const aiClass = Math.random() >= 0.3 ? AttackNearestAI : Math.random() > 0.5 ? ExistingAI : ExpansionAI;
+    const aiClass = Math.random() >= 0.66 ? AttackNearestAI : Math.random() > 0.5 ? ExistingAI : ExpansionAI;
     player.aiName = aiClass.name;
     return new aiClass(game, player, game.players.filter((p) => p != player));
   });
