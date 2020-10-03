@@ -34,53 +34,79 @@ export class Game {
   update(context: IEntityUpdateContext) {
     this.updateCounter += 1;
 
-    this.updateDamagingCollisions();
-    this.updateAIs();
-    this.updatePlayers(context);
-    this.updateObstructionCollisions();
+    window.profiler.time("update_damaging_collisions", () => {
+      this.updateDamagingCollisions();
+    });
+    window.profiler.time("update_ais", () => {
+      this.updateAIs();
+    });
+    window.profiler.time("update_players", () => {
+      this.updatePlayers(context);
+    });
+    window.profiler.time("update_obstruction_collisions", () => {
+      this.updateObstructionCollisions();
+    });
     if (!this.winner) {
       this.updateWinner();
     }
   }
 
   updateDamagingCollisions() {
-    let livingPlayers = this.players.filter((p) => !p.isDefeated());
-    let unitsAndProjectiles = livingPlayers.map((p) => p.units.allKillableCollidableUnits()).flat();
+    let livingPlayers: Player[] = [];
+    let unitsAndProjectiles: (IKillable & ICollidable & IOwnable)[] = [];
+    window.profiler.time("update_damaging_collisions_join", () => {
+      livingPlayers = this.players.filter((p) => !p.isDefeated());
+      unitsAndProjectiles = livingPlayers.map((p) => p.units.allKillableCollidableUnits()).flat();
+    });
     unitsAndProjectiles.push(...this.players.map((p) => p.turretProjectiles).flat());
 
-    for (let unitOrProjectile of unitsAndProjectiles) {
-      if (!this.bounds.contains(unitOrProjectile, () => 0)) {
-        unitOrProjectile.kill();
-      }
-    }
-
-    this.quadtree = IQuadrant.fromEntityCollisions(this.bounds, unitsAndProjectiles);
-    let unitOriginalHealths: {[id: string]: number} = {};
-    for (let unit of unitsAndProjectiles) {
-      if (unit.damage != null) {
-        unitOriginalHealths[unit.id] = (unit instanceof Engineer) ? unit.health / 6 : unit.health;
-      }
-    }
-
-    let collisions = this.quadtree.getCollisions(unitsAndProjectiles);
-    for (let unitId in collisions) {
-      const unit: IKillable = unitsAndProjectiles.filter((u: IKillable) => u.id == unitId)[0];
-      let unitCollisions = collisions[unitId];
-      if (unit instanceof Projectile) {
-        unitCollisions = unitCollisions.filter((u: IKillable) => !(u instanceof Projectile));
-      }
-      const numberOfCollidingUnits = unitCollisions.length;
-      if (numberOfCollidingUnits == 0) {
-        continue;
-      }
-      // FIXME: We need to only apply damage if it fulfils IKillable…
-      const damagePerCollidingUnit = unitOriginalHealths[unitId] / numberOfCollidingUnits;
-      for (let collidingUnit of unitCollisions) {
-        if (collidingUnit.damage != null) {
-          collidingUnit.damage(damagePerCollidingUnit);
+    window.profiler.time("update_damaging_collisions_bounds", () => {
+      for (let unitOrProjectile of unitsAndProjectiles) {
+        if (!this.bounds.contains(unitOrProjectile, () => 0)) {
+          unitOrProjectile.kill();
         }
       }
-    }
+    });
+
+    let quadtree: IQuadrant<ICollidable & IKillable & IOwnable>;
+    window.profiler.time("update_damaging_collisions_build_quadtree", () => {
+      quadtree = IQuadrant.fromEntityCollisions(this.bounds, unitsAndProjectiles, 10);
+    });
+    this.quadtree = quadtree!;
+    let unitOriginalHealths: {[id: string]: number} = {};
+    window.profiler.time("update_damaging_collisions_original_healths", () => {
+      for (let unit of unitsAndProjectiles) {
+        if (unit.damage != null) {
+          // FIXME: I have no idea why this code varies for engineers
+          unitOriginalHealths[unit.id] = (unit instanceof Engineer) ? unit.health / 6 : unit.health;
+        }
+      }
+    });
+
+    let collisions: ReturnType<typeof quadtree.getCollisions>;
+    window.profiler.time("update_damaging_collisions_get_collisions", () => {
+      collisions = this.quadtree.getCollisions(unitsAndProjectiles);
+    });
+    window.profiler.time("update_damaging_collisions_apply_collisions", () => {
+      for (let unitId in collisions!) {
+        const unit: IKillable = unitsAndProjectiles.filter((u: IKillable) => u.id == unitId)[0];
+        let unitCollisions = collisions[unitId];
+        if (unit instanceof Projectile) {
+          unitCollisions = unitCollisions.filter((u: IKillable) => !(u instanceof Projectile));
+        }
+        const numberOfCollidingUnits = unitCollisions.length;
+        if (numberOfCollidingUnits == 0) {
+          continue;
+        }
+        // FIXME: We need to only apply damage if it fulfils IKillable…
+        const damagePerCollidingUnit = unitOriginalHealths[unitId] / numberOfCollidingUnits;
+        for (let collidingUnit of unitCollisions) {
+          if (collidingUnit.damage != null) {
+            collidingUnit.damage(damagePerCollidingUnit);
+          }
+        }
+      }
+    });
   }
 
   updateAIs() {

@@ -1,5 +1,6 @@
-import { IEntity, IEntityConfig } from '../rtt_engine/entities';
-import { ICollidableConfig, ICollidable } from '../rtt_engine/entities/abilities';
+import { Player } from './player';
+import { IEntity, IEntityConfig, Obstruction } from './entities';
+import { ICollidableConfig, ICollidable } from './entities/abilities';
 
 export class Bounds {
   left: number;
@@ -38,25 +39,31 @@ export class Bounds {
 }
 
 export class IQuadrant<E extends ICollidable> {
-  static fromEntityCollisions<E extends ICollidable>(bounds: Bounds, entities: E[]): IQuadrant<E> {
+  static fromEntityCollisions<E extends ICollidable>(bounds: Bounds, entities: E[], allowedDepth?: number): IQuadrant<E> {
     const entityRadius = (e: E) => e.collisionRadius;
-    return this.fromEntitiesAndRadii(bounds, entities, entityRadius);
+    return this.fromEntitiesAndRadii(bounds, entities, entityRadius, allowedDepth);
   }
 
-  static fromEntitiesAndRadii<E extends ICollidable>(bounds: Bounds, entities: E[], entityRadius: (e: E) => number): IQuadrant<E> {
-    return new IQuadrant<E>(bounds, entities, entityRadius);
+  static fromEntitiesAndRadii<E extends ICollidable>(bounds: Bounds, entities: E[], entityRadius: (e: E) => number, allowedDepth?: number): IQuadrant<E> {
+    return new IQuadrant<E>(bounds, entities, entityRadius, allowedDepth);
   }
 
   bounds: Bounds;
   entities: E[];
+  players: Set<Player | null>;
   subtrees: IQuadrant<E>[];
   entityRadius: (e: E) => number;
 
-  constructor(bounds: Bounds, entities: E[], entityRadius: (e: E) => number) {
+  constructor(bounds: Bounds, entities: E[], entityRadius: (e: E) => number, allowedDepth?: number) {
     this.bounds = bounds;
     this.subtrees = [];
     this.entityRadius = entityRadius;
+    this.players = new Set(entities.map((p) => p.player));
     if (entities.length <= 1) {
+      this.entities = entities;
+      return;
+    }
+    if (!(entities[0] instanceof Obstruction) && entities.length <= 8 || (allowedDepth !== undefined && allowedDepth <= 0)) {
       this.entities = entities;
       return;
     }
@@ -80,7 +87,11 @@ export class IQuadrant<E extends ICollidable> {
       }
     }
     for (let j in subquadrantBounds) {
-      const subquadrant = new IQuadrant<E>(subquadrantBounds[j], subquadrantEntities[j], entityRadius);
+      if (!(subquadrantEntities[j][0] instanceof Obstruction) && subquadrantEntities[j].length < 2) {
+        this.entities.push(...subquadrantEntities[j]);
+        continue;
+      }
+      const subquadrant = new IQuadrant<E>(subquadrantBounds[j], subquadrantEntities[j], entityRadius, allowedDepth === undefined ? undefined : allowedDepth - 1);
       this.subtrees.push(subquadrant);
     }
   }
@@ -127,7 +138,12 @@ export class IQuadrant<E extends ICollidable> {
     }
     if (this.subtrees != null) {
       for (let subtree of this.subtrees) {
-        collisions.push(...subtree.getCollisionsFor(collidingEntity));
+        if (!subtree.containedBy(collidingEntity)) {
+          continue;
+        }
+        if (!subtree.players.has(collidingEntity.player) || subtree.players.size > 1) {
+          collisions.push(...subtree.getCollisionsFor(collidingEntity));
+        }
       }
     }
     return collisions;

@@ -1,8 +1,63 @@
+import lodash from 'lodash';
 import * as THREE from 'three';
 import Stats from 'stats-js';
 import * as rtt_engine from './rtt_engine';
 import * as rtt_renderer from './rtt_renderer';
 import { IAI, ExistingAI, AttackNearestAI, ExpansionAI } from './ai';
+
+class Profiler {
+  game: rtt_engine.Game;
+  latestFrame: number;
+  timesByFrame: {[name: string]: number}[];
+
+  constructor(game: rtt_engine.Game) {
+    this.game = game;
+    this.latestFrame = this.game.updateCounter;
+    this.timesByFrame = [];
+  }
+
+  time<R>(name: string, callback: () => R): R {
+    this.latestFrame = this.game.updateCounter;
+    const clock = new THREE.Clock();
+    clock.start();
+    let returnValue = callback();
+    const elapsed = clock.getElapsedTime();
+    this.timesByFrame[this.latestFrame] = this.timesByFrame[this.latestFrame] || {};
+    this.timesByFrame[this.latestFrame][name] = this.timesByFrame[this.latestFrame][name] || 0;
+    this.timesByFrame[this.latestFrame][name] += elapsed;
+    return returnValue;
+  }
+
+  print(sum_over_recent_frames = 1) {
+    const aggregatedTimes: {[name: string]: number} = {};
+    for (let i = 0; i < sum_over_recent_frames; i++) {
+      const targetFrame = this.latestFrame - i;
+      lodash.forEach(this.timesByFrame[targetFrame], (value: number, key: string) => {
+        aggregatedTimes[key] = aggregatedTimes[key] || 0;
+        aggregatedTimes[key] += value;
+      })
+    }
+
+    const totalTime = aggregatedTimes["total"];
+    const percentages = lodash.map(aggregatedTimes, (value: number, key: string) => {
+      const percentage = value / totalTime * 100;
+      if (key == "total" || percentage < 20) {
+        return "";
+      }
+      return `${key}=${Math.round(percentage)}% `;
+    });
+
+    const frameTime = totalTime / sum_over_recent_frames;
+    const maxPossibleFps = Math.ceil(1 / frameTime);
+    const frameDescription = sum_over_recent_frames == 1 ? `#${this.latestFrame}` : `#${this.latestFrame} - ${sum_over_recent_frames}`;
+    const message = `<${maxPossibleFps}fps ${lodash.join(percentages, "")} [${frameDescription}]`;
+    if (maxPossibleFps < 40) {
+      console.warn(message);
+    } else {
+      console.log(message);
+    }
+  }
+}
 
 declare global {
   interface Window {
@@ -15,6 +70,7 @@ declare global {
     selection: rtt_renderer.Selection;
     navmesh: any;
     obstacleBorderLessNavmesh: any;
+    profiler: Profiler;
   }
 }
 
@@ -130,9 +186,10 @@ function main() {
   const bounds = new rtt_engine.Bounds(0, map.worldSize, 0, map.worldSize);
   let game = rtt_engine.gameFromConfig(config, bounds);
   window.game = game;
+  window.profiler = new Profiler(game);
 
   game.ais = game.players.map((player) => {
-    const aiClass = Math.random() >= 0.66 ? AttackNearestAI : Math.random() > 0.5 ? ExistingAI : ExpansionAI;
+    const aiClass = Math.random() >= 0.8 ? AttackNearestAI : Math.random() > 0.8 ? ExistingAI : ExpansionAI;
     player.aiName = aiClass.name;
     return new aiClass(game, player, game.players.filter((p) => p != player));
   });
@@ -153,14 +210,16 @@ function main() {
   window.obstacleBorderLessNavmesh = obstacleBorderLessNavmesh;
   let context: rtt_engine.IEntityUpdateContext = {
     pathfinder: function(from: rtt_engine.Vector, to: rtt_engine.Vector) {
-      let navmeshRoute = navmesh.findPath(from, to);
-      if (!navmeshRoute || navmeshRoute.length == 0) {
-        navmeshRoute = obstacleBorderLessNavmesh.findPath(from, to);
-      }
-      if (!navmeshRoute || navmeshRoute.length == 0) {
-        return null;
-      }
-      return navmeshRoute.map((p: {x: number, y: number}) => new rtt_engine.Vector(p.x, p.y));
+      return window.profiler.time("pathfinder", () => {
+        let navmeshRoute = navmesh.findPath(from, to);
+        if (!navmeshRoute || navmeshRoute.length == 0) {
+          navmeshRoute = obstacleBorderLessNavmesh.findPath(from, to);
+        }
+        if (!navmeshRoute || navmeshRoute.length == 0) {
+          return null;
+        }
+        return navmeshRoute.map((p: {x: number, y: number}) => new rtt_engine.Vector(p.x, p.y));
+      });
     },
   };
 
@@ -175,11 +234,20 @@ function main() {
 
   const animate = () => {
     stats.begin();
-    if (!window.paused) {
-      game.update(context);
-      gameRenderer.update();
-    }
+    window.profiler.time("total", () => {
+      if (!window.paused) {
+        window.profiler.time("update", () => {
+          game.update(context);
+        });
+        window.profiler.time("render", () => {
+          gameRenderer.update();
+        });
+      }
+    });
     stats.end();
+    //if (game.updateCounter % 40 == 39) {
+    window.profiler.print(1);
+    //}
     requestAnimationFrame(animate);
   };
   requestAnimationFrame(animate);

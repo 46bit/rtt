@@ -37,7 +37,7 @@ export class ShotgunTank extends Vehicle {
     super.update(input);
     this.updateCounter++;
 
-    const angleToFireProjectile = this.angleToNearestEnemy(input.enemies);
+    const angleToFireProjectile = window.profiler.time("angle_to_nearest_enemy", () => this.angleToNearestEnemy(input.enemies));
     if (angleToFireProjectile == null) {
       this.turret.update(this.direction);
       return;

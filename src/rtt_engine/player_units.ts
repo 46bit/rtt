@@ -82,37 +82,64 @@ export class PlayerUnits {
   }
 
   public update(enemies: (IKillable & ICollidable)[], context: IEntityUpdateContext) {
-    this.removeDeadUnits();
+    window.profiler.time("remove_dead_units", () => {
+      this.removeDeadUnits();
+    });
     if (this.commander != null) {
-      this.commander.update({context});
+      const commander = this.commander;
+      window.profiler.time("commander_update", () => {
+        commander.update({context});
+      });
     }
-    for (let powerGenerator of this.powerGenerators) {
-      powerGenerator.update({context});
-    }
-    for (let vehicle of this.vehicles) {
-      switch (vehicle.constructor) {
-        case Bot:
-          (vehicle as Bot).update({context});
-          break;
-        case ShotgunTank:
-          (vehicle as ShotgunTank).update({enemies, context});
-          break;
-        case ArtilleryTank:
-          (vehicle as ArtilleryTank).update({enemies, context});
-          break;
-        case Titan:
-          (vehicle as Titan).update({enemies, context});
-          break;
-        case Engineer:
-          (vehicle as Engineer).update({context});
-          break;
+    window.profiler.time("power_generator_update", () => {
+      for (let powerGenerator of this.powerGenerators) {
+        powerGenerator.update({context});
       }
-    }
-    for (const turret of this.turrets) {
-      turret.update({enemies, context});
-    }
-    this.updateFactoriesAndConstructions(context);
-    this.removeDeadUnits();
+    });
+
+    window.profiler.time("vehicle_update", () => {
+      for (let vehicle of this.vehicles) {
+        switch (vehicle.constructor) {
+          case Bot:
+            window.profiler.time("bot_update", () => {
+              (vehicle as Bot).update({context});
+            });
+            break;
+          case ShotgunTank:
+            window.profiler.time("shotgun_tank_update", () => {
+              (vehicle as ShotgunTank).update({enemies, context});
+            });
+            break;
+          case ArtilleryTank:
+            window.profiler.time("artillery_tank_update", () => {
+              (vehicle as ArtilleryTank).update({enemies, context});
+            });
+            break;
+          case Titan:
+            window.profiler.time("titan_update", () => {
+              (vehicle as Titan).update({enemies, context});
+            });
+            break;
+          case Engineer:
+            window.profiler.time("engineer_update", () => {
+              (vehicle as Engineer).update({context});
+            });
+            break;
+        }
+      }
+    });
+
+    window.profiler.time("turret_update", () => {
+      for (const turret of this.turrets) {
+        turret.update({enemies, context});
+      }
+    });
+    window.profiler.time("construction_update", () => {
+      this.updateFactoriesAndConstructions(context);
+    });
+    window.profiler.time("remove_dead_units", () => {
+      this.removeDeadUnits();
+    });
   }
 
   public updateFactoriesAndConstructions(context: IEntityUpdateContext) {
