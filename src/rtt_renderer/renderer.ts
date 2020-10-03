@@ -2,10 +2,11 @@ import * as THREE from 'three';
 import { Vector } from '../rtt_engine';
 import { ScreenPositionToWorldPosition } from './selection';
 
-export function time(name: string, callback: () => void): void {
+export function time(name: string, callback: () => void): number {
   let clock = new THREE.Clock();
   clock.start();
   callback();
+  return clock.getElapsedTime();
   //console.debug("time of '" + name + "': " + clock.getElapsedTime());
 }
 

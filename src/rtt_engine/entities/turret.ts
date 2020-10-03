@@ -31,7 +31,7 @@ export class Turret extends Structure {
     this.updateCounter++;
 
     if (this.updateCounter >= this.firingRate) {
-      const angleToFireProjectile = this.angleToNearestEnemy(input.enemies);
+      const angleToFireProjectile = window.profiler.time("angle_to_nearest_enemy", () => this.angleToNearestEnemy(input.enemies));
       if (angleToFireProjectile == null) {
         return;
       }

@@ -35,7 +35,7 @@ export class ArtilleryTank extends Vehicle {
     this.updateCounter++;
 
     if (this.updateCounter >= this.firingRate && this.velocity == 0) {
-      const angleToFireProjectile = this.angleToNearestEnemy(input.enemies);
+      const angleToFireProjectile = window.profiler.time("angle_to_nearest_enemy", () => this.angleToNearestEnemy(input.enemies));
       if (angleToFireProjectile == null) {
         return;
       }

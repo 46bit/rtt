@@ -36,7 +36,7 @@ export class Titan extends Vehicle {
     super.update(input);
 
     this.laserStopAfter = undefined;
-    const angleToFireProjectile = this.angleToNearestEnemy(input.enemies);
+    const angleToFireProjectile = window.profiler.time("angle_to_nearest_enemy", () => this.angleToNearestEnemy(input.enemies));
     if (angleToFireProjectile == null) {
       this.turret2.update(this.direction);
       return;

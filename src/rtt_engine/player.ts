@@ -24,13 +24,21 @@ export class Player {
   }
 
   public update(powerSources: readonly PowerSource[], otherPlayers: readonly Player[], context: IEntityUpdateContext) {
-    this.updateEnergy();
-    const enemies = otherPlayers.map((p) => p.units.allKillableCollidableUnits()).flat();
+    window.profiler.time("update_energy", () => {
+      this.updateEnergy();
+    });
+    let enemies: any[] = [];
+    window.profiler.time("player_update_enemies", () => {
+      enemies = otherPlayers.map((p) => p.units.allKillableCollidableUnits()).flat();
+    });
     this.units.update(enemies, context);
-    for (let turretProjectile of this.turretProjectiles) {
-      turretProjectile.update();
-    }
-    this.turretProjectiles = this.turretProjectiles.filter((turretProjectile) => turretProjectile.isAlive());
+
+    window.profiler.time("projectiles_update", () => {
+      for (let turretProjectile of this.turretProjectiles) {
+        turretProjectile.update();
+      }
+      this.turretProjectiles = this.turretProjectiles.filter((turretProjectile) => turretProjectile.isAlive());
+    });
   }
 
   public updateEnergy() {

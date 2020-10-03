@@ -1,7 +1,56 @@
+import lodash from 'lodash';
 import * as THREE from 'three';
 import * as rtt_engine from './rtt_engine';
 import * as rtt_renderer from './rtt_renderer';
 import { IAI, ExistingAI, AttackNearestAI, ExpansionAI } from './ai';
+
+class Profiler {
+  game: rtt_engine.Game;
+  latestFrame: number;
+  timesByFrame: {[name: string]: number}[];
+
+  constructor(game: rtt_engine.Game) {
+    this.game = game;
+    this.latestFrame = this.game.updateCounter;
+    this.timesByFrame = [];
+  }
+
+  time<R>(name: string, callback: () => R): R {
+    this.latestFrame = this.game.updateCounter;
+    const clock = new THREE.Clock();
+    clock.start();
+    let returnValue = callback();
+    const elapsed = clock.getElapsedTime();
+    this.timesByFrame[this.latestFrame] = this.timesByFrame[this.latestFrame] || {};
+    this.timesByFrame[this.latestFrame][name] = this.timesByFrame[this.latestFrame][name] || 0;
+    this.timesByFrame[this.latestFrame][name] += elapsed;
+    return returnValue;
+  }
+
+  print(sum_over_recent_frames = 1) {
+    const aggregatedTimes: {[name: string]: number} = {};
+    for (let i = 0; i < sum_over_recent_frames; i++) {
+      const targetFrame = this.latestFrame - i;
+      lodash.forEach(this.timesByFrame[targetFrame], (value: number, key: string) => {
+        aggregatedTimes[key] = aggregatedTimes[key] || 0;
+        aggregatedTimes[key] += value;
+      })
+    }
+
+    const totalTime = aggregatedTimes["total"];
+    const percentages = lodash.map(aggregatedTimes, (value: number, key: string) => {
+      const percentage = value / totalTime * 100;
+      if (key == "total" || percentage < 20) {
+        return "";
+      }
+      return `${key}=${Math.round(percentage)}% `;
+    });
+
+    const frameTime = totalTime / sum_over_recent_frames;
+    const maxPossibleFps = Math.ceil(1 / frameTime);
+    console.log(`<${maxPossibleFps}fps ${lodash.join(percentages, "")}`);
+  }
+}
 
 declare global {
   interface Window {
@@ -14,6 +63,7 @@ declare global {
     selection: rtt_renderer.Selection;
     navmesh: any;
     obstacleBorderLessNavmesh: any;
+    profiler: Profiler;
   }
 }
 
@@ -136,6 +186,7 @@ function main() {
   let game = rtt_engine.gameFromConfig(config);
   const obstructionQuadtree = rtt_engine.IQuadrant.fromEntityCollisions(bounds, game.obstructions as rtt_engine.ICollidable[]);
   window.game = game;
+  window.profiler = new Profiler(game);
 
   let ais: IAI[] = game.players.map((player) => {
     const aiClass = Math.random() >= 0.3 ? AttackNearestAI : Math.random() > 0.5 ? ExistingAI : ExpansionAI;
@@ -174,14 +225,16 @@ function main() {
 
   let context: rtt_engine.IEntityUpdateContext = {
     pathfinder: function(from: rtt_engine.Vector, to: rtt_engine.Vector) {
-      let navmeshRoute = navmesh.findPath([from.x, from.y], [to.x, to.y]);
-      if (!navmeshRoute || navmeshRoute.length == 0) {
-        navmeshRoute = obstacleBorderLessNavmesh.findPath([from.x, from.y], [to.x, to.y]);
-      }
-      if (!navmeshRoute || navmeshRoute.length == 0) {
-        return null;
-      }
-      return navmeshRoute.map((p: {x: number, y: number}) => new rtt_engine.Vector(p.x, p.y));
+      return window.profiler.time("pathfinder", () => {
+        let navmeshRoute = navmesh.findPath([from.x, from.y], [to.x, to.y]);
+        if (!navmeshRoute || navmeshRoute.length == 0) {
+          navmeshRoute = obstacleBorderLessNavmesh.findPath([from.x, from.y], [to.x, to.y]);
+        }
+        if (!navmeshRoute || navmeshRoute.length == 0) {
+          return null;
+        }
+        return navmeshRoute.map((p: {x: number, y: number}) => new rtt_engine.Vector(p.x, p.y));
+      });
     },
   };
 
@@ -269,120 +322,135 @@ function main() {
       return;
     }
 
-    rtt_renderer.time("update", () => {
-      selection.update();
+    window.profiler.time("total", () => {
+      window.profiler.time("update", () => {
+        selection.update();
 
-      for (let ai of ais) {
-        if (ai.player.isDefeated()) {
-          continue;
-        }
-        ai.update();
-      }
-
-      let livingPlayers = game.players.filter((p) => !p.isDefeated());
-      let unitsAndProjectiles = livingPlayers.map((p) => p.units.allKillableCollidableUnits()).flat();
-      unitsAndProjectiles.push(...game.players.map((p) => p.turretProjectiles).flat());
-
-      for (let unitOrProjectile of unitsAndProjectiles) {
-        if (!bounds.contains(unitOrProjectile, () => 0)) {
-          //console.log("bounds " + JSON.stringify(bounds) + " killed " + unitOrProjectile.position.x + " " + unitOrProjectile.position.y);
-          unitOrProjectile.kill();
-        }
-      }
-
-      quadtree = rtt_engine.IQuadrant.fromEntityCollisions(bounds, unitsAndProjectiles);
-      let unitOriginalHealths: {[id: string]: number} = {};
-      for (let unit of unitsAndProjectiles) {
-        if (unit.damage != null) {
-          unitOriginalHealths[unit.id] = (unit instanceof rtt_engine.Engineer) ? unit.health / 6 : unit.health;
-        }
-      }
-
-      let collisions = quadtree.getCollisions(unitsAndProjectiles);
-      for (let unitId in collisions) {
-        const unit: rtt_engine.IKillable = unitsAndProjectiles.filter((u: rtt_engine.IKillable) => u.id == unitId)[0];
-        let unitCollisions = collisions[unitId];
-        if (unit instanceof rtt_engine.Projectile) {
-          unitCollisions = unitCollisions.filter((u: rtt_engine.IKillable) => !(u instanceof rtt_engine.Projectile));
-        }
-        const numberOfCollidingUnits = unitCollisions.length;
-        if (numberOfCollidingUnits == 0) {
-          continue;
-        }
-        // FIXME: We need to only apply damage if it fulfils IKillable…
-        const damagePerCollidingUnit = unitOriginalHealths[unitId] / numberOfCollidingUnits;
-        for (let collidingUnit of unitCollisions) {
-          if (collidingUnit.damage != null) {
-            collidingUnit.damage(damagePerCollidingUnit);
+        window.profiler.time("ai", () => {
+          for (let ai of ais) {
+            if (ai.player.isDefeated()) {
+              continue;
+            }
+            ai.update();
           }
-        }
-      }
+        });
 
-      game.update(context);
+        let livingPlayers: rtt_engine.Player[];
+        window.profiler.time("collision_damage", () => {
+          livingPlayers = game.players.filter((p) => !p.isDefeated());
+          let unitsAndProjectiles = livingPlayers.map((p) => p.units.allKillableCollidableUnits()).flat();
+          unitsAndProjectiles.push(...game.players.map((p) => p.turretProjectiles).flat());
 
-      const units = livingPlayers.map((p) => p.units.allKillableCollidableUnits()).flat();
-      const obstructionCollisions = obstructionQuadtree.getCollisions(units);
-      for (let unitId in obstructionCollisions) {
-        const unitOrProjectile = units.filter((u: rtt_engine.IKillable) => u.id == unitId)[0];
-        if (unitOrProjectile.dead) {
-          continue;
+          for (let unitOrProjectile of unitsAndProjectiles) {
+            if (!bounds.contains(unitOrProjectile, () => 0)) {
+              //console.log("bounds " + JSON.stringify(bounds) + " killed " + unitOrProjectile.position.x + " " + unitOrProjectile.position.y);
+              unitOrProjectile.kill();
+            }
+          }
+
+          quadtree = rtt_engine.IQuadrant.fromEntityCollisions(bounds, unitsAndProjectiles);
+          let unitOriginalHealths: {[id: string]: number} = {};
+          for (let unit of unitsAndProjectiles) {
+            if (unit.damage != null) {
+              unitOriginalHealths[unit.id] = (unit instanceof rtt_engine.Engineer) ? unit.health / 6 : unit.health;
+            }
+          }
+
+          let collisions = quadtree.getCollisions(unitsAndProjectiles);
+          for (let unitId in collisions) {
+            const unit: rtt_engine.IKillable = unitsAndProjectiles.filter((u: rtt_engine.IKillable) => u.id == unitId)[0];
+            let unitCollisions = collisions[unitId];
+            if (unit instanceof rtt_engine.Projectile) {
+              unitCollisions = unitCollisions.filter((u: rtt_engine.IKillable) => !(u instanceof rtt_engine.Projectile));
+            }
+            const numberOfCollidingUnits = unitCollisions.length;
+            if (numberOfCollidingUnits == 0) {
+              continue;
+            }
+            // FIXME: We need to only apply damage if it fulfils IKillable…
+            const damagePerCollidingUnit = unitOriginalHealths[unitId] / numberOfCollidingUnits;
+            for (let collidingUnit of unitCollisions) {
+              if (collidingUnit.damage != null) {
+                collidingUnit.damage(damagePerCollidingUnit);
+              }
+            }
+          }
+        });
+
+        window.profiler.time("game_update", () => {
+          game.update(context);
+        });
+
+        window.profiler.time("obstruction_collision", () => {
+          const units = livingPlayers.map((p) => p.units.allKillableCollidableUnits()).flat();
+          const obstructionCollisions = obstructionQuadtree.getCollisions(units);
+          for (let unitId in obstructionCollisions) {
+            const unitOrProjectile = units.filter((u: rtt_engine.IKillable) => u.id == unitId)[0];
+            if (unitOrProjectile.dead) {
+              continue;
+            }
+            for (let obstruction of obstructionCollisions[unitId]) {
+              (obstruction as rtt_engine.Obstruction).collide(unitOrProjectile);
+            }
+          }
+        });
+      });
+
+      window.profiler.time("render", () => {
+        mapPresenter.draw();
+        obstructionPresenter.draw();
+        powerSourcePresenter.draw();
+        selectionPresenter.draw();
+        for (let commanderPresenter of commanderPresenters) {
+          commanderPresenter.draw();
         }
-        for (let obstruction of obstructionCollisions[unitId]) {
-          (obstruction as rtt_engine.Obstruction).collide(unitOrProjectile);
+        for (let botPresenter of botPresenters) {
+          botPresenter.draw();
         }
-      }
+        for (let shotgunTankPresenter of shotgunTankPresenters) {
+          shotgunTankPresenter.draw();
+        }
+        for (let shotgunProjectilePresenter of shotgunProjectilePresenters) {
+          shotgunProjectilePresenter.draw();
+        }
+        for (let artilleryTankPresenter of artilleryTankPresenters) {
+          artilleryTankPresenter.draw();
+        }
+        for (let artilleryProjectilePresenter of artilleryProjectilePresenters) {
+          artilleryProjectilePresenter.draw();
+        }
+        for (let titanPresenter of titanPresenters) {
+          titanPresenter.draw();
+        }
+        for (let titanProjectilePresenter of titanProjectilePresenters) {
+          titanProjectilePresenter.draw();
+        }
+        for (let engineerPresenter of engineerPresenters) {
+          engineerPresenter.draw();
+        }
+        for (let factoryPresenter of factoryPresenters) {
+          factoryPresenter.draw();
+        }
+        for (let healthinessPresenter of healthinessPresenters) {
+          healthinessPresenter.draw();
+        }
+        for (let powerGeneratorPresenter of powerGeneratorPresenters) {
+          powerGeneratorPresenter.draw();
+        }
+        for (let turretPresenter of turretPresenters) {
+          turretPresenter.draw();
+        }
+        for (let turretProjectilePresenter of turretProjectilePresenters) {
+          turretProjectilePresenter.draw();
+        }
+
+        ui.update();
+      });
     });
 
-    rtt_renderer.time("update rendering", () => {
-      mapPresenter.draw();
-      obstructionPresenter.draw();
-      powerSourcePresenter.draw();
-      selectionPresenter.draw();
-      for (let commanderPresenter of commanderPresenters) {
-        commanderPresenter.draw();
-      }
-      for (let botPresenter of botPresenters) {
-        botPresenter.draw();
-      }
-      for (let shotgunTankPresenter of shotgunTankPresenters) {
-        shotgunTankPresenter.draw();
-      }
-      for (let shotgunProjectilePresenter of shotgunProjectilePresenters) {
-        shotgunProjectilePresenter.draw();
-      }
-      for (let artilleryTankPresenter of artilleryTankPresenters) {
-        artilleryTankPresenter.draw();
-      }
-      for (let artilleryProjectilePresenter of artilleryProjectilePresenters) {
-        artilleryProjectilePresenter.draw();
-      }
-      for (let titanPresenter of titanPresenters) {
-        titanPresenter.draw();
-      }
-      for (let titanProjectilePresenter of titanProjectilePresenters) {
-        titanProjectilePresenter.draw();
-      }
-      for (let engineerPresenter of engineerPresenters) {
-        engineerPresenter.draw();
-      }
-      for (let factoryPresenter of factoryPresenters) {
-        factoryPresenter.draw();
-      }
-      for (let healthinessPresenter of healthinessPresenters) {
-        healthinessPresenter.draw();
-      }
-      for (let powerGeneratorPresenter of powerGeneratorPresenters) {
-        powerGeneratorPresenter.draw();
-      }
-      for (let turretPresenter of turretPresenters) {
-        turretPresenter.draw();
-      }
-      for (let turretProjectilePresenter of turretProjectilePresenters) {
-        turretProjectilePresenter.draw();
-      }
-
-      ui.update();
-    });
+    if (game.updateCounter % 40 == 39) {
+      window.profiler.print(40);
+    }
   }, 1000 / 30);
 }
 

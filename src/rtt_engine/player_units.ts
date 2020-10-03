@@ -76,37 +76,45 @@ export class PlayerUnits {
   }
 
   public update(enemies: (IKillable & ICollidable)[], context: IEntityUpdateContext) {
-    this.removeDeadUnits();
+    window.profiler.time("remove_dead_units", () => {
+      this.removeDeadUnits();
+    });
     if (this.commander != null) {
       this.commander.update({context});
     }
     for (let powerGenerator of this.powerGenerators) {
       powerGenerator.update({context});
     }
-    for (let vehicle of this.vehicles) {
-      switch (vehicle.constructor) {
-        case Bot:
-          (vehicle as Bot).update({context});
-          break;
-        case ShotgunTank:
-          (vehicle as ShotgunTank).update({enemies, context});
-          break;
-        case ArtilleryTank:
-          (vehicle as ArtilleryTank).update({enemies, context});
-          break;
-        case Titan:
-          (vehicle as Titan).update({enemies, context});
-          break;
-        case Engineer:
-          (vehicle as Engineer).update({context});
-          break;
+    window.profiler.time("vehicle_update", () => {
+      for (let vehicle of this.vehicles) {
+        switch (vehicle.constructor) {
+          case Bot:
+            (vehicle as Bot).update({context});
+            break;
+          case ShotgunTank:
+            (vehicle as ShotgunTank).update({enemies, context});
+            break;
+          case ArtilleryTank:
+            (vehicle as ArtilleryTank).update({enemies, context});
+            break;
+          case Titan:
+            (vehicle as Titan).update({enemies, context});
+            break;
+          case Engineer:
+            (vehicle as Engineer).update({context});
+            break;
+        }
       }
-    }
+    });
     for (const turret of this.turrets) {
       turret.update({enemies, context});
     }
-    this.updateFactoriesAndConstructions(context);
-    this.removeDeadUnits();
+    window.profiler.time("construction_update", () => {
+      this.updateFactoriesAndConstructions(context);
+    });
+    window.profiler.time("remove_dead_units", () => {
+      this.removeDeadUnits();
+    });
   }
 
   public updateFactoriesAndConstructions(context: IEntityUpdateContext) {
