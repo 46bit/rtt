@@ -226,9 +226,9 @@ function main() {
   let context: rtt_engine.IEntityUpdateContext = {
     pathfinder: function(from: rtt_engine.Vector, to: rtt_engine.Vector) {
       return window.profiler.time("pathfinder", () => {
-        let navmeshRoute = navmesh.findPath([from.x, from.y], [to.x, to.y]);
+        let navmeshRoute = navmesh.findPath(from, to);
         if (!navmeshRoute || navmeshRoute.length == 0) {
-          navmeshRoute = obstacleBorderLessNavmesh.findPath([from.x, from.y], [to.x, to.y]);
+          navmeshRoute = obstacleBorderLessNavmesh.findPath(from, to);
         }
         if (!navmeshRoute || navmeshRoute.length == 0) {
           return null;

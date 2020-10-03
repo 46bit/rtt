@@ -1,6 +1,6 @@
 import lodash from 'lodash';
 import cdt2d from "cdt2d";
-import { NavMesh } from "nav2d";
+import NavMesh from "navmesh";
 import cleanPSLG from "clean-pslg";
 import { Vector } from './vector';
 import { Obstruction } from './entities';
@@ -84,8 +84,11 @@ export function triangulate(worldSize: number, obstructions: Obstruction[], clea
 }
 
 export function triangulatedMapToNavMesh(triangulatedMap: ITriangulatedMap): NavMesh {
-  const trianglesAsArraysOfPoints = triangulatedMap.passableTriangles.map((triangle) => {
-    return triangle.map((i) => triangulatedMap.points[i]);
+  const trianglesAsArraysOfPoints: {x: number, y: number}[][] = triangulatedMap.passableTriangles.map((triangle) => {
+    const points = triangle.map((i) => triangulatedMap.points[i]);
+    return points.map((p) => {
+      return {x: p[0], y: p[1]};
+    });
   });
   return new NavMesh(trianglesAsArraysOfPoints);
 }
