@@ -11,3 +11,12 @@ declare module "clean-pslg" {
   function cleanPSLG(points: Point[], edges: Edge[], colors?: string[]): void;
   export = cleanPSLG;
 }
+
+declare module "navmesh" {
+  type Point = {x: number, y: number};
+  class NavMesh {
+    constructor(meshPolygonPoints: Point[][], meshShrinkAmount?: number);
+    findPath(start: Point, end: Point): Point[] | null;
+  }
+  export = NavMesh;
+}
