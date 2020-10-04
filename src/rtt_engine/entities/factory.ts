@@ -46,6 +46,8 @@ export class Factory extends Orderable(Engineerable(Structure)) {
       if (this.constructing) {
         this.constructing = false;
         return false;
+      } else if (this.cooldownBeforeNextConstruction > 0) {
+        return true;
       } else {
         this.constructing = true;
         this.construction = new constructionOrder.vehicleClass(

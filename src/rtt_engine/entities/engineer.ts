@@ -54,6 +54,8 @@ export class Engineer extends Engineerable(Vehicle) {
       if (this.constructing) {
         this.constructing = false;
         return false;
+      } else if (this.cooldownBeforeNextConstruction > 0) {
+        return true;
       } else if (constructionOrder.structureClass == PowerGenerator) {
         const powerSource: PowerSource = constructionOrder.metadata;
         if (powerSource.structure == null) {

@@ -9,6 +9,8 @@ export interface IEngineerableConfig {
 
 export interface IEngineerable extends IEntity {
   energyProvided: number;
+  cooldownBeforeNextConstruction: number;
+  construction: (IConstructable & IKillable & ICollidable & IOwnable) | null;
 
   energyConsumption(): number;
 }
@@ -18,12 +20,14 @@ export function Engineerable<T extends new(o: any) => any>(base: T) {
     // FIXME: Store velocity as a Vector instead?
     public productionRange: number;
     public energyProvided: number;
+    public cooldownBeforeNextConstruction: number;
     public construction: (IConstructable & IKillable & ICollidable & IOwnable) | null;
 
     constructor(cfg: IEngineerableConfig) {
       super(cfg);
       this.productionRange = cfg.productionRange ?? 0;
       this.energyProvided = 0;
+      this.cooldownBeforeNextConstruction = 0;
       this.construction = null;
     }
 
@@ -44,6 +48,10 @@ export function Engineerable<T extends new(o: any) => any>(base: T) {
     }
 
     public updateProduction() {
+      if (this.cooldownBeforeNextConstruction > 0) {
+        this.cooldownBeforeNextConstruction--;
+      }
+
       if (this.construction == null) {
         return;
       }

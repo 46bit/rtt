@@ -55,6 +55,8 @@ export class Commander extends Engineerable(Vehicle) {
       if (this.constructing) {
         this.constructing = false;
         return false;
+      } else if (this.cooldownBeforeNextConstruction > 0) {
+        return true;
       } else if (constructionOrder.structureClass == PowerGenerator) {
         const powerSource: PowerSource = constructionOrder.metadata;
         if (powerSource.structure == null) {
@@ -68,6 +70,8 @@ export class Commander extends Engineerable(Vehicle) {
         } else if (powerSource.structure.player == this.player && powerSource.structure.isUnderConstruction()) {
           this.constructing = true;
           this.construction = powerSource.structure;
+        } else {
+          return false;
         }
       } else {
         this.constructing = true;

@@ -12,6 +12,7 @@ import {
   ICollidable,
   IConstructable,
   IOwnable,
+  IEngineerable,
   IEntity,
   IEntityUpdateContext,
 } from './entities';
@@ -22,6 +23,11 @@ type Unit = Bot | ArtilleryTank | ShotgunTank | Titan | Engineer | Commander | P
 // FIXME: Do this based upon an `IVehicle`?
 type Vehicle = Bot | ArtilleryTank | ShotgunTank | Titan | Engineer;
 
+interface IConstruction {
+  construction: IConstructable & IKillable & ICollidable & IOwnable;
+  engineer: IEngineerable & IKillable | null;
+}
+
 export class PlayerUnits {
   public unitCap: number | null;
   public commander: Commander | null;
@@ -30,7 +36,7 @@ export class PlayerUnits {
   public factories: Factory[];
   public powerGenerators: PowerGenerator[];
   public turrets: Turret[];
-  public constructions: {[id: string]: IKillable & ICollidable & IConstructable & IOwnable};
+  public constructions: {[id: string]: IConstruction};
 
   public constructor(unitCap: number | null) {
     this.unitCap = unitCap;
@@ -50,7 +56,7 @@ export class PlayerUnits {
     units.push(...this.factories);
     units.push(...this.powerGenerators);
     units.push(...this.turrets);
-    units.push(...Object.values(this.constructions));
+    units.push(...Object.values(this.constructions).map(c => c.construction));
     if (this.commander != null) {
       units.push(this.commander);
     }
@@ -113,61 +119,90 @@ export class PlayerUnits {
     for (let factory of this.factories) {
       factory.update({context});
       if (factory.construction != null) {
-        this.constructions[factory.construction.id] = factory.construction;
+        this.constructions[factory.construction.id] = {
+          construction: factory.construction,
+          engineer: factory,
+        };
       }
     }
     if (this.commander != null && this.commander.construction != null) {
-      this.constructions[this.commander.construction.id] = this.commander.construction;
+      this.constructions[this.commander.construction.id] = {
+        construction: this.commander.construction,
+        engineer: this.commander,
+      };
     }
     for (let engineer of this.engineers) {
       if (engineer.construction != null) {
-        this.constructions[engineer.construction.id] = engineer.construction;
+        this.constructions[engineer.construction.id] = {
+          construction: engineer.construction,
+          engineer,
+        };
       }
     }
 
     for (let unitId in this.constructions) {
-      const unit = this.constructions[unitId];
-      if (unit.isDead()) {
+      const construction = this.constructions[unitId];
+      if (construction.construction.isDead()) {
         delete(this.constructions[unitId]);
+        // FIXME: This does mean that if you stop creating something before it dies, you
+        // escape the cooldown. When I refactor the engineering code to make that possible,
+        // I'll have to improve this too.
+        if (construction.engineer && construction.engineer.construction == construction as any) {
+          construction.engineer.cooldownBeforeNextConstruction = 30;
+        }
         continue;
       }
-      if (this.isAtUnitCap() || !unit.isBuilt()) {
+      if (construction.engineer?.isDead()) {
+        construction.engineer = null;
+      }
+      if (this.isAtUnitCap() || !construction.construction.isBuilt()) {
+        if (!construction.engineer) {
+          // If nothing is building something, gradually damage it.
+          construction.construction.damage(1);
+        }
         continue;
       }
+
       delete(this.constructions[unitId]);
-      switch (unit.constructor) {
+      if (construction.engineer) {
+        // When something finishes construction, make the thing that built it
+        // wait before building something else. This protects against some cheesy
+        // strategies for confusing AIs.
+        construction.engineer.cooldownBeforeNextConstruction = 30;
+      }
+      switch (construction.construction.constructor) {
         case Factory:
-          this.factories.push(unit as Factory);
+          this.factories.push(construction.construction as Factory);
           break;
         case PowerGenerator:
           // Power generators have special support for being built by multiple engineers at once
           // and so needs guard logic for the multiple completions that will happen. Eventually this
           // will be present for all structures.
-          if (!(this.powerGenerators.includes(unit as PowerGenerator))) {
-            this.powerGenerators.push(unit as PowerGenerator);
+          if (!(this.powerGenerators.includes(construction.construction as PowerGenerator))) {
+            this.powerGenerators.push(construction.construction as PowerGenerator);
           }
           break;
         case Bot:
-          this.vehicles.push(unit as Bot);
+          this.vehicles.push(construction.construction as Bot);
           break;
         case ShotgunTank:
-          this.vehicles.push(unit as ShotgunTank);
+          this.vehicles.push(construction.construction as ShotgunTank);
           break;
         case ArtilleryTank:
-          this.vehicles.push(unit as ArtilleryTank);
+          this.vehicles.push(construction.construction as ArtilleryTank);
           break;
         case Titan:
-          this.vehicles.push(unit as Titan);
+          this.vehicles.push(construction.construction as Titan);
           break;
         case Engineer:
-          this.vehicles.push(unit as Engineer);
-          this.engineers.push(unit as Engineer);
+          this.vehicles.push(construction.construction as Engineer);
+          this.engineers.push(construction.construction as Engineer);
           break;
         case Turret:
-          this.turrets.push(unit as Turret);
+          this.turrets.push(construction.construction as Turret);
           break;
         default:
-          throw new TypeError('unexpected kind of construction completed: ' + unit);
+          throw new TypeError('unexpected kind of construction completed: ' + construction.construction);
       }
     }
   }

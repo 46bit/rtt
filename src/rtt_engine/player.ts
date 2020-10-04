@@ -35,7 +35,11 @@ export class Player {
 
   public updateEnergy() {
     this.storedEnergy += this.units.energyOutput();
-    const drainingUnits = (this.units.factories as IEngineerable[]).concat(this.units.powerGenerators);
+    type DrainingUnit = {
+      energyProvided: number;
+      energyConsumption(): number;
+    }
+    const drainingUnits = (this.units.factories as DrainingUnit[]).concat(this.units.powerGenerators);
     if (this.units.commander != null) {
       drainingUnits.push(this.units.commander);
     }
