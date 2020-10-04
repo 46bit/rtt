@@ -235,10 +235,8 @@ function main() {
     const healthinessPresenter = new rtt_renderer.HealthinessPresenter(player, renderer.gameCoordsGroup);
     healthinessPresenters.push(healthinessPresenter);
     const powerGeneratorPresenter = new rtt_renderer.PowerGeneratorPresenter(player, renderer.gameCoordsGroup);
-    powerGeneratorPresenter.predraw();
     powerGeneratorPresenters.push(powerGeneratorPresenter);
     const turretPresenter = new rtt_renderer.TurretPresenter(player, renderer.gameCoordsGroup);
-    turretPresenter.predraw();
     turretPresenters.push(turretPresenter);
     const turretProjectilePresenter = new rtt_renderer.TurretProjectilePresenter(player, renderer.gameCoordsGroup);
     turretProjectilePresenter.predraw();

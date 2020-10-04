@@ -2,7 +2,10 @@ import * as THREE from 'three';
 import { Player } from '../../rtt_engine/player';
 import { PowerSource } from '../../rtt_engine/entities/power_source';
 import { Vector } from '../../rtt_engine/vector';
-import { InstancedPresenter } from './lib';
+import { InstancedGeometryPresenter } from './lib';
+
+import structure_vert from '../shaders/structure_vert.glsl.js';
+import structure_frag from '../shaders/structure_frag.glsl.js';
 
 export function turretShape(): THREE.Shape {
   let shape = new THREE.Shape();
@@ -14,13 +17,21 @@ export function turretShape(): THREE.Shape {
   return shape;
 }
 
-export class TurretPresenter extends InstancedPresenter {
+export class TurretPresenter extends InstancedGeometryPresenter {
+  player: Player;
+
   constructor(player: Player, scene: THREE.Group) {
-    super(
-      player,
-      (p) => p.units.turrets,
-      new THREE.ShapeBufferGeometry(turretShape()),
-      scene,
-    );
+    const geometry = new THREE.ShapeBufferGeometry(turretShape());
+    const material = new THREE.ShaderMaterial({
+      vertexShader: structure_vert,
+      fragmentShader: structure_frag,
+      blending: THREE.NoBlending,
+    });
+    super(geometry, material, scene);
+    this.player = player;
+  }
+
+  getInstances(): {position: Vector, direction?: number, player: Player | null}[] {
+    return this.player.units.turrets;
   }
 }
