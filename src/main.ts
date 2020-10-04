@@ -198,6 +198,7 @@ function main() {
   let artilleryTankPresenters: rtt_renderer.ArtilleryTankPresenter[] = [];
   let artilleryProjectilePresenters: rtt_renderer.ArtilleryProjectilePresenter[] = [];
   let titanPresenters: rtt_renderer.TitanPresenter[] = [];
+  let titanTurretPresenters: rtt_renderer.TitanTurretPresenter[] = [];
   let titanProjectilePresenters: rtt_renderer.TitanProjectilePresenter[] = [];
   let engineerPresenters: rtt_renderer.EngineerPresenter[] = [];
   let factoryPresenters: rtt_renderer.FactoryPresenter[] = [];
@@ -223,8 +224,9 @@ function main() {
     const artilleryProjectilePresenter = new rtt_renderer.ArtilleryProjectilePresenter(player, renderer.gameCoordsGroup);
     artilleryProjectilePresenters.push(artilleryProjectilePresenter);
     const titanPresenter = new rtt_renderer.TitanPresenter(player, renderer.gameCoordsGroup);
-    titanPresenter.predraw();
     titanPresenters.push(titanPresenter);
+    const titanTurretPresenter = new rtt_renderer.TitanTurretPresenter(player, renderer.gameCoordsGroup);
+    titanTurretPresenters.push(titanTurretPresenter);
     const titanProjectilePresenter = new rtt_renderer.TitanProjectilePresenter(player, renderer.gameCoordsGroup);
     titanProjectilePresenter.predraw();
     titanProjectilePresenters.push(titanProjectilePresenter);
@@ -239,7 +241,6 @@ function main() {
     const turretPresenter = new rtt_renderer.TurretPresenter(player, renderer.gameCoordsGroup);
     turretPresenters.push(turretPresenter);
     const turretProjectilePresenter = new rtt_renderer.TurretProjectilePresenter(player, renderer.gameCoordsGroup);
-    turretProjectilePresenter.predraw();
     turretProjectilePresenters.push(turretProjectilePresenter);
   }
 
@@ -356,6 +357,9 @@ function main() {
       }
       for (let titanPresenter of titanPresenters) {
         titanPresenter.draw();
+      }
+      for (let titanTurretPresenter of titanTurretPresenters) {
+        titanTurretPresenter.draw();
       }
       for (let titanProjectilePresenter of titanProjectilePresenters) {
         titanProjectilePresenter.draw();

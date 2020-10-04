@@ -1,7 +1,10 @@
 import * as THREE from 'three';
-import { Player } from '../../rtt_engine/player';
-import { Titan, TitanProjectile, TITAN_RANGE } from '../../rtt_engine/entities';
-import { InstancedRotateablePresenter } from './lib';
+import { Player, Vector } from '../../rtt_engine';
+import { Titan, TitanProjectile, TITAN_RANGE, VehicleTurret } from '../../rtt_engine/entities';
+import { InstancedRotateablePresenter, InstancedGeometryPresenter } from './lib';
+
+import vehicle_vert from '../shaders/vehicle_vert.glsl.js';
+import vehicle_frag from '../shaders/vehicle_frag.glsl.js';
 
 export function titanShape(): THREE.Shape {
   var shape = new THREE.Shape();
@@ -29,65 +32,51 @@ export function titanTurretShape(): THREE.Shape {
   return shape;
 }
 
-export class TitanPresenter extends InstancedRotateablePresenter {
-  titanTurretPresenter: TitanTurretPresenter;
+export class TitanPresenter extends InstancedGeometryPresenter {
+  player: Player;
+
   constructor(player: Player, scene: THREE.Group) {
-    super(
-      player,
-      (p) => p.units.vehicles.filter(v => v instanceof Titan),
-      new THREE.ShapeBufferGeometry(titanShape()),
-      scene,
-    );
-    this.titanTurretPresenter = new TitanTurretPresenter(player, scene);
+    const geometry = new THREE.ShapeBufferGeometry(titanShape());
+    const material = new THREE.ShaderMaterial({
+      vertexShader: vehicle_vert,
+      fragmentShader: vehicle_frag,
+      blending: THREE.NoBlending,
+    });
+    super(geometry, material, scene);
+    this.player = player;
   }
 
-  predraw() {
-    super.predraw();
-    this.titanTurretPresenter.predraw();
-  }
-
-  draw() {
-    super.draw();
-    this.titanTurretPresenter.draw();
-  }
-
-  dedraw() {
-    super.dedraw();
-    this.titanTurretPresenter.dedraw();
+  getInstances(): Titan[] {
+    return this.player.units.vehicles.filter(v => v instanceof Titan) as Titan[];
   }
 }
 
-export class TitanTurretPresenter extends InstancedRotateablePresenter {
+export class TitanTurretPresenter extends InstancedGeometryPresenter {
+  player: Player;
+
   constructor(player: Player, scene: THREE.Group) {
-    super(
-      player,
-      (p) => p.units.vehicles.filter(v => v instanceof Titan),
-      new THREE.ShapeBufferGeometry(titanTurretShape()),
-      scene,
-    );
+    const geometry = new THREE.ShapeBufferGeometry(titanTurretShape());
+    const material = new THREE.ShaderMaterial({
+      vertexShader: vehicle_vert,
+      fragmentShader: vehicle_frag,
+      blending: THREE.NoBlending,
+    });
+    super(geometry, material, scene);
+    this.player = player;
   }
 
-  draw() {
-    const instances = this.instanceCallback(this.player);
-    const instanceCount = instances.length;
-    if (this.instancedMesh != undefined && this.instancedMesh.count != instanceCount) {
-      this.scene.remove(this.instancedMesh);
-      this.instancedMesh = undefined;
-    }
-    if (this.instancedMesh == undefined) {
-      this.instancedMesh = new THREE.InstancedMesh(this.geometry!, this.material!, instanceCount);
-      this.instancedMesh.count = instanceCount;
-      this.instancedMesh.frustumCulled = false;
-      this.scene.add(this.instancedMesh);
-    }
-    let m = new THREE.Matrix4();
-    for (let i = 0; i < instanceCount; i++) {
-      const instance = instances[i] as Titan;
-      m.makeRotationZ(-Math.PI/2 - instance.turret2.rotation);
-      m.setPosition(instance.position.x, instance.position.y, 0);
-      this.instancedMesh.setMatrixAt(i, m);
-    }
-    this.instancedMesh.instanceMatrix.needsUpdate = true;
+  // FIXME: Make `VehicleTurret` more like a normal entity to stop having to
+  // make it look like one here
+  getInstances(): {position: Vector, direction: number, player: Player | null}[] {
+    const titans = this.player.units.vehicles.filter(v => v instanceof Titan) as Titan[];
+    return titans.map((titan) => {
+      const titanTurret = titan.turret2;
+      return {
+        position: titan.position,
+        direction: titanTurret.rotation,
+        player: titan.player,
+      };
+    });
   }
 }
 
