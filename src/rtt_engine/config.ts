@@ -4,6 +4,7 @@ import { Player } from './player';
 import { PlayerUnits } from './player_units';
 import { PowerSource, Obstruction } from './entities';
 import { Commander } from './entities/commander';
+import { Bounds } from './quadtree';
 
 export interface IGameConfig {
   map: IMap;
@@ -24,12 +25,12 @@ export interface IMap {
   obstructions: Obstruction[];
 }
 
-export function gameFromConfig(gameConfig: IGameConfig, sandbox = false): Game {
+export function gameFromConfig(gameConfig: IGameConfig, bounds: Bounds, sandbox = false): Game {
   let powerSources = gameConfig.map.powerSources.map((v) => new PowerSource(v));
   let players = gameConfig.players.map((p) => {
     const player = new Player(p.name, p.color, new PlayerUnits(gameConfig.unitCap));
     player.units.commander = new Commander(p.commanderPosition, Math.random() * 2 * Math.PI, player);
     return player;
   });
-  return new Game(powerSources, players, gameConfig.map.obstructions, sandbox);
+  return new Game(bounds, powerSources, players, gameConfig.map.obstructions, sandbox);
 }

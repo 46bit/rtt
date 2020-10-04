@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { Drawable } from '../../drawer';
 import { Player } from '../../../rtt_engine/player';
 import { IMovable } from '../../../rtt_engine/entities';
 import { Vector } from '../../../rtt_engine/vector';
@@ -10,7 +11,7 @@ export type Instance = {
   turret?: {rotation: number}
 };
 
-export abstract class InstancedGeometryPresenter {
+export abstract class InstancedGeometryPresenter implements Drawable {
   singleGeometry: THREE.BufferGeometry;
   material: THREE.Material;
   scene: THREE.Group;

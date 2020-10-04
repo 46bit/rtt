@@ -1,4 +1,4 @@
-import { Game, Player } from '../rtt_engine';
+import { Game, Player, IQuadrant, ICollidable, IOwnable } from '../rtt_engine';
 import { Order } from '../rtt_engine/entities/abilities';
 import { Selection, Button } from './';
 
@@ -78,6 +78,23 @@ export class UI {
     this.selectedUnits = new Map();
     this.orderInProgress = null;
     this.viewport.addEventListener("mousedown", (e: MouseEvent) => this.viewportMouseDown(e));
+
+    document.addEventListener('contextmenu', function (e: Event) {
+      e.preventDefault();
+    });
+    viewport.addEventListener('mousedown', function (e: MouseEvent) {
+      e.preventDefault();
+      selection.mousedown(e);
+    }, false);
+    viewport.addEventListener('mousemove', function (e: MouseEvent) {
+      e.preventDefault();
+      selection.mousemove(e);
+    }, false);
+    // Detect mouseup anywhere, so selections in progress don't miss the mouseup
+    document.body.addEventListener('mouseup', function (e: MouseEvent) {
+      e.preventDefault();
+      selection.mouseup(e, game.quadtree as any);
+    }, false);
   }
 
   update() {

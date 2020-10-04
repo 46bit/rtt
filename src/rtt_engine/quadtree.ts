@@ -38,12 +38,12 @@ export class Bounds {
 }
 
 export class IQuadrant<E extends ICollidable> {
-  public static fromEntityCollisions<E extends ICollidable>(bounds: Bounds, entities: E[]): IQuadrant<E> {
+  static fromEntityCollisions<E extends ICollidable>(bounds: Bounds, entities: E[]): IQuadrant<E> {
     const entityRadius = (e: E) => e.collisionRadius;
     return this.fromEntitiesAndRadii(bounds, entities, entityRadius);
   }
 
-  public static fromEntitiesAndRadii<E extends ICollidable>(bounds: Bounds, entities: E[], entityRadius: (e: E) => number): IQuadrant<E> {
+  static fromEntitiesAndRadii<E extends ICollidable>(bounds: Bounds, entities: E[], entityRadius: (e: E) => number): IQuadrant<E> {
     return new IQuadrant<E>(bounds, entities, entityRadius);
   }
 
