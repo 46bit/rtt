@@ -9,6 +9,7 @@ export abstract class InstancedGeometryPresenter {
   scene: THREE.Group;
   attributes: {[key: string]: Float32Array};
   instancedGeometry?: THREE.InstancedBufferGeometry;
+  allocatedInstances: number;
   mesh?: THREE.Mesh;
 
   constructor(singleGeometry: THREE.BufferGeometry, material: THREE.Material, scene: THREE.Group) {
@@ -16,28 +17,32 @@ export abstract class InstancedGeometryPresenter {
     this.material = material;
     this.scene = scene;
     this.attributes = {};
+    this.allocatedInstances = 0;
   }
 
   abstract getInstances(): {position: Vector, direction?: number, player: {color: THREE.Color} | null, turret?: {rotation: number}}[];
 
   predraw(instances: any[]) {
     const numberOfInstances = instances.length;
+    const sensibleInstanceAllocation = Math.max(Math.ceil(numberOfInstances / 32) * 32, 32);
+
     this.instancedGeometry = new THREE.InstancedBufferGeometry().copy(this.singleGeometry);
     this.instancedGeometry.instanceCount = numberOfInstances;
+    this.allocatedInstances = sensibleInstanceAllocation;
 
-    this.attributes.position = new Float32Array(numberOfInstances * 2);
+    this.attributes.position = new Float32Array(sensibleInstanceAllocation * 2);
     this.instancedGeometry.setAttribute(
       "instancePosition",
       new THREE.InstancedBufferAttribute(this.attributes.position, 2),
     );
 
-    this.attributes.rotation = new Float32Array(numberOfInstances);
+    this.attributes.rotation = new Float32Array(sensibleInstanceAllocation);
     this.instancedGeometry.setAttribute(
       "instanceRotation",
       new THREE.InstancedBufferAttribute(this.attributes.rotation, 1),
     );
 
-    this.attributes.playerColor = new Float32Array(numberOfInstances * 3);
+    this.attributes.playerColor = new Float32Array(sensibleInstanceAllocation * 3);
     this.instancedGeometry.setAttribute(
       "playerColor",
       new THREE.InstancedBufferAttribute(this.attributes.playerColor, 3),
@@ -51,14 +56,18 @@ export abstract class InstancedGeometryPresenter {
   draw() {
     const instances = this.getInstances();
     const numberOfInstances = instances.length;
-    if (!this.instancedGeometry || numberOfInstances != this.instancedGeometry.instanceCount) {
+    if (!this.instancedGeometry) {
       this.dedraw();
       this.predraw(instances);
+    } else if (numberOfInstances > this.allocatedInstances) {
+      this.dedraw();
+      this.predraw(instances);
+    } else if (numberOfInstances != this.instancedGeometry!.instanceCount) {
+      this.instancedGeometry!.instanceCount = numberOfInstances;
     }
 
     for (let i = 0; i < numberOfInstances; i++) {
       const instance = instances[i];
-      // FIXME: Do draw un-owned units?
       if (!instance.player) {
         continue;
       }
