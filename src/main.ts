@@ -228,7 +228,6 @@ function main() {
     const titanTurretPresenter = new rtt_renderer.TitanTurretPresenter(player, renderer.gameCoordsGroup);
     titanTurretPresenters.push(titanTurretPresenter);
     const titanProjectilePresenter = new rtt_renderer.TitanProjectilePresenter(player, renderer.gameCoordsGroup);
-    titanProjectilePresenter.predraw();
     titanProjectilePresenters.push(titanProjectilePresenter);
     const engineerPresenter = new rtt_renderer.EngineerPresenter(player, renderer.gameCoordsGroup);
     engineerPresenters.push(engineerPresenter);

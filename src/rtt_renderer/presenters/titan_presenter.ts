@@ -1,10 +1,12 @@
 import * as THREE from 'three';
 import { Player, Vector } from '../../rtt_engine';
 import { Titan, TitanProjectile, TITAN_RANGE, VehicleTurret } from '../../rtt_engine/entities';
-import { InstancedRotateablePresenter, InstancedGeometryPresenter } from './lib';
+import { InstancedGeometryPresenter } from './lib';
 
 import vehicle_vert from '../shaders/vehicle_vert.glsl.js';
 import vehicle_frag from '../shaders/vehicle_frag.glsl.js';
+import beam_projectile_vert from '../shaders/beam_projectile_vert.glsl.js';
+import beam_projectile_frag from '../shaders/beam_projectile_frag.glsl.js';
 
 export function titanShape(): THREE.Shape {
   var shape = new THREE.Shape();
@@ -89,41 +91,57 @@ export function titanProjectileShape(): THREE.Shape {
   return shape;
 }
 
-export class TitanProjectilePresenter extends InstancedRotateablePresenter {
+export class TitanProjectilePresenter extends InstancedGeometryPresenter {
+  player: Player;
+
   constructor(player: Player, scene: THREE.Group) {
-    super(
-      player,
-      (p) => p.units.vehicles.filter(v => v instanceof Titan),
-      new THREE.ShapeBufferGeometry(titanProjectileShape()),
-      scene,
+    const geometry = new THREE.ShapeBufferGeometry(titanProjectileShape());
+    const material = new THREE.ShaderMaterial({
+      vertexShader: beam_projectile_vert,
+      fragmentShader: beam_projectile_frag,
+      blending: THREE.NormalBlending,
+    });
+    material.transparent = true;
+    super(geometry, material, scene);
+    this.player = player;
+  }
+
+  getInstances(): {position: Vector, direction: number, player: Player | null, laserStopAfter: number}[] {
+    let titans = this.player.units.vehicles.filter(v => v instanceof Titan) as Titan[];
+    titans = titans.filter((t) => t.laserStopAfter != null);
+    return titans.map((titan) => {
+      const titanTurret = titan.turret2;
+      return {
+        position: titan.position,
+        direction: titanTurret.rotation,
+        player: titan.player,
+        laserStopAfter: titan.laserStopAfter!,
+      };
+    });
+  }
+
+  predraw(instances: any[]) {
+    super.predraw(instances);
+
+    this.attributes.length = new Float32Array(this.allocatedInstances);
+    this.instancedGeometry!.setAttribute(
+      "projectileLength",
+      new THREE.InstancedBufferAttribute(this.attributes.length, 1),
     );
-    this.material!.transparent = true;
-    this.material!.opacity = 0.5;
   }
 
   draw() {
-    const instances = this.instanceCallback(this.player).filter((i) => (i as Titan).laserStopAfter != null);
-    const instanceCount = instances.length;
-    if (this.instancedMesh != undefined && this.instancedMesh.count != instanceCount) {
-      this.scene.remove(this.instancedMesh);
-      this.instancedMesh = undefined;
+    const instances = this.getInstances();
+    super.draw(instances);
+
+    const numberOfInstances = instances.length;
+    for (let i = 0; i < numberOfInstances; i++) {
+      const instance = instances[i];
+      if (!instance.player) {
+        continue;
+      }
+      this.attributes.length[i] = instance.laserStopAfter!;
     }
-    if (this.instancedMesh == undefined) {
-      this.instancedMesh = new THREE.InstancedMesh(this.geometry!, this.material!, instanceCount);
-      this.instancedMesh.count = instanceCount;
-      this.instancedMesh.frustumCulled = false;
-      this.scene.add(this.instancedMesh);
-    }
-    let m = new THREE.Matrix4();
-    let s = new THREE.Vector3(0, 1, 1);
-    for (let i = 0; i < instanceCount; i++) {
-      const instance = instances[i] as Titan;
-      m.makeRotationZ(-Math.PI/2 - instance.turret2.rotation);
-      s.x = instance.laserStopAfter!;
-      m.scale(s);
-      m.setPosition(instance.position.x, instance.position.y, 0);
-      this.instancedMesh.setMatrixAt(i, m);
-    }
-    this.instancedMesh.instanceMatrix.needsUpdate = true;
+    this.instancedGeometry!.getAttribute("projectileLength").needsUpdate = true;
   }
 }

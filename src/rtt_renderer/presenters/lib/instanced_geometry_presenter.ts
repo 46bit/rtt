@@ -3,6 +3,13 @@ import { Player } from '../../../rtt_engine/player';
 import { IMovable } from '../../../rtt_engine/entities';
 import { Vector } from '../../../rtt_engine/vector';
 
+export type Instance = {
+  position: Vector,
+  direction?: number,
+  player: {color: THREE.Color} | null,
+  turret?: {rotation: number}
+};
+
 export abstract class InstancedGeometryPresenter {
   singleGeometry: THREE.BufferGeometry;
   material: THREE.Material;
@@ -20,7 +27,7 @@ export abstract class InstancedGeometryPresenter {
     this.allocatedInstances = 0;
   }
 
-  abstract getInstances(): {position: Vector, direction?: number, player: {color: THREE.Color} | null, turret?: {rotation: number}}[];
+  abstract getInstances(): Instance[];
 
   predraw(instances: any[]) {
     const numberOfInstances = instances.length;
@@ -53,8 +60,8 @@ export abstract class InstancedGeometryPresenter {
     this.scene.add(this.mesh);
   }
 
-  draw() {
-    const instances = this.getInstances();
+  draw(instances?: Instance[]) {
+    instances = instances || this.getInstances();
     const numberOfInstances = instances.length;
     if (!this.instancedGeometry) {
       this.dedraw();
