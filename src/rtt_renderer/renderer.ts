@@ -2,13 +2,6 @@ import * as THREE from 'three';
 import { Vector } from '../rtt_engine';
 import { ScreenPositionToWorldPosition } from './selection';
 
-export function time(name: string, callback: () => void): void {
-  let clock = new THREE.Clock();
-  clock.start();
-  callback();
-  //console.debug("time of '" + name + "': " + clock.getElapsedTime());
-}
-
 export class Renderer {
   clock: THREE.Clock;
   rttViewport: any;
@@ -93,37 +86,35 @@ export class Renderer {
       this.screenHeight = newScreenHeight;
     }
 
-    time("animate", () => {
-      let dx = 0;
-      let dy = 0;
-      this.pressedArrowKeys.forEach((keyCode) => {
-        switch (keyCode) {
-          case 37: // left arrow key
-            dx += 1;
-            break;
-          case 39: // right arrow key
-            dx -= 1;
-            break;
-          case 38: // up arrow key
-            dy += 1;
-            break;
-          case 40: // down arrow key
-            dy -= 1;
-            break;
-        }
-      });
-      if (dx != 0 || dy != 0) {
-        // FIXME: I'm not convinced this calculation works, but the UI result is OK
-        // FIXME: Make these movements smoother. Acceleration/easing.
-        const neededMovementForOnePixelAtThisScrollLevel = 15 / this.camera.matrix.elements[0];
-        const translate = new THREE.Matrix4().makeTranslation(-dx * neededMovementForOnePixelAtThisScrollLevel, dy * neededMovementForOnePixelAtThisScrollLevel, 0);
-        this.camera.applyMatrix4(translate);
-        this.moveWithinBounds();
+    let dx = 0;
+    let dy = 0;
+    this.pressedArrowKeys.forEach((keyCode) => {
+      switch (keyCode) {
+        case 37: // left arrow key
+          dx += 1;
+          break;
+        case 39: // right arrow key
+          dx -= 1;
+          break;
+        case 38: // up arrow key
+          dy += 1;
+          break;
+        case 40: // down arrow key
+          dy -= 1;
+          break;
       }
-
-      this.renderer.render(this.scene, this.camera);
-      //console.debug("draw calls: " + this.renderer.info.render.calls);
     });
+    if (dx != 0 || dy != 0) {
+      // FIXME: I'm not convinced this calculation works, but the UI result is OK
+      // FIXME: Make these movements smoother. Acceleration/easing.
+      const neededMovementForOnePixelAtThisScrollLevel = 15 / this.camera.matrix.elements[0];
+      const translate = new THREE.Matrix4().makeTranslation(-dx * neededMovementForOnePixelAtThisScrollLevel, dy * neededMovementForOnePixelAtThisScrollLevel, 0);
+      this.camera.applyMatrix4(translate);
+      this.moveWithinBounds();
+    }
+
+    this.renderer.render(this.scene, this.camera);
+    //console.debug("draw calls: " + this.renderer.info.render.calls);
   }
 
   wheel(event: WheelEvent) {
