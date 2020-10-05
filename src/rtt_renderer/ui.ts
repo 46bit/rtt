@@ -98,7 +98,7 @@ export class UI {
   }
 
   update() {
-    const timeElapsedInSeconds = this.game.updateCounter / 30;
+    const timeElapsedInSeconds = this.game.updateCounter / 60;
     let minutesElapsed = Math.floor(timeElapsedInSeconds / 60);
     let secondsElapsed = Math.floor(timeElapsedInSeconds % 60);
     if (secondsElapsed == 60) {

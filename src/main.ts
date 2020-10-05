@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import Stats from 'stats-js';
 import * as rtt_engine from './rtt_engine';
 import * as rtt_renderer from './rtt_renderer';
 import { IAI, ExistingAI, AttackNearestAI, ExpansionAI } from './ai';
@@ -168,19 +169,20 @@ function main() {
   const rttSidebar = rttDiv.getElementsByClassName("game--sidebar")[0]! as HTMLElement;
   let gameRenderer = new rtt_renderer.GameRenderer(map, game, rttViewport, rttSidebar);
 
-  setInterval(() => {
-    if (window.paused) {
-      return;
-    }
+  const stats = new Stats();
+  stats.showPanel(0);
+  document.body.appendChild(stats.dom);
 
-    rtt_renderer.time("update", () => {
+  const animate = () => {
+    stats.begin();
+    if (!window.paused) {
       game.update(context);
-    });
-
-    rtt_renderer.time("update rendering", () => {
       gameRenderer.update();
-    });
-  }, 1000 / 30);
+    }
+    stats.end();
+    requestAnimationFrame(animate);
+  };
+  requestAnimationFrame(animate);
 }
 
 main();
