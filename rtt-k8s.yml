@@ -1,0 +1,60 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rtt
+spec:
+  ports:
+  - port: 80
+    targetPort: 80
+  selector:
+    app: rtt
+...
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rtt
+spec:
+  selector:
+    matchLabels:
+      app: rtt
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: rtt
+    spec:
+      containers:
+      - name: nginx
+        image: ghcr.io/46bit/rtt
+        ports:
+        - containerPort: 80
+...
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: rtt
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt
+spec:
+  tls:
+    - hosts:
+      - rtt.46b.it
+      secretName: rtt-tls
+  rules:
+  - host: rtt.46b.it
+    http:
+      paths:
+      - pathType: Prefix
+        path: /
+        backend:
+          service:
+            name: rtt
+            port:
+              number: 80
+...
