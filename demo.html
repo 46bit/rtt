@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>RTT</title>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-22921213-7"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-22921213-7');
+    </script>
+    <style type="text/css">
+      * {
+        padding: 0;
+        margin: 0;
+      }
+      html, body {
+        overscroll-behavior-x: none;
+      }
+      body {
+        overflow: hidden;
+        background: #202020;
+        font: 14px "Helvetica Neue", Helvetica, Arial, sans-serif;
+      }
+      .game {
+        height: 100vh;
+      }
+      .game--viewport {
+        height: 100vh;
+        position: relative;
+      }
+      .game--viewport canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="game" id="rtt">
+      <section class="game--viewport">
+      </section>
+      <aside class="game--sidebar" style="display: none;">
+        <table class="player-scores">
+          <thead>
+            <tr>
+              <th class="time" style="min-width: 65px;"></th>
+              <th style="min-width: 60px;">Energy</th>
+              <th style="min-width: 60px;">Income</th>
+              <th style="min-width: 50px;">Units</th>
+              <th>AI</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <ul class="players--tabs"></ul>
+        <section class="player--ui">
+          <h2 class="player--selected-units-heading">Selected units</h2>
+          <ul class="player--selected-units"></ul>
+
+          <h2 class="player--order-panel-heading">Order selected units</h2>
+          <ul class="player--order-panel"></ul>
+        </section>
+      </aside>
+    </div>
+    <script src="dist/main.js"></script>
+  </body>
+</html>
