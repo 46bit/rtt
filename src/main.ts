@@ -225,7 +225,8 @@ function main() {
 
   const rttDiv = document.getElementById("rtt")!;
   const rttViewport = rttDiv.getElementsByClassName("game--viewport")[0]! as HTMLElement;
-  const rttSidebar = rttDiv.getElementsByClassName("game--sidebar")[0]! as HTMLElement;
+  const sidebarElement = rttDiv.getElementsByClassName("game--sidebar");
+  const rttSidebar = (sidebarElement.length == 0) ? null : rttDiv.getElementsByClassName("game--sidebar")[0]! as HTMLElement;
   let gameRenderer = new rtt_renderer.GameRenderer(map, game, rttViewport, rttSidebar);
 
   const stats = new Stats();

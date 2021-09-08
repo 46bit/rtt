@@ -5,10 +5,10 @@ import * as presenters from './presenters';
 export class GameRenderer {
   renderer: Renderer;
   selection: Selection;
-  ui: UI;
+  ui?: UI;
   drawer: Drawer;
 
-  constructor(map: IMap, game: Game, rttViewport: HTMLElement, rttSidebar: HTMLElement) {
+  constructor(map: IMap, game: Game, rttViewport: HTMLElement, rttSidebar: HTMLElement | null) {
     this.renderer = new Renderer(map.worldSize, window, document, rttViewport);
     this.renderer.animate(true);
 
@@ -17,7 +17,9 @@ export class GameRenderer {
       this.renderer.camera,
     );
     this.selection = new Selection(game, screenPositionToWorldPosition);
-    this.ui = new UI(game, this.selection, rttSidebar, rttViewport);
+    if (rttSidebar != null) {
+      this.ui = new UI(game, this.selection, rttSidebar, rttViewport);
+    }
 
     this.drawer = new Drawer();
 
@@ -57,6 +59,6 @@ export class GameRenderer {
   update() {
     this.selection.update();
     this.drawer.draw();
-    this.ui.update();
+    this.ui?.update();
   }
 }
