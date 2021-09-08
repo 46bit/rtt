@@ -249,7 +249,7 @@ function main() {
     });
     stats.end();
     //if (game.updateCounter % 40 == 39) {
-    window.profiler.print(1);
+    //window.profiler.print(1);
     //}
 
     if (!refreshing && game.winner != null) {
