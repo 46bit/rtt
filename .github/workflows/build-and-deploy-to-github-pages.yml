@@ -25,13 +25,15 @@ jobs:
         js_hash=$(cat dist/main.js | sha1sum | awk '{ print $1 }')
         cp dist/main.js "release/main-${js_hash}.js"
         # cp dist/main.js.map "release/main-${js_hash}.js.map"
-        cp index.html release/index.html
+        cp index.html release/
+        cp demo.html release/
         sed -i "s/src=\"dist\/main\.js/src=\"main-${js_hash}\.js/g" release/index.html
+        sed -i "s/src=\"dist\/main\.js/src=\"main-${js_hash}\.js/g" release/demo.html
         # sed -i "s/main\.js\.map/main-${js_hash}\.js\.map/g" "release/main-${js_hash}.js"
         ls -la release
 
     - name: Install SSH Client
-      uses: webfactory/ssh-agent@v0.2.0
+      uses: webfactory/ssh-agent@v0.5.0
       with:
         ssh-private-key: ${{ secrets.DEPLOY_KEY }}
 
