@@ -234,6 +234,7 @@ function main() {
   stats.dom.style.opacity = "0.5";
   document.body.appendChild(stats.dom);
 
+  let refreshing = false;
   const animate = () => {
     stats.begin();
     window.profiler.time("total", () => {
@@ -250,6 +251,13 @@ function main() {
     //if (game.updateCounter % 40 == 39) {
     window.profiler.print(1);
     //}
+
+    if (!refreshing && game.winner != null) {
+      refreshing = true;
+      setTimeout(function() {
+        window.location.reload();
+      }, 4000);
+    }
     requestAnimationFrame(animate);
   };
   requestAnimationFrame(animate);
