@@ -226,11 +226,12 @@ function main() {
   const rttDiv = document.getElementById("rtt")!;
   const rttViewport = rttDiv.getElementsByClassName("game--viewport")[0]! as HTMLElement;
   const sidebarElement = rttDiv.getElementsByClassName("game--sidebar");
-  const rttSidebar = (sidebarElement.length == 0) ? null : rttDiv.getElementsByClassName("game--sidebar")[0]! as HTMLElement;
+  const rttSidebar = (sidebarElement.length == 0) ? null : sidebarElement[0]! as HTMLElement;
   let gameRenderer = new rtt_renderer.GameRenderer(map, game, rttViewport, rttSidebar);
 
   const stats = new Stats();
   stats.showPanel(0);
+  stats.dom.style.opacity = "0.5";
   document.body.appendChild(stats.dom);
 
   const animate = () => {
