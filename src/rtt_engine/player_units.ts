@@ -66,10 +66,11 @@ export class PlayerUnits {
   public unitCount() {
     return (this.commander ? 1 : 0)
       + this.vehicles.length
+      + this.engineers.length
       + this.factories.length
       + this.powerGenerators.length
-      + this.turrets.length
-      + Object.keys(this.constructions).length;
+      + this.turrets.length;
+    //+ Object.keys(this.constructions).length;
   }
 
   public isAtUnitCap() {

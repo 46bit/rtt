@@ -164,7 +164,7 @@ function main() {
   };
   const config = {
     map,
-    unitCap: 500,
+    unitCap: 250,
     players: [{
       name: 'Green',
       color: new THREE.Color("rgb(0, 255, 0)"),
