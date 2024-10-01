@@ -45,7 +45,11 @@ export class ShotgunTank extends Vehicle {
     this.turret.updateTowards(0, angleToFireProjectile[0]);
 
     if (this.updateCounter >= this.firingRate && angleToFireProjectile[1] <= SHOTGUN_RANGE * 1.2) {
-      for (let projectileOffsetAngle = -4.8; projectileOffsetAngle <= 4.8; projectileOffsetAngle += 2.4) {
+      const numberOfProjectiles = 5;
+      const angleBetweenProjectiles = 2.4;
+      const projectileMaxAngle = (numberOfProjectiles - 1) / 2 * angleBetweenProjectiles;
+
+      for (let projectileOffsetAngle = -projectileMaxAngle; projectileOffsetAngle <= projectileMaxAngle; projectileOffsetAngle += angleBetweenProjectiles) {
         const projectile = new ShotgunProjectile(this.position, this.player!, this.turret.rotation + projectileOffsetAngle*Math.PI/180);
         this.player!.turretProjectiles.push(projectile);
       }
