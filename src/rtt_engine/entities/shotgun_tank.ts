@@ -45,7 +45,7 @@ export class ShotgunTank extends Vehicle {
     this.turret.updateTowards(0, angleToFireProjectile[0]);
 
     if (this.updateCounter >= this.firingRate && angleToFireProjectile[1] <= SHOTGUN_RANGE * 1.2) {
-      const numberOfProjectiles = 5;
+      const numberOfProjectiles = 3;
       const angleBetweenProjectiles = 2.4;
       const projectileMaxAngle = (numberOfProjectiles - 1) / 2 * angleBetweenProjectiles;
 
@@ -83,12 +83,13 @@ export class ShotgunTank extends Vehicle {
 
 export class ShotgunProjectile extends Projectile {
   constructor(position: Vector, player: Player, direction: number) {
+    const velocity = 4.0;
     super({
       player,
       position,
       direction,
-      velocity: 6.5,
-      lifetime: SHOTGUN_RANGE / 5,
+      velocity: velocity,
+      lifetime: SHOTGUN_RANGE / velocity,
       collisionRadius: 3,
       health: 2.5,
       fullHealth: 2.5,
