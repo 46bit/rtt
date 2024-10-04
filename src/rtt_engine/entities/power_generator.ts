@@ -63,7 +63,7 @@ export class PowerGenerator extends Structure {
       }
       this.upgrading = true;
       this.fullHealth *= 2;
-      this.buildCost *= 4;
+      this.buildCost *= 3;
     }
     return true;
   }
