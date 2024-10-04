@@ -56,12 +56,13 @@ export class Turret extends Structure {
 
 export class TurretProjectile extends Projectile {
   constructor(position: Vector, player: Player, direction: number) {
+    const velocity = 5.5;
     super({
       player,
       position,
       direction,
-      velocity: 3.5,
-      lifetime: TURRET_RANGE / 3.5,
+      velocity: velocity,
+      lifetime: TURRET_RANGE / velocity,
       collisionRadius: 4,
       health: 7,
       fullHealth: 7,
